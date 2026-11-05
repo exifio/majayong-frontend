@@ -90,6 +90,17 @@ export async function loginWithPassword(email: string, password: string): Promis
   return session;
 }
 
+export async function registerWithPassword(
+  email: string,
+  password: string,
+  role: Role,
+  termsVersion: string,
+): Promise<AuthSession> {
+  const session = await authRequest('/auth/register', { email, password, role, termsVersion });
+  storeRefreshToken(session.refreshToken);
+  return session;
+}
+
 export type GoogleCodeExchange =
   | { onboardingToken: string }
   | { session: AuthSession };

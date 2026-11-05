@@ -4,6 +4,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button, ConfirmCheck, Note, SelectCards } from '@/components/ui';
+import { AuthError } from '@/app/auth';
 import { ROLE_HOME, useSession } from '@/app/session';
 import { DEMO, resolveRoleMock, roleDemoOf, type RoleMock } from './Signup-Role.data';
 import s from './Signup-Role.module.css';
@@ -39,7 +40,7 @@ function RoleStepper({ current }: { current: 1 | 2 | 3 }) {
 export default function SignupRole() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
-  const { googleOnboardingToken, completeGoogleSignup } = useSession();
+  const { googleOnboardingToken, completeGoogleSignup, register } = useSession();
   const mock: RoleMock = resolveRoleMock(params.get('mock'));
   const demo = roleDemoOf(mock);
   const googleFlow = demo.google || Boolean(googleOnboardingToken);
@@ -56,13 +57,47 @@ export default function SignupRole() {
     setRole(roleDemoOf(resolveRoleMock(params.get('mock'))).role);
   }, [params]);
 
-  const nextHref = role === 'supplier' ? '/signup/supplier' : '/signup/client';
   const googleReady =
     !googleFlow || (termsOk && privacyOk && brokerOk && (role !== 'supplier' || ndaOk));
 
   const continueSignup = async () => {
     if (!googleOnboardingToken) {
-      navigate(nextHref);
+      // ①에서 입력한 이메일·비밀번호로 실제 계정을 만든다.
+      let email = '';
+      let password = '';
+      let termsVersion = TERMS_VERSION;
+      try {
+        email = window.sessionStorage.getItem('mj.signup.email') ?? '';
+        password = window.sessionStorage.getItem('mj.signup.password') ?? '';
+        termsVersion = window.sessionStorage.getItem('mj.signup.terms') ?? TERMS_VERSION;
+      } catch { /* storage unavailable */ }
+      if (!email || !password) {
+        setError('이메일과 비밀번호를 다시 입력해 주세요.');
+        return;
+      }
+      setBusy(true);
+      setError(null);
+      try {
+        await register(
+          email,
+          password,
+          role === 'supplier' ? 'SUPPLIER' : 'CLIENT',
+          termsVersion,
+        );
+        try { window.sessionStorage.removeItem('mj.signup.password'); } catch { /* storage unavailable */ }
+        // 가입 즉시 로그인 상태가 되므로 ③ 프로필 단계는 인증 후 화면에서 이어 간다.
+        navigate(role === 'supplier' ? '/s' : '/c', { replace: true });
+      } catch (caught) {
+        setError(
+          caught instanceof AuthError && caught.code === 'EMAIL_ALREADY_REGISTERED'
+            ? '이미 가입된 이메일입니다. 로그인해 주세요.'
+            : caught instanceof AuthError
+              ? caught.message
+              : '가입을 완료하지 못했습니다. 다시 시도해 주세요.',
+        );
+      } finally {
+        setBusy(false);
+      }
       return;
     }
     setBusy(true);

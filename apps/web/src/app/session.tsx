@@ -17,6 +17,7 @@ import {
   exchangeGoogleCode as exchangeGoogleCodeRequest,
   loginWithPassword,
   logoutAuthSession,
+  registerWithPassword,
   refreshAuthSession,
   storedRefreshToken,
   storeRefreshToken,
@@ -72,6 +73,7 @@ type Ctx = {
   authReady: boolean;
   authUser: AuthUser | null;
   login: (email: string, password: string) => Promise<AuthUser>;
+  register: (email: string, password: string, role: Role, termsVersion: string) => Promise<AuthUser>;
   exchangeGoogleAuthorizationCode: (code: string) => Promise<
     { onboardingRequired: true } | { onboardingRequired: false; role: Role }
   >;
@@ -161,6 +163,20 @@ export function SessionProvider({ initial, children }: { initial?: Session; chil
     return session.user;
   }, [applySession, storeGoogleOnboardingToken]);
 
+  const register = useCallback(async (
+    email: string,
+    password: string,
+    role: Role,
+    termsVersion: string,
+  ) => {
+    const session = await registerWithPassword(email, password, role, termsVersion);
+    storeGoogleOnboardingToken(null);
+    applySession(session);
+    setDevSessionState(DEV_SESSIONS.guest!);
+    setDevToken('');
+    return session.user;
+  }, [applySession, storeGoogleOnboardingToken]);
+
   const exchangeGoogleAuthorizationCode = useCallback(async (code: string) => {
     const result = await exchangeGoogleCodeRequest(code);
     setDevSessionState(DEV_SESSIONS.guest!);
@@ -222,10 +238,11 @@ export function SessionProvider({ initial, children }: { initial?: Session; chil
     authUser: auth.status === 'authenticated' ? auth.user : null,
     googleOnboardingToken: auth.status === 'signup' ? auth.onboardingToken : null,
     login,
+    register,
     exchangeGoogleAuthorizationCode,
     completeGoogleSignup,
     logout,
-  }), [session, setDevSession, apiAccessToken, authReady, auth, login, exchangeGoogleAuthorizationCode, completeGoogleSignup, logout]);
+  }), [session, setDevSession, apiAccessToken, authReady, auth, login, register, exchangeGoogleAuthorizationCode, completeGoogleSignup, logout]);
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }
