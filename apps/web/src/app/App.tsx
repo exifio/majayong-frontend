@@ -92,7 +92,11 @@ function ShellOnly({ shell, guard, children }: { shell: Shell; guard: Guard; chi
 
 export function AppRoutes() {
   useDevDesignChecks();
+  const { authReady } = useSession();
   const Help = PAGES.Help!;
+  if (!authReady) {
+    return <p role="status" style={{ padding: 24 }}>세션을 확인하는 중입니다.</p>;
+  }
   return (
     <>
       <Routes>

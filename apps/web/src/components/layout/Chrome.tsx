@@ -194,7 +194,7 @@ export function Gnb({ space }: { space: 'client' | 'supplier' }) {
 }
 function AvatarMenu({ space, name }: { space: 'client' | 'supplier'; name: string }) {
   const { open, setOpen, ref, btnRef } = usePopover();
-  const { setDevSession, setApiAccessToken } = useSession();
+  const { logout } = useSession();
   const base = space === 'client' ? '/c' : '/s';
   return (
     <div ref={ref} style={{ position: 'relative' }}>
@@ -207,7 +207,7 @@ function AvatarMenu({ space, name }: { space: 'client' | 'supplier'; name: strin
           <li role="none"><Link role="menuitem" to={`${base}/profile`} onClick={() => setOpen(false)}>내 프로필</Link></li>
           <li role="none"><Link role="menuitem" to={`${base}/account`} onClick={() => setOpen(false)}>계정 설정</Link></li>
           <li role="none"><hr /></li>
-          <li role="none"><button role="menuitem" className={s.logout} onClick={() => { setApiAccessToken(''); setDevSession('guest'); }}>로그아웃</button></li>
+          <li role="none"><button role="menuitem" className={s.logout} onClick={() => { void logout(); }}>로그아웃</button></li>
         </ul>
       )}
     </div>

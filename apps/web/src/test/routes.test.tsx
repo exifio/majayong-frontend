@@ -60,7 +60,7 @@ describe('알림 드롭다운(Notify-Client · Notify-Supplier)', () => {
       fireEvent.click(screen.getByRole('button', { name: '알림' }));
       const dd = container.querySelector('[data-dropdown="notifications"]');
       expect(dd).not.toBeNull();
-      expect(dd!.textContent).toContain('알림으로는 기한 안내만 보냅니다');
+      expect(dd!.textContent).toContain('알림으로는 안내만 보냅니다');
     });
   }
 });

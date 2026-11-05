@@ -1,99 +1,94 @@
-/* 로그인 — 보드 Login · /?modal=login · M1
- * 상태: 의뢰인 랜딩에서 / 공급자 랜딩에서(/supplier?modal=login) / 로그인 실패 / 역할 안내
- * 모달 틀은 App. 본문만. F-06 · 결정메모 #2. */
-import { useState } from 'react';
+/* 로그인 — 실제 /auth/login. 모달 틀은 App, 본문만. */
+import { useState, type FormEvent } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button, TextField } from '@/components/ui';
-import { useSession } from '@/app/session';
-import { DEMO, loginDemoOf, resolveLoginMock } from './Login.data';
+import { AuthError } from '@/app/auth';
+import { ROLE_HOME, useSession } from '@/app/session';
+import { DEMO } from './Login.data';
 import s from './Login.module.css';
+
+function safeNext(value: string | null): string | null {
+  return value && value.startsWith('/') && !value.startsWith('//') ? value : null;
+}
 
 export default function Login() {
   const [params] = useSearchParams();
   const loc = useLocation();
   const navigate = useNavigate();
-  const { setDevSession } = useSession();
-  const mock = resolveLoginMock(params.get('mock'), loc.pathname);
-  const demo = loginDemoOf(mock);
+  const { login } = useSession();
+  const next = safeNext(params.get('next'));
 
-  const [email, setEmail] = useState(demo.emailValue);
-  const [password, setPassword] = useState(demo.fail ? '' : 'password1234');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const enter = (role: 'client' | 'supplier') => {
-    setDevSession(role);
-    navigate(role === 'client' ? '/c' : '/s', { replace: true });
-  };
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const user = await login(email.trim(), password);
+      setPassword('');
+      navigate(next ?? ROLE_HOME[user.role], { replace: true });
+    } catch (caught) {
+      if (caught instanceof AuthError) {
+        setError(caught.status === 401 || caught.code === 'INVALID_CREDENTIALS'
+          ? '이메일 또는 비밀번호를 확인해 주세요.'
+          : caught.code === 'ACCOUNT_INACTIVE'
+            ? '사용할 수 없는 계정입니다.'
+            : caught.message);
+      } else {
+        setError('로그인에 실패했습니다. 다시 시도해 주세요.');
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
 
   return (
     <div className={s.body} data-screen="Login">
-      <p className={s.heading}>{demo.heading}</p>
-      <p className={s.sub}>{demo.sub}</p>
+      <p className={s.heading}>{loc.pathname === '/supplier' ? DEMO.headingSupplier : DEMO.headingClient}</p>
+      <p className={s.sub}>{loc.pathname === '/supplier' ? DEMO.subSupplier : DEMO.subClient}</p>
 
-      {demo.fail ? (
-        <div className={s.fail} role="status">
-          <b>{DEMO.failTitle}</b>
-          <p>{DEMO.failBody}</p>
+      {error && (
+        <div className={s.fail} role="alert">
+          <b>로그인하지 못했습니다</b>
+          <p>{error}</p>
         </div>
-      ) : null}
+      )}
 
-      {demo.role ? (
-        <>
-          <div className={s.role}>
-            <b>{DEMO.roleTitle}</b>
-            {DEMO.roleBody}
-          </div>
-          <Button variant="primary" full onClick={() => enter('client')}>
-            {DEMO.roleCta}
-          </Button>
-        </>
-      ) : null}
+      <form onSubmit={(event) => void submit(event)}>
+        <div className={s.fields}>
+          <TextField
+            label={DEMO.email}
+            type="email"
+            autoComplete="email"
+            required
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+          />
+          <TextField
+            label={DEMO.password}
+            type="password"
+            autoComplete="current-password"
+            required
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+          />
+        </div>
 
-      {demo.showForm ? (
-        <>
-          <div className={s.google}>
-            <Button
-              variant="ghost"
-              full
-              onClick={() => enter(demo.supplier ? 'supplier' : 'client')}
-            >
-              {DEMO.google}
-            </Button>
-          </div>
+        <Button type="submit" variant="primary" full disabled={busy}>
+          {busy ? '로그인 중' : DEMO.submit}
+        </Button>
+      </form>
 
-          <div className={s.div}>{DEMO.orEmail}</div>
-
-          <div className={s.fields}>
-            <TextField
-              label={DEMO.email}
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-            <TextField
-              label={DEMO.password}
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
-
-          <Button
-            variant="primary"
-            full
-            onClick={() => enter(demo.supplier ? 'supplier' : 'client')}
-          >
-            {DEMO.submit}
-          </Button>
-
-          <div className={s.subrow}>
-            <Link to="/reset">{DEMO.reset}</Link>
-            <span className={s.bar} aria-hidden="true">
-              |
-            </span>
-            <Link to="/signup">{DEMO.signup}</Link>
-          </div>
-        </>
-      ) : null}
+      <div className={s.subrow}>
+        <Link to="/reset">{DEMO.reset}</Link>
+        <span className={s.bar} aria-hidden="true">|</span>
+        <Link to="/signup">{DEMO.signup}</Link>
+      </div>
 
       <p className={s.foot}>{DEMO.foot}</p>
     </div>

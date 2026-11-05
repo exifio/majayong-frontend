@@ -1,14 +1,32 @@
-/* 세션 — M0에서는 개발용 목업 세션. M1에서 실제 로그인(Access/Refresh Token)으로 바꾼다.
- * 개발 중에는 화면 왼쪽 아래 'DEV 세션' 패널로 비로그인 · 가입 중 · 의뢰인 · 공급자 · 운영자 · 정지를 바꿔 본다. */
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
+/* 세션 — 실제 로그인(access/refresh token)을 우선하고, 개발 빌드에서만 데모 세션을 허용한다. */
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
 import type { Role } from '@majayong/types';
+import {
+  loginWithPassword,
+  logoutAuthSession,
+  refreshAuthSession,
+  storedRefreshToken,
+  storeRefreshToken,
+  type AuthSession,
+  type AuthUser,
+} from './auth';
 
 export type Session =
   | { status: 'guest' }
-  | { status: 'signup' }                        // 가입 진행 중(① 계정 이후 ③ 프로필 전)
+  | { status: 'signup' }                        // 가입 진행 중(개발용 데모)
   | { status: 'user'; role: Role; name: string; suspended: boolean };
 
 const KEY = 'mj.dev.session';
+const DEV = import.meta.env.DEV;
 
 export const DEV_SESSIONS: Record<string, Session> = {
   guest: { status: 'guest' },
@@ -19,33 +37,125 @@ export const DEV_SESSIONS: Record<string, Session> = {
   suspended: { status: 'user', role: 'CLIENT', name: '정지된 사용자', suspended: true },
 };
 
-function load(): Session {
+function loadDevSession(): Session {
   try {
     const raw = window.localStorage.getItem(KEY);
     if (raw && raw in DEV_SESSIONS) return DEV_SESSIONS[raw]!;
-  } catch { /* 저장소를 쓸 수 없으면 비로그인 */ }
+  } catch { /* storage unavailable */ }
   return DEV_SESSIONS.guest!;
 }
+
+type AuthState =
+  | { status: 'loading' }
+  | { status: 'guest' }
+  | { status: 'authenticated'; user: AuthUser; accessToken: string; expiresAt: number };
 
 type Ctx = {
   session: Session;
   setDevSession: (key: keyof typeof DEV_SESSIONS) => void;
   apiAccessToken: string;
   setApiAccessToken: (token: string) => void;
+  authReady: boolean;
+  authUser: AuthUser | null;
+  login: (email: string, password: string) => Promise<AuthUser>;
+  logout: () => Promise<void>;
 };
+
 const SessionContext = createContext<Ctx | null>(null);
 
 export function SessionProvider({ initial, children }: { initial?: Session; children: ReactNode }) {
-  const [session, setSession] = useState<Session>(() => initial ?? load());
-  const [apiAccessToken, setApiAccessToken] = useState('');
-  const setDevSession = useCallback((key: keyof typeof DEV_SESSIONS) => {
-    try { window.localStorage.setItem(KEY, key); } catch { /* 무시 */ }
-    setSession(DEV_SESSIONS[key]!);
+  const [devSession, setDevSessionState] = useState<Session>(() =>
+    initial ?? (DEV ? loadDevSession() : DEV_SESSIONS.guest!));
+  const [devToken, setDevToken] = useState('');
+  const [auth, setAuth] = useState<AuthState>(() => (initial ? { status: 'guest' } : { status: 'loading' }));
+  const [authReady, setAuthReady] = useState(Boolean(initial));
+  const refreshing = useRef<Promise<void> | null>(null);
+
+  const applySession = useCallback((session: AuthSession) => {
+    setAuth({
+      status: 'authenticated',
+      user: session.user,
+      accessToken: session.accessToken,
+      expiresAt: Date.parse(session.accessExpiresAt),
+    });
   }, []);
-  const value = useMemo(
-    () => ({ session, setDevSession, apiAccessToken, setApiAccessToken }),
-    [session, setDevSession, apiAccessToken],
-  );
+
+  const refresh = useCallback(async () => {
+    if (refreshing.current) return refreshing.current;
+    const token = storedRefreshToken();
+    if (!token) {
+      setAuth({ status: 'guest' });
+      return;
+    }
+    const request = refreshAuthSession(token)
+      .then(applySession)
+      .catch(() => {
+        storeRefreshToken(null);
+        setAuth({ status: 'guest' });
+      })
+      .finally(() => {
+        refreshing.current = null;
+      });
+    refreshing.current = request;
+    return request;
+  }, [applySession]);
+
+  useEffect(() => {
+    if (initial) return;
+    void refresh().finally(() => setAuthReady(true));
+  }, [initial, refresh]);
+
+  // Refresh shortly before the access token expires; the backend rotates the refresh token.
+  useEffect(() => {
+    if (auth.status !== 'authenticated') return;
+    const delay = Math.max(5_000, auth.expiresAt - Date.now() - 60_000);
+    const timer = window.setTimeout(() => { void refresh(); }, delay);
+    return () => window.clearTimeout(timer);
+  }, [auth, refresh]);
+
+  const login = useCallback(async (email: string, password: string) => {
+    const session = await loginWithPassword(email, password);
+    applySession(session);
+    // A real login always takes precedence over the development demo session.
+    setDevSessionState(DEV_SESSIONS.guest!);
+    setDevToken('');
+    return session.user;
+  }, [applySession]);
+
+  const logout = useCallback(async () => {
+    await logoutAuthSession(storedRefreshToken());
+    setAuth({ status: 'guest' });
+    setDevToken('');
+    if (DEV) {
+      setDevSessionState(DEV_SESSIONS.guest!);
+      try { window.localStorage.removeItem(KEY); } catch { /* storage unavailable */ }
+    }
+  }, []);
+
+  const setDevSession = useCallback((key: keyof typeof DEV_SESSIONS) => {
+    try { window.localStorage.setItem(KEY, key); } catch { /* storage unavailable */ }
+    setDevSessionState(DEV_SESSIONS[key]!);
+  }, []);
+
+  const session: Session = auth.status === 'authenticated'
+    ? { status: 'user', role: auth.user.role, name: auth.user.name?.trim() || auth.user.email, suspended: false }
+    : DEV
+      ? devSession
+      : DEV_SESSIONS.guest!;
+
+  const apiAccessToken = auth.status === 'authenticated' ? auth.accessToken : devToken;
+
+  const value = useMemo<Ctx>(() => ({
+    session,
+    setDevSession,
+    apiAccessToken,
+    setApiAccessToken: setDevToken,
+    authReady,
+    authUser: auth.status === 'authenticated' ? auth.user : null,
+    login,
+    logout,
+  }), [session, setDevSession, apiAccessToken, authReady, auth, login, logout]);
+
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }
 
