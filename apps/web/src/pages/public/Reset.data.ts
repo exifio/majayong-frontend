@@ -1,20 +1,12 @@
-/* 비밀번호 재설정 시연 — PRD F-06. */
-
-export const RESET_MOCKS = [
-  '이메일 입력',
-  '메일 보냄',
-  '새 비밀번호',
-  '링크 만료',
-  '완료',
-] as const;
-export type ResetMock = (typeof RESET_MOCKS)[number];
+/* 비밀번호 재설정 — PRD F-06. 초기값은 비워 두고 실제 API 응답으로만 상태가 바뀐다. */
 
 export const DEMO = {
   askTitle: '비밀번호를 잊으셨나요?',
   askSub: '가입한 이메일을 적어 주세요. 비밀번호를 새로 정하는 링크를 보내 드립니다.',
   email: '이메일',
-  emailValue: 'minjae.ondo@example.com',
+  emailNeed: '이메일을 입력해 주세요',
   send: '재설정 링크 보내기',
+  sending: '보내는 중',
   googleHint: '구글로 가입한 계정은 비밀번호가 없습니다. 구글로 로그인하세요.',
   backLogin: '로그인으로 돌아가기',
   signup: '계정 만들기',
@@ -23,19 +15,18 @@ export const DEMO = {
 
   sentTitle: '메일을 보냈습니다',
   sentSub: '메일의 링크를 눌러 비밀번호를 새로 정해 주세요.',
-  sentMask: 'm******@example.com',
   sentBody: '30분 동안 유효한 링크를 보냈습니다. 가입하지 않은 이메일이면 메일이 가지 않습니다.',
   sentLogin: '로그인으로',
   resendHint: '메일이 오지 않았나요? 스팸함을 확인하거나',
   resend: '다시 보내기',
 
   newTitle: '새 비밀번호를 정해 주세요',
-  newSub: 'm******@example.com 계정의 비밀번호를 바꿉니다.',
+  newSub: '새 비밀번호를 정하면 다른 기기에서는 다시 로그인해야 합니다.',
   pw: '새 비밀번호',
   pwConfirm: '한 번 더',
-  pwValue: 'ondo2026new',
   pwRules: ['8자 이상', '영문과 숫자를 섞음'] as const,
   change: '비밀번호 바꾸기',
+  changing: '바꾸는 중',
   changeHint: '바꾸면 다른 기기에서는 다시 로그인해야 합니다.',
   pwShort: '8자 이상이어야 합니다',
   pwMixed: '영문과 숫자를 함께 넣어 주세요',
@@ -54,9 +45,11 @@ export const DEMO = {
   doneCta: '로그인하기',
 } as const;
 
-export function resolveResetMock(raw: string | null): ResetMock {
-  if (raw && (RESET_MOCKS as readonly string[]).includes(raw)) return raw as ResetMock;
-  return '이메일 입력';
+/** 메일 주소를 화면에 그대로 노출하지 않는다. */
+export function maskEmail(email: string): string {
+  const [local, domain] = email.split('@');
+  if (!local || !domain) return email;
+  return `${local.slice(0, 1)}${'*'.repeat(Math.max(5, local.length - 1))}@${domain}`;
 }
 
 export function passwordError(pw: string, confirm: string): string | undefined {

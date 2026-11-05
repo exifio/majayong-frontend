@@ -90,6 +90,16 @@ export async function loginWithPassword(email: string, password: string): Promis
   return session;
 }
 
+/** 재설정 메일 요청 — 서버는 계정 존재 여부와 무관하게 같은 응답을 준다. */
+export async function requestPasswordReset(email: string): Promise<void> {
+  await authRequestData('/auth/password-reset/request', { email });
+}
+
+/** 메일 링크의 토큰으로 새 비밀번호를 확정한다. */
+export async function confirmPasswordReset(token: string, newPassword: string): Promise<void> {
+  await authRequestData('/auth/password-reset/confirm', { token, newPassword });
+}
+
 export async function registerWithPassword(
   email: string,
   password: string,

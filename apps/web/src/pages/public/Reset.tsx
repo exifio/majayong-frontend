@@ -1,44 +1,86 @@
 /* 비밀번호 재설정 — 보드 Reset · /reset · M1
  * 상태: 이메일 입력 / 메일 보냄 / 새 비밀번호 / 링크 만료 / 완료
- * F-06. */
-import { useEffect, useState } from 'react';
+ * F-06. 요청과 확정은 실제 API를 쓰고, 성공해도 메일 수신을 단정하지 않는다. */
+import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Band, Button, TextField } from '@/components/ui';
-import {
-  DEMO,
-  passwordError,
-  resolveResetMock,
-  type ResetMock,
-} from './Reset.data';
+import { AuthError, confirmPasswordReset, requestPasswordReset } from '@/app/auth';
+import { DEMO, maskEmail, passwordError } from './Reset.data';
 import s from './Reset.module.css';
+
+type ResetStep = 'ask' | 'sent' | 'confirm' | 'expired' | 'done';
 
 export default function Reset() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
-  const mock: ResetMock = resolveResetMock(params.get('mock'));
+  const token = params.get('token');
 
-  const [email, setEmail] = useState<string>(DEMO.emailValue);
-  const [pw, setPw] = useState<string>(DEMO.pwValue);
-  const [pw2, setPw2] = useState<string>(DEMO.pwValue);
+  const [step, setStep] = useState<ResetStep>(() => (token ? 'confirm' : 'ask'));
+  const [email, setEmail] = useState('');
+  const [pw, setPw] = useState('');
+  const [pw2, setPw2] = useState('');
   const [tried, setTried] = useState(false);
+  const [emailTried, setEmailTried] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const emailEmpty = email.trim().length === 0;
+  const emailError = emailTried && emailEmpty ? DEMO.emailNeed : undefined;
+  const pwError = tried ? passwordError(pw, pw2) : undefined;
+
+  const backToAsk = () => {
+    navigate('/reset', { replace: true });
+    setStep('ask');
+    setError(null);
     setTried(false);
-    setEmail(DEMO.emailValue);
-    setPw(DEMO.pwValue);
-    setPw2(DEMO.pwValue);
-  }, [mock]);
-
-  const go = (next: ResetMock) => {
-    navigate(`/reset?mock=${encodeURIComponent(next)}`, { replace: true });
   };
 
-  const err = tried ? passwordError(pw, pw2) : undefined;
+  const sendReset = async () => {
+    setEmailTried(true);
+    if (emailEmpty) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await requestPasswordReset(email.trim());
+      setStep('sent');
+    } catch (caught) {
+      setError(caught instanceof AuthError ? caught.message : '재설정 메일을 보내지 못했습니다. 다시 시도해 주세요.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const changePassword = async () => {
+    const formatError = passwordError(pw, pw2);
+    if (formatError) {
+      setTried(true);
+      return;
+    }
+    if (!token) {
+      setStep('expired');
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      await confirmPasswordReset(token, pw);
+      setStep('done');
+    } catch (caught) {
+      if (caught instanceof AuthError && (caught.status === 401 || caught.code === 'RESET_TOKEN_INVALID')) {
+        navigate('/reset', { replace: true });
+        setStep('expired');
+        return;
+      }
+      setError(caught instanceof AuthError ? caught.message : '비밀번호를 바꾸지 못했습니다. 다시 시도해 주세요.');
+    } finally {
+      setBusy(false);
+    }
+  };
 
   return (
     <div className={s.page} data-screen="Reset">
       <div className={s.formcard}>
-        {mock === '이메일 입력' ? (
+        {step === 'ask' ? (
           <>
             <h1 className={s.title}>{DEMO.askTitle}</h1>
             <p className={s.sub}>{DEMO.askSub}</p>
@@ -48,9 +90,18 @@ export default function Reset() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                error={emailError}
               />
-              <Button variant="primary" full type="button" onClick={() => go('메일 보냄')}>
-                {DEMO.send}
+              {error ? <p className={s.error} role="alert">{error}</p> : null}
+              <Button
+                variant="primary"
+                full
+                type="button"
+                disabled={busy}
+                disabledReason={busy ? '메일을 보내는 중입니다' : undefined}
+                onClick={() => void sendReset()}
+              >
+                {busy ? DEMO.sending : DEMO.send}
               </Button>
               <p className={s.hintCenter}>{DEMO.googleHint}</p>
             </div>
@@ -61,13 +112,13 @@ export default function Reset() {
           </>
         ) : null}
 
-        {mock === '메일 보냄' ? (
+        {step === 'sent' ? (
           <>
             <h1 className={s.title}>{DEMO.sentTitle}</h1>
             <p className={s.sub}>{DEMO.sentSub}</p>
             <div className={s.card}>
               <div className={s.mailbox}>
-                <b>{DEMO.sentMask}</b>
+                <b>{maskEmail(email)}</b>
                 <p>{DEMO.sentBody}</p>
               </div>
               <Button variant="primary" full to={DEMO.loginHref}>
@@ -75,7 +126,7 @@ export default function Reset() {
               </Button>
               <p className={s.hintCenter}>
                 {DEMO.resendHint}{' '}
-                <button type="button" className={s.txb} onClick={() => go('메일 보냄')}>
+                <button type="button" className={s.txb} disabled={busy} onClick={() => void sendReset()}>
                   {DEMO.resend}
                 </button>
               </p>
@@ -83,7 +134,7 @@ export default function Reset() {
           </>
         ) : null}
 
-        {mock === '새 비밀번호' ? (
+        {step === 'confirm' ? (
           <>
             <h1 className={s.title}>{DEMO.newTitle}</h1>
             <p className={s.sub}>{DEMO.newSub}</p>
@@ -93,7 +144,7 @@ export default function Reset() {
                 type="password"
                 value={pw}
                 onChange={(e) => setPw(e.target.value)}
-                error={err && (err === DEMO.pwShort || err === DEMO.pwMixed) ? err : undefined}
+                error={pwError === DEMO.pwShort || pwError === DEMO.pwMixed ? pwError : undefined}
               />
               <ul className={s.rules}>
                 {DEMO.pwRules.map((r) => (
@@ -105,29 +156,25 @@ export default function Reset() {
                 type="password"
                 value={pw2}
                 onChange={(e) => setPw2(e.target.value)}
-                error={err === DEMO.pwMismatch ? err : undefined}
+                error={pwError === DEMO.pwMismatch ? pwError : undefined}
               />
+              {error ? <p className={s.error} role="alert">{error}</p> : null}
               <Button
                 variant="primary"
                 full
                 type="button"
-                onClick={() => {
-                  const e = passwordError(pw, pw2);
-                  if (e) {
-                    setTried(true);
-                    return;
-                  }
-                  go('완료');
-                }}
+                disabled={busy}
+                disabledReason={busy ? '비밀번호를 바꾸는 중입니다' : undefined}
+                onClick={() => void changePassword()}
               >
-                {DEMO.change}
+                {busy ? DEMO.changing : DEMO.change}
               </Button>
               <p className={s.hintCenter}>{DEMO.changeHint}</p>
             </div>
           </>
         ) : null}
 
-        {mock === '링크 만료' ? (
+        {step === 'expired' ? (
           <>
             <h1 className={s.title}>{DEMO.expiredTitle}</h1>
             <p className={s.sub}>{DEMO.expiredSub}</p>
@@ -136,7 +183,7 @@ export default function Reset() {
                 {DEMO.expiredBandBody}
               </Band>
               <div className={s.bandGap}>
-                <Button variant="primary" full type="button" onClick={() => go('이메일 입력')}>
+                <Button variant="primary" full type="button" onClick={backToAsk}>
                   {DEMO.expiredCta}
                 </Button>
               </div>
@@ -147,7 +194,7 @@ export default function Reset() {
           </>
         ) : null}
 
-        {mock === '완료' ? (
+        {step === 'done' ? (
           <>
             <h1 className={s.title}>{DEMO.doneTitle}</h1>
             <p className={s.sub}>{DEMO.doneSub}</p>

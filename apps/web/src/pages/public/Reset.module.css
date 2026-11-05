@@ -106,3 +106,9 @@
     padding: 18px 16px;
   }
 }
+
+.error {
+  font-size: var(--fs-sub);
+  color: var(--red-600);
+  margin: 8px 0 0;
+}
