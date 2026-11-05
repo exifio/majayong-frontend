@@ -74,6 +74,8 @@ export type DraftBlock = {
   description: string;
   conditions: string[];
   memo: string;
+  /** 메모를 저장할 때 쓰는 서버 조건 key. 데모 데이터에는 없다. */
+  memoKey?: string;
   /** null이면 금액 미정. 합계에서 빼고 '+ 금액 미정 N건'으로만 보여 준다. */
   amount: number | null;
   wire: WireKind;

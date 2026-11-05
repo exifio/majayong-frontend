@@ -145,6 +145,62 @@ export interface MyProjectDto {
   detailViewCount: number;
 }
 
+export type ApiDraftEntryType = 'SENTENCE' | 'DEFAULT_DRAFT';
+export type ApiDraftStatus = 'IN_PROGRESS' | 'ABANDONED' | 'CONFIRMED';
+export type ApiDraftBlockStatus = 'ADDED' | 'REMOVED';
+export type ApiDisclosureScope = 'FULL' | 'DETAIL';
+
+export interface DraftBlockDto {
+  id: string;
+  blockId: string;
+  origin: ApiBlockOrigin;
+  status: ApiDraftBlockStatus;
+  unitPrice: number;
+  pricedAt: IsoDate;
+  conditionNotes: { key: string; note: string; at: string }[] | null;
+  sortOrder: number;
+  block: {
+    id: string;
+    code: string;
+    name: string;
+    functionSummary: string;
+    description: string;
+    conditions: { key: string; text: string }[];
+    wireframe: unknown;
+    unitPrice: number;
+  };
+}
+
+export interface DraftDto {
+  id: string;
+  entryType: ApiDraftEntryType;
+  status: ApiDraftStatus;
+  hopeBudget: number | null;
+  chatEditCount: number;
+  pendingFeatures: { key: string; summary: string; attempts: number; lastTriedAt: string | null }[];
+  firstInputAt: IsoDate;
+  renderedAt: IsoDate | null;
+  lastActiveAt: IsoDate;
+  createdAt: IsoDate;
+  utterances: { id: string; kind: 'FIRST_SENTENCE' | 'CHAT'; content: string; createdAt: IsoDate }[];
+  blocks: DraftBlockDto[];
+}
+
+export interface DraftRecommendationDto {
+  id: string;
+  name: string;
+  functionSummary: string;
+}
+
+export interface PublishedProjectDto {
+  projectId: string;
+  title: string;
+  summary: string;
+  currentVersion: number;
+  status: ApiProjectStatus;
+  itemCount: number;
+}
+
 /** Public supplier profile (GET /profiles/suppliers/{supplierId}). */
 export interface SupplierPublicProfileDto {
   supplierId: string;
@@ -472,7 +528,9 @@ export type BApiEmptyJsonBodyOperation =
   | 'declineContract'
   | 'cancelProvisionalContract'
   | 'readNotification'
-  | 'readAllNotifications';
+  | 'readAllNotifications'
+  | 'retryDraft'
+  | 'restoreDraft';
 
 /** Request bodies keyed by matching OpenAPI operationId. */
 export interface BApiRequestBodies {
@@ -491,6 +549,20 @@ export interface BApiRequestBodies {
   cancelProvisionalContract: EmptyJsonObjectDto;
   readNotification: EmptyJsonObjectDto;
   readAllNotifications: EmptyJsonObjectDto;
+  createDraft: { entryType: ApiDraftEntryType; text?: string };
+  editDraftChat: { text: string };
+  addDraftBlock: { blockId: string };
+  updateConditionNote: { key: string; note: string };
+  updateHopeBudget: { hopeBudget: number | null };
+  publishDraft: {
+    recruitStartAt?: IsoDate;
+    deadline: IsoDate;
+    disclosureConsentVersion: string;
+    disclosureScope: ApiDisclosureScope;
+    disclosureConsent: true;
+  };
+  retryDraft: EmptyJsonObjectDto;
+  restoreDraft: EmptyJsonObjectDto;
   submitReport: SubmitReportRequestDto;
   resolveReport: ResolveReportRequestDto;
   createInquiry: CreateInquiryRequestDto;
@@ -521,6 +593,19 @@ export interface BApiResponses {
   submitApplication: DataEnvelope<ApplicationRevisionDto>;
   listMyApplications: DataEnvelope<ApplicationRevisionDto[]>;
   listMyProjects: DataEnvelope<MyProjectDto[]>;
+  createDraft: DataEnvelope<DraftDto>;
+  listDrafts: DataEnvelope<DraftDto[]>;
+  getDraft: DataEnvelope<DraftDto>;
+  deleteDraft: DataEnvelope<{ deleted: true }>;
+  retryDraft: DataEnvelope<DraftDto>;
+  restoreDraft: DataEnvelope<DraftDto>;
+  editDraftChat: DataEnvelope<DraftDto>;
+  getDraftRecommendations: DataEnvelope<DraftRecommendationDto[]>;
+  addDraftBlock: DataEnvelope<DraftDto>;
+  removeDraftBlock: DataEnvelope<DraftDto>;
+  updateConditionNote: DataEnvelope<DraftDto>;
+  updateHopeBudget: DataEnvelope<DraftDto>;
+  publishDraft: DataEnvelope<PublishedProjectDto>;
   getApplication: DataEnvelope<ApplicationRevisionDto>;
   withdrawApplication: DataEnvelope<ApplicationStatusResultDto>;
   rejectApplication: DataEnvelope<ApplicationStatusResultDto>;

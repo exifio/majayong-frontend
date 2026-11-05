@@ -35,6 +35,7 @@ export function LiveAgreement({ styles }: { styles: Record<string, string> }) {
   const [confirming, setConfirming] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmError, setConfirmError] = useState<string | null>(null);
+  const [confirmBlocked, setConfirmBlocked] = useState(false);
 
   useEffect(() => {
     const queryId = params.get('applicationId');
@@ -111,8 +112,13 @@ export function LiveAgreement({ styles }: { styles: Record<string, string> }) {
       if (error instanceof ApiRequestError && error.status === 401) {
         setState('auth-error');
       } else if (error instanceof ApiRequestError && error.status === 409) {
-        setConfirmError(error.message);
-        setRetry((count) => count + 1); // 409: 최신 상태를 다시 조회한다.
+        // 이미 계약이 만들어졌거나 상태가 바뀐 경우다. 같은 요청을 다시 보내지 않는다.
+        setConfirmBlocked(true);
+        setConfirmError(
+          error.code === 'APPLICATION_NOT_SUBMITTED' || error.code === 'PROJECT_ALREADY_CONTRACTED'
+            ? '이미 계약이 생성되었거나 현재 상태에서는 합의를 확정할 수 없습니다. 내 계약에서 상태를 확인해 주세요.'
+            : error.message,
+        );
       } else if (error instanceof ApiRequestError && error.message) {
         setConfirmError(error.message);
       } else {
@@ -247,8 +253,14 @@ export function LiveAgreement({ styles }: { styles: Record<string, string> }) {
             <Button variant="ghost" to={back}>채팅으로 돌아가기</Button>
             <Button
               variant="primary"
-              disabled={!AGREEMENT_CONFIRM_ENABLED || confirming}
-              disabledReason={!AGREEMENT_CONFIRM_ENABLED ? '백엔드 합의 초안 생성(D-23) 적용 후 활성화됩니다.' : '처리 중입니다.'}
+              disabled={!AGREEMENT_CONFIRM_ENABLED || confirming || confirmBlocked}
+              disabledReason={
+                !AGREEMENT_CONFIRM_ENABLED
+                  ? '백엔드 합의 초안 생성(D-23) 적용 후 활성화됩니다.'
+                  : confirmBlocked
+                    ? '이미 처리된 지원입니다. 내 계약에서 상태를 확인해 주세요.'
+                    : '처리 중입니다.'
+              }
               onClick={() => setConfirmOpen(true)}
             >
               {confirming ? '확정 중' : '합의 확정'}

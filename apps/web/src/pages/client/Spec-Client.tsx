@@ -12,6 +12,10 @@ import {
   Money,
   StatusChip,
 } from '@/components/ui';
+import { useSession } from '@/app/session';
+import { ApiRequestError, apiRequest } from '@/lib/api';
+import { projectStatusLabel } from '@/lib/project-adapter';
+import type { MyProjectDto } from '@majayong/types/api';
 import {
   DEMO,
   DRAFT_HREF,
@@ -26,6 +30,110 @@ import s from './Spec-Client.module.css';
 
 export default function SpecClient() {
   const { pid = DEFAULT_PID } = useParams();
+  const { apiAccessToken } = useSession();
+  const live = Boolean(apiAccessToken.trim()) || !import.meta.env.DEV;
+  if (live) return <LiveSpec pid={pid} />;
+  return <DemoSpec pid={pid} />;
+}
+
+function LiveSpec({ pid }: { pid: string }) {
+  const { apiAccessToken } = useSession();
+  const [project, setProject] = useState<MyProjectDto | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    setLoading(true);
+    setError(null);
+    apiRequest('listMyProjects', '/me/projects', { accessToken: apiAccessToken, signal: controller.signal })
+      .then((response) => {
+        const found = response.data.find((item) => item.projectId === pid) ?? null;
+        setProject(found);
+        if (found === null) setError('프로젝트를 찾을 수 없습니다.');
+      })
+      .catch((caught: unknown) => {
+        if (caught instanceof Error && caught.name === 'AbortError') return;
+        setError(caught instanceof ApiRequestError ? caught.message : '프로젝트를 불러오지 못했습니다.');
+      })
+      .finally(() => setLoading(false));
+    return () => controller.abort();
+  }, [pid, apiAccessToken]);
+
+  if (loading) {
+    return (
+      <div className={s.page} data-screen="Spec-Client">
+        <p role="status" style={{ padding: 24 }}>프로젝트를 불러오는 중입니다.</p>
+      </div>
+    );
+  }
+
+  if (error || project === null) {
+    return (
+      <div className={s.page} data-screen="Spec-Client">
+        <p className={s.crumb}><Link to="/c/projects">내 프로젝트</Link></p>
+        <p role="alert" style={{ padding: 24 }}>{error ?? '프로젝트를 찾을 수 없습니다.'}</p>
+        <Button variant="tint" to="/c/projects">내 프로젝트로</Button>
+      </div>
+    );
+  }
+
+  const deadline = project.deadline ? new Date(project.deadline).toLocaleDateString('ko-KR') : '정하지 않음';
+  return (
+    <div className={s.page} data-screen="Spec-Client">
+      <p className={s.crumb}>
+        <Link to="/c/projects">내 프로젝트</Link> › {project.title}
+      </p>
+      <div className={s.head}>
+        <div className={s.chips}>
+          <StatusChip status={projectStatusLabel(project.status)} />
+          {project.deadline && <Chip tone="amber">모집 마감 {deadline}</Chip>}
+        </div>
+        <h1 className={s.title}>{project.title}</h1>
+        <p className={s.meta}>
+          상세 열람 <b>{project.detailViewCount}</b>
+          <span className={s.metaSep}>|</span>
+          지원 <b>{project.applicationCount}</b>
+          <span className={s.metaSep}>|</span>
+          명세 버전 <b>{project.currentVersion}</b>
+        </p>
+      </div>
+
+      <div className={s.lay}>
+        <div>
+          <div className={s.secH}>
+            <h2>모집 현황</h2>
+            <p>이 프로젝트의 명세는 비밀유지에 동의한 공급자에게 공개됩니다.</p>
+          </div>
+          <section className={s.fc} aria-label="지원 현황">
+            <p className={s.ds}>
+              지원한 공급자 {project.applicationCount}명 · 상세 열람 {project.detailViewCount}회 · 명세 버전 {project.currentVersion}
+            </p>
+          </section>
+        </div>
+
+        <aside className={s.rail}>
+          <section className={s.card} aria-labelledby="p-h">
+            <h3 id="p-h">모집</h3>
+            <div className={s.kv}>
+              <div className={s.r}><span>모집 마감</span><b>{deadline}</b></div>
+              <div className={s.r}><span>상세 열람</span><b>{project.detailViewCount}</b></div>
+              <div className={s.r}><span>받은 견적</span><b>{project.applicationCount}</b></div>
+            </div>
+            <div className={s.acts}>
+              <Button variant="tint" full to={`/c/projects/${encodeURIComponent(pid)}/proposals`}>
+                제안 비교 보기
+              </Button>
+              <Button variant="ghost" full to="/c/projects">내 프로젝트로</Button>
+            </div>
+          </section>
+        </aside>
+      </div>
+    </div>
+  );
+}
+
+function DemoSpec({ pid = DEFAULT_PID }: { pid?: string }) {
   const [params, setParams] = useSearchParams();
   const navigate = useNavigate();
   const mock = resolveSpecMock(params.get('mock'));

@@ -136,7 +136,7 @@ describe('LiveAgreement', () => {
     expect(JSON.parse(String(posts[0]![1]!.body))).toEqual({});
   });
 
-  it('shows the conflict message and refetches on 409', async () => {
+  it('shows the conflict message and does not retry on 409', async () => {
     let previewCalls = 0;
     fetchMock.mockImplementation(async (input, init) => {
       const url = String(input);
@@ -158,7 +158,8 @@ describe('LiveAgreement', () => {
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: '합의 확정' }));
 
     await waitFor(() => expect(screen.getByRole('alert').textContent).toContain('이미 대체된 회차입니다.'));
-    await waitFor(() => expect(previewCalls).toBeGreaterThan(1));
+    expect(previewCalls).toBe(1);
+    expect(screen.getByRole('button', { name: '합의 확정' }).getAttribute('disabled')).not.toBeNull();
   });
 
   it('shows the authentication error state for a 401 response', async () => {

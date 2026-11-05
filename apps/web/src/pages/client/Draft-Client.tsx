@@ -1,12 +1,16 @@
 /* 초안 · 명세 2분할 — 보드 Draft-Client · /c/drafts/:did · M1
  * 상태: 기본 / 초안 만드는 중 / 만들기 실패 / 채팅 반영 중
  * 추가 · 삭제 · 되돌리기는 이 화면 상태만 바꾼다. API는 부르지 않는다. */
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { Check, Plus } from 'lucide-react';
 import { Attr, Band, Button, Chip, Skeleton, Tabs } from '@/components/ui';
 import { PageHeader } from '@/components/layout/Chrome';
 import { formatWon } from '@/lib/format';
+import { useSession } from '@/app/session';
+import { ApiRequestError, apiRequest } from '@/lib/api';
+import { toDraftScreen, type DraftScreen } from '@/lib/draft-adapter';
+import type { DraftDto, DraftRecommendationDto } from '@majayong/types/api';
 import {
   BASIS,
   CHAT,
@@ -32,10 +36,14 @@ import s from './Draft-Client.module.css';
 export default function DraftClient() {
   const { did = 'd-1' } = useParams();
   const [params] = useSearchParams();
+  const { apiAccessToken } = useSession();
   const rawMock = params.get('mock');
   const mock = resolveDraftMock(rawMock);
   const making = mock === '초안 만드는 중';
   const fail = mock === '만들기 실패';
+  const live = Boolean(apiAccessToken.trim()) || !import.meta.env.DEV;
+
+  if (live) return <LiveDraft did={did} />;
 
   return (
     <div data-screen="Draft-Client">
@@ -46,6 +54,373 @@ export default function DraftClient() {
       )}
     </div>
   );
+}
+
+type SaveState = 'idle' | 'saving' | 'saved' | 'error';
+
+function LiveDraft({ did }: { did: string }) {
+  const { apiAccessToken } = useSession();
+  const [draft, setDraft] = useState<DraftDto | null>(null);
+  const [screen, setScreen] = useState<DraftScreen | null>(null);
+  const [recs, setRecs] = useState<DraftRecommendationDto[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [saveState, setSaveState] = useState<SaveState>('idle');
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [memoId, setMemoId] = useState<string | null>(null);
+  const [memoDraft, setMemoDraft] = useState('');
+  const [pane, setPane] = useState<'draft' | 'spec'>('draft');
+  const [chat, setChat] = useState('');
+  const [chatBusy, setChatBusy] = useState(false);
+  const [pendingBusy, setPendingBusy] = useState(false);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    setLoading(true);
+    setLoadError(null);
+    Promise.all([
+      apiRequest('getDraft', `/drafts/${encodeURIComponent(did)}`, { accessToken: apiAccessToken, signal: controller.signal }),
+      apiRequest('getDraftRecommendations', `/drafts/${encodeURIComponent(did)}/recommendations`, {
+        accessToken: apiAccessToken,
+        signal: controller.signal,
+      }).catch((caught: unknown) => {
+        if (caught instanceof ApiRequestError && caught.status === 503) return { data: [] };
+        throw caught;
+      }),
+    ]).then(([draftResponse, recResponse]) => {
+      setDraft(draftResponse.data);
+      setScreen(toDraftScreen(draftResponse.data));
+      setRecs(recResponse.data);
+    }).catch((caught: unknown) => {
+      if (caught instanceof Error && caught.name === 'AbortError') return;
+      setLoadError(caught instanceof ApiRequestError ? caught.message : '초안을 불러오지 못했습니다.');
+    }).finally(() => setLoading(false));
+    return () => controller.abort();
+  }, [did, apiAccessToken]);
+
+  async function mutate(errorMessage: string, work: () => Promise<DraftDto>): Promise<boolean> {
+    setSaveState('saving');
+    setSaveError(null);
+    try {
+      const next = await work();
+      setDraft(next);
+      setScreen(toDraftScreen(next));
+      setSaveState('saved');
+      return true;
+    } catch (caught) {
+      setSaveState('error');
+      setSaveError(caught instanceof ApiRequestError ? caught.message : errorMessage);
+      return false;
+    }
+  }
+
+  async function addBlock(blockId: string) {
+    const applied = await mutate('블록을 추가하지 못했습니다.', async () => {
+      const response = await apiRequest('addDraftBlock', `/drafts/${encodeURIComponent(did)}/blocks`, {
+        method: 'POST',
+        accessToken: apiAccessToken,
+        jsonBody: { blockId },
+      });
+      return response.data;
+    });
+    if (applied) setRecs((list) => list.filter((item) => item.id !== blockId));
+  }
+
+  async function removeBlock(blockId: string) {
+    await mutate('블록을 삭제하지 못했습니다.', async () => {
+      const response = await apiRequest('removeDraftBlock', `/drafts/${encodeURIComponent(did)}/blocks/${encodeURIComponent(blockId)}`, {
+        method: 'DELETE',
+        accessToken: apiAccessToken,
+      });
+      return response.data;
+    });
+  }
+
+  async function undoBlock(blockId: string) {
+    await mutate('블록을 되돌리지 못했습니다.', async () => {
+      const response = await apiRequest('addDraftBlock', `/drafts/${encodeURIComponent(did)}/blocks`, {
+        method: 'POST',
+        accessToken: apiAccessToken,
+        jsonBody: { blockId },
+      });
+      return response.data;
+    });
+  }
+
+  async function saveMemo() {
+    const item = screen?.included.find((block) => block.id === memoId);
+    if (!item || !item.memoKey) return;
+    const saved = await mutate('메모를 저장하지 못했습니다.', async () => {
+      const response = await apiRequest('updateConditionNote', `/drafts/${encodeURIComponent(did)}/blocks/${encodeURIComponent(item.id)}/condition-notes`, {
+        method: 'PUT',
+        accessToken: apiAccessToken,
+        jsonBody: { key: item.memoKey as string, note: memoDraft.trim() },
+      });
+      return response.data;
+    });
+    if (saved) setMemoId(null);
+  }
+
+  async function matchBudget(total: number) {
+    await mutate('희망 예산을 저장하지 못했습니다.', async () => {
+      const response = await apiRequest('updateHopeBudget', `/drafts/${encodeURIComponent(did)}/budget`, {
+        method: 'PATCH',
+        accessToken: apiAccessToken,
+        jsonBody: { hopeBudget: total },
+      });
+      return response.data;
+    });
+  }
+
+  async function sendChat() {
+    if (!chat.trim() || chatBusy) return;
+    setChatBusy(true);
+    setSaveError(null);
+    try {
+      const response = await apiRequest('editDraftChat', `/drafts/${encodeURIComponent(did)}/messages`, {
+        method: 'POST',
+        accessToken: apiAccessToken,
+        jsonBody: { text: chat.trim() },
+      });
+      setDraft(response.data);
+      setScreen(toDraftScreen(response.data));
+      setChat('');
+      setSaveState('saved');
+    } catch (caught) {
+      setSaveState('error');
+      setSaveError(caught instanceof ApiRequestError ? caught.message : '채팅 수정을 반영하지 못했습니다.');
+    } finally {
+      setChatBusy(false);
+    }
+  }
+
+  async function retryPending() {
+    if (pendingBusy) return;
+    setPendingBusy(true);
+    try {
+      const response = await apiRequest('retryDraft', `/drafts/${encodeURIComponent(did)}/retry`, {
+        method: 'POST',
+        accessToken: apiAccessToken,
+      });
+      setDraft(response.data);
+      setScreen(toDraftScreen(response.data));
+      setSaveState('saved');
+    } catch (caught) {
+      setSaveState('error');
+      setSaveError(caught instanceof ApiRequestError ? caught.message : '다시 시도하지 못했습니다.');
+    } finally {
+      setPendingBusy(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className={s.page} data-screen="Draft-Client">
+        <PageHeader title="초안을 불러오는 중입니다" description="저장된 명세를 확인하고 있습니다." />
+        <p role="status" style={{ padding: 24 }}>초안을 불러오는 중입니다.</p>
+      </div>
+    );
+  }
+
+  if (loadError || !draft || !screen) {
+    return (
+      <div className={s.page} data-screen="Draft-Client">
+        <PageHeader title="초안을 불러오지 못했습니다" description="잠시 후 다시 시도해 주세요." />
+        <p role="alert" style={{ padding: 24 }}>{loadError ?? '초안 정보가 없습니다.'}</p>
+        <Button variant="tint" to={INPUT_HREF}>초안 목록으로</Button>
+      </div>
+    );
+  }
+
+  if (draft.status !== 'IN_PROGRESS') {
+    return (
+      <div className={s.page} data-screen="Draft-Client">
+        <PageHeader
+          title={draft.status === 'CONFIRMED' ? '이미 확정된 초안입니다' : '보관된 초안입니다'}
+          description={draft.status === 'CONFIRMED'
+            ? '게시된 프로젝트는 내 프로젝트에서 확인할 수 있습니다.'
+            : '초안 목록에서 다시 열면 이어서 고칠 수 있습니다.'}
+        />
+        <Button variant="primary" to={draft.status === 'CONFIRMED' ? '/c/projects' : INPUT_HREF}>
+          {draft.status === 'CONFIRMED' ? '내 프로젝트로' : '초안 목록으로'}
+        </Button>
+      </div>
+    );
+  }
+
+  const included = screen.included;
+  const quote = quoteOf(included);
+  const canChat = screen.chatRemaining > 0 && !chatBusy;
+
+  return (
+    <>
+      <PageHeader
+        title="틀린 곳을 고쳐주세요"
+        description="아래 채팅으로 바꾸고 싶은 점을 말씀하시면 화면 초안과 명세, 예상 총액이 함께 바뀝니다. 이 그림은 기능을 이해하기 위한 것이고 최종 디자인이 아닙니다."
+        right={(
+          <div className={s.headActions}>
+            <SaveLabel state={saveState} />
+            {included.length > 0 && (
+              <Button variant="primary" to={confirmHref(did)}>명세 확정하기</Button>
+            )}
+          </div>
+        )}
+      />
+
+      {saveError && <p role="alert" style={{ padding: '0 24px' }}>{saveError}</p>}
+      {screen.pendingCount > 0 && (
+        <div style={{ padding: '0 24px' }}>
+          <Band tone="warn" title={`아직 반영하지 못한 기능 ${screen.pendingCount}건`}>
+            적어 주신 내용은 저장되어 있습니다. 다시 시도해 주세요.
+            <Button variant="text" onClick={() => void retryPending()} disabled={pendingBusy}>
+              {pendingBusy ? '다시 시도 중…' : '다시 시도'}
+            </Button>
+          </Band>
+        </div>
+      )}
+
+      <div className={s.tabs}>
+        <Tabs
+          kind="underline"
+          label="화면 초안 / 명세"
+          value={pane}
+          onChange={(key) => setPane(key === 'spec' ? 'spec' : 'draft')}
+          items={[{ key: 'draft', label: '화면 초안' }, { key: 'spec', label: '명세' }]}
+        />
+      </div>
+
+      <div className={`${s.split} ${pane === 'draft' ? s.showDraft : s.showSpec}`}>
+        <section className={`mj-card ${s.pane} ${s.paneDraft}`} aria-labelledby="draft-h" role="region">
+          <div className={s.cardHead}>
+            <h2 id="draft-h">화면 초안</h2>
+            <Button variant="ghost" size="sm" to={INPUT_HREF}>처음부터</Button>
+          </div>
+          <Canvas included={included} onRemove={(id) => void removeBlock(id)} />
+          <Recommendations
+            recs={recs.map((rec) => ({
+              id: rec.id,
+              reason: rec.functionSummary,
+              block: {
+                id: rec.id,
+                name: rec.name,
+                description: rec.functionSummary,
+                conditions: [],
+                memo: '',
+                amount: null,
+                wire: 'remind',
+              },
+            }))}
+            onAdd={(id) => void addBlock(id)}
+          />
+        </section>
+
+        <section className={`mj-card ${s.pane} ${s.paneSpec}`} aria-labelledby="spec-h" role="region">
+          <div className={s.cardHead}>
+            <h2 id="spec-h">요구사항 명세</h2>
+            <span className={s.count}>명세 항목 {included.length}개</span>
+          </div>
+          <ul className={s.items} aria-label="명세 항목">
+            {included.map((item) => (
+              <li key={item.id} className={s.item}>
+                <div className={s.itemName}>{item.name}</div>
+                <p className={s.itemDesc}>{item.description}</p>
+                <div className={s.cond}>
+                  <div className={s.condHead}>
+                    <span>공급자와 정할 것 · {item.conditions.length}건</span>
+                    {memoId === item.id ? (
+                      <Button variant="text" onClick={() => setMemoId(null)}>닫기</Button>
+                    ) : (
+                      <Button variant="text" onClick={() => { setMemoId(item.id); setMemoDraft(item.memo); }}>메모 남기기</Button>
+                    )}
+                  </div>
+                  <p className={s.condItems}>
+                    {item.conditions.map((cond, index) => (
+                      <span key={cond}>{index > 0 && <span className={s.sep}> · </span>}{cond}</span>
+                    ))}
+                  </p>
+                  {item.memo && <div className={s.memo}><Attr label="메모">{item.memo}</Attr></div>}
+                  {memoId === item.id && (
+                    <div className={s.memoEdit}>
+                      <input
+                        className={s.memoInput}
+                        value={memoDraft}
+                        onChange={(e) => setMemoDraft(e.target.value)}
+                        aria-label={`${item.name} 메모`}
+                        onKeyDown={(e) => { if (e.key === 'Enter') void saveMemo(); }}
+                      />
+                      <Button variant="text" onClick={() => void saveMemo()}>저장</Button>
+                    </div>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+
+          {screen.excluded.length > 0 && (
+            <div className={s.excl}>
+              <p className={s.exclLab}>이번 범위에서 제외</p>
+              {screen.excluded.map((item) => (
+                <div key={item.id} className={s.exclRow}>
+                  <span>
+                    <span className={s.exclName}>{item.name}</span>
+                    <span className={s.exclWhy}>{item.reason}</span>
+                  </span>
+                  <Button variant="text" onClick={() => void undoBlock(item.id)} aria-label={`${item.name} 되돌리기`}>되돌리기</Button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <Total
+            quote={quote}
+            did={did}
+            rawMock={null}
+            matched={null}
+            hopeBudget={screen.hopeBudget}
+            showReport={false}
+            onMatch={() => void matchBudget(quote.total)}
+          />
+        </section>
+      </div>
+
+      <section className={s.dock} aria-label="채팅으로 고치기">
+        <div className={s.chatTop}>
+          <label className={s.chatLabel} htmlFor="chat">{CHAT.label}</label>
+          <span className={s.chatCount}>남은 채팅 수정 <b>{screen.chatRemaining}</b> / {CHAT.max}회</span>
+        </div>
+        <div className={s.chatRow}>
+          <input
+            className={s.chatInput}
+            id="chat"
+            type="text"
+            placeholder={CHAT.placeholder}
+            value={chat}
+            onChange={(e) => setChat(e.target.value)}
+            disabled={!canChat}
+          />
+          {chatBusy ? (
+            <Button variant="tint" disabled disabledReason="요청을 반영하고 있습니다.">반영 중…</Button>
+          ) : (
+            <Button
+              variant="tint"
+              onClick={() => void sendChat()}
+              disabled={!chat.trim() || screen.chatRemaining <= 0}
+              disabledReason={screen.chatRemaining <= 0 ? '채팅 수정 횟수를 모두 사용했습니다.' : '바꾸고 싶은 점을 적어 주세요.'}
+            >
+              반영하기
+            </Button>
+          )}
+        </div>
+      </section>
+    </>
+  );
+}
+
+function SaveLabel({ state }: { state: SaveState }) {
+  if (state === 'saving') return <span className={s.saved}>저장 중…</span>;
+  if (state === 'error') return <span className={s.saved}>저장하지 못했습니다</span>;
+  if (state === 'saved') return <span className={s.saved}><Check size={16} strokeWidth={2.2} aria-hidden />서버에 저장됨</span>;
+  return <span className={s.saved}>불러온 상태</span>;
 }
 
 function Gen({ mode, did }: { mode: 'making' | 'fail'; did: string }) {
@@ -263,7 +638,7 @@ function Editor({ mock, did, rawMock }: { mock: DraftMock; did: string; rawMock:
             </div>
           )}
 
-          <Total quote={quote} did={did} rawMock={rawMock} matched={matched} onMatch={() => setMatched(quote.total)} />
+          <Total quote={quote} did={did} rawMock={rawMock} matched={matched} hopeBudget={HOPE_BUDGET} onMatch={() => setMatched(quote.total)} />
         </section>
       </div>
 
@@ -342,17 +717,19 @@ function Recommendations({ recs, onAdd }: { recs: RecBlock[]; onAdd: (id: string
 }
 
 function Total({
-  quote, did, rawMock, matched, onMatch,
+  quote, did, rawMock, matched, hopeBudget, showReport = true, onMatch,
 }: {
   quote: ReturnType<typeof quoteOf>;
   did: string;
   rawMock: string | null;
   matched: number | null;
+  hopeBudget: number | null;
+  showReport?: boolean;
   onMatch: () => void;
 }) {
   const same = matched === quote.total;
-  const over = quote.total > HOPE_BUDGET;
-  const under = quote.total < HOPE_BUDGET;
+  const over = hopeBudget !== null && quote.total > hopeBudget;
+  const under = hopeBudget !== null && quote.total < hopeBudget;
   return (
     <>
       <div className={s.tot} aria-label="예상 총액">
@@ -366,20 +743,22 @@ function Total({
         {quote.tbd > 0 && <p className={s.tbd}>+ 금액 미정 {quote.tbd}건</p>}
         <div className={s.rep}>
           <span>기능별 금액과 근거</span>
-          <Link className={s.report} to={reportHref(did, rawMock)}>단가 분석 리포트 보기</Link>
+          {showReport && <Link className={s.report} to={reportHref(did, rawMock)}>단가 분석 리포트 보기</Link>}
         </div>
       </div>
       <div className={s.bud}>
-        {same ? (
+        {hopeBudget === null ? (
+          <p>희망 예산을 정하지 않았습니다. 아래 버튼으로 AI 예상 총액을 희망 예산으로 저장할 수 있습니다.</p>
+        ) : same ? (
           <p className={s.budMatched}>희망 예산을 AI 예상 총액 {formatWon(quote.total)}으로 바꿨습니다.</p>
         ) : over ? (
-          <p className={s.budOver}>생각해 두신 예산 {formatWon(HOPE_BUDGET)}보다 {formatWon(quote.total - HOPE_BUDGET)} 많습니다. 항목을 빼면 합계가 바로 줄어듭니다.</p>
+          <p className={s.budOver}>생각해 두신 예산 {formatWon(hopeBudget)}보다 {formatWon(quote.total - hopeBudget)} 많습니다. 항목을 빼면 합계가 바로 줄어듭니다.</p>
         ) : under ? (
-          <p>생각해 두신 예산 {formatWon(HOPE_BUDGET)}보다 {formatWon(HOPE_BUDGET - quote.total)} 적습니다.</p>
+          <p>생각해 두신 예산 {formatWon(hopeBudget)}보다 {formatWon(hopeBudget - quote.total)} 적습니다.</p>
         ) : (
-          <p>생각해 두신 예산 {formatWon(HOPE_BUDGET)}과 같습니다.</p>
+          <p>생각해 두신 예산 {formatWon(hopeBudget)}과 같습니다.</p>
         )}
-        {!same && (
+        {hopeBudget !== quote.total && (
           <Button variant="ghost" size="sm" onClick={onMatch}>예산을 이 금액으로 맞추기</Button>
         )}
       </div>
