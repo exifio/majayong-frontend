@@ -11,10 +11,15 @@ function LocationSpy() {
   return null;
 }
 
-export function renderAt(path: string, who: keyof typeof DEV_SESSIONS = 'guest', session?: Session) {
+export function renderAt(
+  path: string,
+  who: keyof typeof DEV_SESSIONS | null = 'guest',
+  session?: Session,
+) {
+  const initialSession = session !== undefined ? session : who ? DEV_SESSIONS[who] : undefined;
   return render(
     <MemoryRouter initialEntries={[path]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-      <Providers session={session ?? DEV_SESSIONS[who]}>
+      <Providers session={initialSession}>
         <AppRoutes />
         <LocationSpy />
       </Providers>

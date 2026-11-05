@@ -31,6 +31,7 @@ export type Session =
   | { status: 'user'; role: Role; name: string; suspended: boolean };
 
 const KEY = 'mj.dev.session';
+const SIGNUP_SESSION_KEY = 'mj.signup.session';
 const GOOGLE_ONBOARDING_KEY = 'mj.auth.google-onboarding';
 const DEV = import.meta.env.DEV;
 
@@ -43,10 +44,16 @@ export const DEV_SESSIONS: Record<string, Session> = {
   suspended: { status: 'user', role: 'CLIENT', name: '정지된 사용자', suspended: true },
 };
 
-function loadDevSession(): Session {
+function loadInitialDevSession(): Session {
   try {
-    const raw = window.localStorage.getItem(KEY);
-    if (raw && raw in DEV_SESSIONS) return DEV_SESSIONS[raw]!;
+    const signup = window.sessionStorage.getItem(SIGNUP_SESSION_KEY);
+    if (signup === 'signup' || window.sessionStorage.getItem('mj.signup.email')) {
+      return DEV_SESSIONS.signup!;
+    }
+    if (DEV) {
+      const raw = window.localStorage.getItem(KEY);
+      if (raw && raw in DEV_SESSIONS) return DEV_SESSIONS[raw]!;
+    }
   } catch { /* storage unavailable */ }
   return DEV_SESSIONS.guest!;
 }
@@ -86,7 +93,7 @@ const SessionContext = createContext<Ctx | null>(null);
 
 export function SessionProvider({ initial, children }: { initial?: Session; children: ReactNode }) {
   const [devSession, setDevSessionState] = useState<Session>(() =>
-    initial ?? (DEV ? loadDevSession() : DEV_SESSIONS.guest!));
+    initial ?? loadInitialDevSession());
   const [devToken, setDevToken] = useState('');
   const [auth, setAuth] = useState<AuthState>(() => (initial ? { status: 'guest' } : { status: 'loading' }));
   const [authReady, setAuthReady] = useState(Boolean(initial));
@@ -156,13 +163,13 @@ export function SessionProvider({ initial, children }: { initial?: Session; chil
   const login = useCallback(async (email: string, password: string) => {
     const session = await loginWithPassword(email, password);
     storeGoogleOnboardingToken(null);
+    try { window.sessionStorage.removeItem(SIGNUP_SESSION_KEY); } catch { /* storage unavailable */ }
     applySession(session);
     // A real login always takes precedence over the development demo session.
     setDevSessionState(DEV_SESSIONS.guest!);
     setDevToken('');
     return session.user;
   }, [applySession, storeGoogleOnboardingToken]);
-
   const register = useCallback(async (
     email: string,
     password: string,
@@ -171,14 +178,21 @@ export function SessionProvider({ initial, children }: { initial?: Session; chil
   ) => {
     const session = await registerWithPassword(email, password, role, termsVersion);
     storeGoogleOnboardingToken(null);
+    try {
+      window.sessionStorage.removeItem(SIGNUP_SESSION_KEY);
+      window.sessionStorage.removeItem('mj.signup.email');
+      window.sessionStorage.removeItem('mj.signup.password');
+      window.sessionStorage.removeItem('mj.signup.terms');
+      window.sessionStorage.removeItem('mj.signup.role');
+    } catch { /* storage unavailable */ }
     applySession(session);
     setDevSessionState(DEV_SESSIONS.guest!);
     setDevToken('');
     return session.user;
   }, [applySession, storeGoogleOnboardingToken]);
-
   const exchangeGoogleAuthorizationCode = useCallback(async (code: string) => {
     const result = await exchangeGoogleCodeRequest(code);
+    try { window.sessionStorage.removeItem(SIGNUP_SESSION_KEY); } catch { /* storage unavailable */ }
     setDevSessionState(DEV_SESSIONS.guest!);
     setDevToken('');
     if ('onboardingToken' in result) {
@@ -197,6 +211,7 @@ export function SessionProvider({ initial, children }: { initial?: Session; chil
     }
     const session = await completeGoogleOnboardingRequest(auth.onboardingToken, role, termsVersion);
     storeGoogleOnboardingToken(null);
+    try { window.sessionStorage.removeItem(SIGNUP_SESSION_KEY); } catch { /* storage unavailable */ }
     setDevSessionState(DEV_SESSIONS.guest!);
     setDevToken('');
     applySession(session);
@@ -206,16 +221,25 @@ export function SessionProvider({ initial, children }: { initial?: Session; chil
   const logout = useCallback(async () => {
     await logoutAuthSession(storedRefreshToken());
     storeGoogleOnboardingToken(null);
+    try { window.sessionStorage.removeItem(SIGNUP_SESSION_KEY); } catch { /* storage unavailable */ }
     setAuth({ status: 'guest' });
     setDevToken('');
+    setDevSessionState(DEV_SESSIONS.guest!);
     if (DEV) {
-      setDevSessionState(DEV_SESSIONS.guest!);
       try { window.localStorage.removeItem(KEY); } catch { /* storage unavailable */ }
     }
   }, [storeGoogleOnboardingToken]);
-
   const setDevSession = useCallback((key: keyof typeof DEV_SESSIONS) => {
-    try { window.localStorage.setItem(KEY, key); } catch { /* storage unavailable */ }
+    try {
+      if (key === 'signup') {
+        window.sessionStorage.setItem(SIGNUP_SESSION_KEY, 'signup');
+      } else {
+        window.sessionStorage.removeItem(SIGNUP_SESSION_KEY);
+      }
+      if (DEV) {
+        window.localStorage.setItem(KEY, key);
+      }
+    } catch { /* storage unavailable */ }
     setDevSessionState(DEV_SESSIONS[key]!);
   }, []);
 
@@ -223,9 +247,11 @@ export function SessionProvider({ initial, children }: { initial?: Session; chil
     ? { status: 'user', role: auth.user.role, name: auth.user.name?.trim() || auth.user.email, suspended: false }
     : auth.status === 'signup'
       ? { status: 'signup' }
-      : DEV
-      ? devSession
-      : DEV_SESSIONS.guest!;
+      : devSession.status === 'signup'
+        ? { status: 'signup' }
+        : DEV
+        ? devSession
+        : DEV_SESSIONS.guest!;
 
   const apiAccessToken = auth.status === 'authenticated' ? auth.accessToken : devToken;
 

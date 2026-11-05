@@ -229,3 +229,9 @@
   line-height: var(--lh-body);
   text-align: right;
 }
+
+.error {
+  font-size: var(--fs-sub);
+  color: var(--red-600);
+  margin: 12px 0 0;
+}

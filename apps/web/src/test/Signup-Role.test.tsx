@@ -42,50 +42,24 @@ describe('Signup-Role — 회원가입 ② 역할', () => {
     expect(findDesignViolations(container)).toEqual([]);
   });
 
-  it('의뢰인 가입: 저장한 이메일·비밀번호로 /auth/register를 호출하고 의뢰인 홈으로 이동한다', async () => {
-    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(signupSession('CLIENT'));
-    vi.stubGlobal('fetch', fetchMock);
+  it('의뢰인 선택 후 다음: 의뢰인 프로필(/signup/client)로 이동한다', async () => {
     seedSignupInput();
     renderAt('/signup/role', 'signup');
 
     fireEvent.click(screen.getByRole('button', { name: DEMO.next }));
 
-    await waitFor(() => expect(location.current.startsWith('/c')).toBe(true));
-    const [path, init] = fetchMock.mock.calls[0]!;
-    expect(path).toBe('/api/v1/auth/register');
-    expect(JSON.parse(String(init?.body))).toEqual({
-      email: 'minjae.ondo@example.invalid',
-      password: 'password1234',
-      role: 'CLIENT',
-      termsVersion: 'v0.7',
-    });
-    expect(window.sessionStorage.getItem('mj.signup.password')).toBeNull();
+    expect(location.current.startsWith('/signup/client')).toBe(true);
+    expect(window.sessionStorage.getItem('mj.signup.role')).toBe('CLIENT');
   });
 
-  it('공급자 가입: SUPPLIER 역할로 가입하고 공급자 홈으로 이동한다', async () => {
-    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(signupSession('SUPPLIER'));
-    vi.stubGlobal('fetch', fetchMock);
+  it('공급자 선택 후 다음: 공급자 프로필(/signup/supplier)로 이동한다', async () => {
     seedSignupInput();
     renderAt(`/signup/role?mock=${encodeURIComponent('공급자 선택')}`, 'signup');
 
     fireEvent.click(screen.getByRole('button', { name: DEMO.next }));
 
-    await waitFor(() => expect(location.current.startsWith('/s')).toBe(true));
-    const [, init] = fetchMock.mock.calls[0]!;
-    expect(JSON.parse(String(init?.body)).role).toBe('SUPPLIER');
-  });
-
-  it('이미 가입된 이메일: 서버 409를 안내로 보여 준다', async () => {
-    vi.stubGlobal('fetch', vi.fn<typeof fetch>().mockResolvedValue(jsonResponse({
-      error: { code: 'EMAIL_ALREADY_REGISTERED', message: '현재 상태에서는 요청을 완료할 수 없습니다.', requestId: 'r1' },
-    }, 409)));
-    seedSignupInput();
-    renderAt('/signup/role', 'signup');
-
-    fireEvent.click(screen.getByRole('button', { name: DEMO.next }));
-
-    expect(await screen.findByRole('alert')).toBeTruthy();
-    expect(screen.getByRole('alert').textContent).toContain('이미 가입된 이메일입니다');
+    expect(location.current.startsWith('/signup/supplier')).toBe(true);
+    expect(window.sessionStorage.getItem('mj.signup.role')).toBe('SUPPLIER');
   });
 
   it('이메일·비밀번호 없이 진입: 가입을 호출하지 않고 다시 입력하라고 안내한다', async () => {

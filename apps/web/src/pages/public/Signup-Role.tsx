@@ -40,7 +40,7 @@ function RoleStepper({ current }: { current: 1 | 2 | 3 }) {
 export default function SignupRole() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
-  const { googleOnboardingToken, completeGoogleSignup, register } = useSession();
+  const { googleOnboardingToken, completeGoogleSignup } = useSession();
   const mock: RoleMock = resolveRoleMock(params.get('mock'));
   const demo = roleDemoOf(mock);
   const googleFlow = demo.google || Boolean(googleOnboardingToken);
@@ -62,42 +62,20 @@ export default function SignupRole() {
 
   const continueSignup = async () => {
     if (!googleOnboardingToken) {
-      // ①에서 입력한 이메일·비밀번호로 실제 계정을 만든다.
       let email = '';
       let password = '';
-      let termsVersion = TERMS_VERSION;
       try {
         email = window.sessionStorage.getItem('mj.signup.email') ?? '';
         password = window.sessionStorage.getItem('mj.signup.password') ?? '';
-        termsVersion = window.sessionStorage.getItem('mj.signup.terms') ?? TERMS_VERSION;
       } catch { /* storage unavailable */ }
       if (!email || !password) {
         setError('이메일과 비밀번호를 다시 입력해 주세요.');
         return;
       }
-      setBusy(true);
-      setError(null);
       try {
-        await register(
-          email,
-          password,
-          role === 'supplier' ? 'SUPPLIER' : 'CLIENT',
-          termsVersion,
-        );
-        try { window.sessionStorage.removeItem('mj.signup.password'); } catch { /* storage unavailable */ }
-        // 가입 즉시 로그인 상태가 되므로 ③ 프로필 단계는 인증 후 화면에서 이어 간다.
-        navigate(role === 'supplier' ? '/s' : '/c', { replace: true });
-      } catch (caught) {
-        setError(
-          caught instanceof AuthError && caught.code === 'EMAIL_ALREADY_REGISTERED'
-            ? '이미 가입된 이메일입니다. 로그인해 주세요.'
-            : caught instanceof AuthError
-              ? caught.message
-              : '가입을 완료하지 못했습니다. 다시 시도해 주세요.',
-        );
-      } finally {
-        setBusy(false);
-      }
+        window.sessionStorage.setItem('mj.signup.role', role === 'supplier' ? 'SUPPLIER' : 'CLIENT');
+      } catch { /* storage unavailable */ }
+      navigate(role === 'supplier' ? '/signup/supplier' : '/signup/client');
       return;
     }
     setBusy(true);
