@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SessionProvider, DEV_SESSIONS, useSession } from '@/app/session';
 import { LiveContract } from '@/components/contract/LiveContract';
@@ -16,12 +16,12 @@ const contract = {
   supplierId: 'supplier-user-1',
   status: 'PENDING_CONSENT',
   specVersionNo: 1,
-  agreedAmount: 3_255_000,
-  durationDays: 21,
-  clientFee: 162_750,
-  supplierFee: 162_750,
+  agreedAmount: 2_800_000,
+  durationDays: 20,
+  clientFee: 140_000,
+  supplierFee: 140_000,
   interimRatio: 50,
-  consentDeadline: '2026-11-10T04:00:00.000Z',
+  consentDeadline: '2026-11-12T05:51:09.223Z',
   contentHash: 'hash-1234567890abcdef',
   clientSignedAt: null,
   supplierSignedAt: null,
@@ -43,12 +43,12 @@ const document = {
   contractId: 'contract-1',
   contentHash: 'hash-1234567890abcdef',
   status: 'PENDING_CONSENT',
-  agreedAmount: 3_255_000,
-  clientFee: 162_750,
-  supplierFee: 162_750,
+  agreedAmount: 2_800_000,
+  clientFee: 140_000,
+  supplierFee: 140_000,
   interimRatio: 50,
-  depositAmount: 3_417_750,
-  supplierPayout: 3_092_250,
+  depositAmount: 2_940_000,
+  supplierPayout: 2_660_000,
   items: contract.items,
 };
 
@@ -62,12 +62,15 @@ function WithToken({ children }: { children: React.ReactNode }) {
   return ready ? children : null;
 }
 
-function renderContract() {
+function renderContract(initial = DEV_SESSIONS.client) {
   return render(
-    <MemoryRouter>
-      <SessionProvider initial={DEV_SESSIONS.client}>
+    <MemoryRouter initialEntries={['/c/contracts/contract-1']}>
+      <SessionProvider initial={initial}>
         <WithToken>
-          <LiveContract cid="contract-1" styles={{}} />
+          <Routes>
+            <Route path="/c/contracts/:cid" element={<LiveContract cid="contract-1" styles={{}} />} />
+            <Route path="/c/contracts/:cid/escrow" element={<p>ESCROW_PAGE</p>} />
+          </Routes>
         </WithToken>
       </SessionProvider>
     </MemoryRouter>,
@@ -82,21 +85,100 @@ describe('LiveContract', () => {
     vi.stubGlobal('fetch', fetchMock);
   });
 
-  it('shows the contract status, money and document hash without enabling signing', async () => {
-    fetchMock.mockImplementation(async (input) => {
+  function mockContract(overrides: { sign?: () => Response; contract?: unknown } = {}) {
+    fetchMock.mockImplementation(async (input, init) => {
       const url = String(input);
-      if (url === '/api/v1/contracts/contract-1') return jsonResponse({ data: contract });
+      if (url === '/api/v1/contracts/contract-1') return jsonResponse({ data: overrides.contract ?? contract });
       if (url === '/api/v1/contracts/contract-1/document') return jsonResponse({ data: document });
+      if (url === '/api/v1/contracts/contract-1/sign' && init?.method === 'POST') {
+        return overrides.sign ? overrides.sign() : jsonResponse({ data: { contract, activated: false } });
+      }
       return jsonResponse({ error: { code: 'NOT_FOUND', message: 'not found', requestId: 'r' } }, 404);
+    });
+  }
+
+  it('signs with the document hash and waits for the other party', async () => {
+    mockContract({
+      sign: () => jsonResponse({ data: {
+        contract: { ...contract, clientSignedAt: '2026-11-05T06:00:00.000Z' },
+        activated: false,
+      } }),
     });
     renderContract();
 
-    expect(await screen.findByText('양측 서명 대기')).toBeTruthy();
-    expect(screen.getByText('예약 달력')).toBeTruthy();
-    expect(screen.getByText(/3,417,750원/)).toBeTruthy();
-    expect(screen.getByText(/hash-1234567/)).toBeTruthy();
-    const sign = screen.getByRole('button', { name: '서명' });
-    expect(sign).toHaveProperty('disabled', true);
+    fireEvent.click(await screen.findByRole('button', { name: '서명' }));
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: '서명' }));
+
+    expect(await screen.findByText('서명이 완료되었습니다. 상대방 서명을 기다립니다.')).toBeTruthy();
+    const post = fetchMock.mock.calls.find(([url, init]) =>
+      String(url) === '/api/v1/contracts/contract-1/sign' && init?.method === 'POST');
+    expect(JSON.parse(String(post![1]!.body))).toEqual({ expectedContentHash: 'hash-1234567890abcdef' });
+    expect(fetchMock.mock.calls.filter(([url]) =>
+      String(url) === '/api/v1/contracts/contract-1/sign')).toHaveLength(1);
+  });
+
+  it('shows the deposit step for the client after both signatures', async () => {
+    mockContract({
+      sign: () => jsonResponse({ data: {
+        contract: {
+          ...contract,
+          status: 'ACTIVE',
+          clientSignedAt: '2026-11-05T06:00:00.000Z',
+          supplierSignedAt: '2026-11-05T06:01:00.000Z',
+        },
+        activated: true,
+      } }),
+    });
+    renderContract();
+
+    fireEvent.click(await screen.findByRole('button', { name: '서명' }));
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: '서명' }));
+
+    expect(await screen.findByText('계약이 체결되었습니다. 예치 단계로 진행합니다.')).toBeTruthy();
+    expect(screen.getByRole('link', { name: '예치 화면 보기' })).toBeTruthy();
+  });
+
+  it('shows the supplier payout and no escrow link', async () => {
+    mockContract();
+    renderContract(DEV_SESSIONS.supplier);
+
+    expect(await screen.findByText('받을 금액')).toBeTruthy();
+    expect(screen.getByText(/2,660,000원/)).toBeTruthy();
+    expect(screen.queryByRole('link', { name: '예치 화면 보기' })).toBeNull();
+  });
+
+  it('shows the conflict message and refetches without signing again', async () => {
+    mockContract({
+      sign: () => jsonResponse({
+        error: { code: 'CONTRACT_HASH_MISMATCH', message: '계약 문서가 변경되었습니다. 다시 확인해 주세요.', requestId: 'r2' },
+      }, 409),
+    });
+    renderContract();
+
+    fireEvent.click(await screen.findByRole('button', { name: '서명' }));
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: '서명' }));
+
+    await waitFor(() => expect(screen.getByRole('alert').textContent).toContain('계약 문서가 변경되었습니다.'));
+    await waitFor(() => expect(fetchMock.mock.calls.filter(([url]) =>
+      String(url) === '/api/v1/contracts/contract-1').length).toBeGreaterThan(1));
+    expect(fetchMock.mock.calls.filter(([url, init]) =>
+      String(url) === '/api/v1/contracts/contract-1/sign' && init?.method === 'POST')).toHaveLength(1);
+  });
+
+  it('does not enable signing for an already signed contract', async () => {
+    mockContract({ contract: { ...contract, clientSignedAt: '2026-11-05T06:00:00.000Z' } });
+    renderContract();
+
+    const button = await screen.findByRole('button', { name: '서명' });
+    expect(button).toHaveProperty('disabled', true);
+  });
+
+  it('does not enable signing after the consent deadline', async () => {
+    mockContract({ contract: { ...contract, consentDeadline: '2020-01-01T00:00:00.000Z' } });
+    renderContract();
+
+    const button = await screen.findByRole('button', { name: '서명' });
+    expect(button).toHaveProperty('disabled', true);
   });
 
   it('shows the authentication error state for a 401 response', async () => {

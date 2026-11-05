@@ -1,13 +1,16 @@
-/* 의뢰인 계약 상세(읽기 전용) — getContract + getContractDocument 구조만 준비한다.
- * 서명(POST /contracts/{id}/sign)은 계약 권한·확정 규칙 확인 후 연결한다. */
+/* 계약 상세·전자서명 — CLIENT/SUPPLIER 공용.
+ * 서명은 계약 문서의 contentHash를 그대로 사용하고, 성공 후 서버 계약 상태로만 갱신한다. */
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import type { ContractDocumentDto, ContractRecordDto } from '@majayong/types/api';
-import { Button, Chip, StatusChip } from '@/components/ui';
+import { Button, Chip, ConfirmDialog, StatusChip } from '@/components/ui';
 import { useSession } from '@/app/session';
 import { ApiRequestError, apiRequest } from '@/lib/api';
 import { contractDisplayLabel } from '@/lib/contract-status';
 import { formatDateTime, formatWon } from '@/lib/format';
+
+/* 배포에서 서명을 열지 여부는 별도 설정으로 관리한다. */
+const CONTRACT_SIGN_ENABLED = import.meta.env.DEV;
 
 type State = 'loading' | 'success' | 'auth-error' | 'error';
 
@@ -15,11 +18,16 @@ const STAGE_LABEL = { INTERIM: '중간', FINAL: '최종' } as const;
 
 export function LiveContract({ cid, styles }: { cid?: string; styles: Record<string, string> }) {
   const s = styles;
-  const { apiAccessToken } = useSession();
+  const { apiAccessToken, session } = useSession();
+  const role = session.status === 'user' ? session.role : 'CLIENT';
   const [state, setState] = useState<State>('loading');
   const [contract, setContract] = useState<ContractRecordDto | null>(null);
   const [document, setDocument] = useState<ContractDocumentDto | null>(null);
   const [retry, setRetry] = useState(0);
+  const [signOpen, setSignOpen] = useState(false);
+  const [signing, setSigning] = useState(false);
+  const [signError, setSignError] = useState<string | null>(null);
+  const [signNotice, setSignNotice] = useState<string | null>(null);
 
   useEffect(() => {
     if (!cid) return;
@@ -39,6 +47,46 @@ export function LiveContract({ cid, styles }: { cid?: string; styles: Record<str
     return () => controller.abort();
   }, [cid, apiAccessToken, retry]);
 
+  async function sign() {
+    if (!cid || signing) return;
+    setSignOpen(false);
+    setSigning(true);
+    setSignError(null);
+    setSignNotice(null);
+    try {
+      // Always use the server document hash fetched immediately before signing.
+      const current = await apiRequest('getContractDocument', `/contracts/${encodeURIComponent(cid)}/document`, {
+        accessToken: apiAccessToken,
+      });
+      setDocument(current.data);
+      const response = await apiRequest('signContract', `/contracts/${encodeURIComponent(cid)}/sign`, {
+        method: 'POST',
+        accessToken: apiAccessToken,
+        jsonBody: { expectedContentHash: current.data.contentHash },
+      });
+      setContract(response.data.contract);
+      setSignNotice(response.data.activated
+        ? '계약이 체결되었습니다. 예치 단계로 진행합니다.'
+        : '서명이 완료되었습니다. 상대방 서명을 기다립니다.');
+    } catch (error) {
+      if (error instanceof ApiRequestError && error.status === 401) {
+        setState('auth-error');
+      } else if (error instanceof ApiRequestError && error.status === 404) {
+        setState('error');
+      } else if (error instanceof ApiRequestError) {
+        setSignError(error.message);
+        // Hash/state conflicts: show the latest contract and document, never re-sign automatically.
+        if (error.status === 409 || error.code === 'CONTRACT_HASH_MISMATCH') {
+          setRetry((count) => count + 1);
+        }
+      } else {
+        setSignError('서명하지 못했습니다. 다시 시도해 주세요.');
+      }
+    } finally {
+      setSigning(false);
+    }
+  }
+
   if (!cid) return <div className={s.page}><p role="alert" style={{ padding: 24 }}>계약을 찾을 수 없습니다.</p></div>;
 
   if (state !== 'success' || contract === null || document === null) {
@@ -56,17 +104,24 @@ export function LiveContract({ cid, styles }: { cid?: string; styles: Record<str
     );
   }
 
+  const isSupplier = role === 'SUPPLIER';
+  const mySignedAt = isSupplier ? contract.supplierSignedAt : contract.clientSignedAt;
+  const otherSignedAt = isSupplier ? contract.clientSignedAt : contract.supplierSignedAt;
   const label = contractDisplayLabel(contract.status, contract.paymentStatus);
   const headline = contract.status === 'PENDING_CONSENT'
     ? '양측 서명 대기'
     : contract.status === 'ACTIVE'
       ? (contract.paymentStatus === 'PENDING' ? '예치 대기' : '거래 진행')
       : label;
+  const deadlineValid = new Date(contract.consentDeadline).getTime() > Date.now();
+  const canSign = CONTRACT_SIGN_ENABLED && role !== 'ADMIN' &&
+    contract.status === 'PENDING_CONSENT' && mySignedAt === null && deadlineValid;
+  const listHref = isSupplier ? '/s/contracts' : '/c/contracts';
 
   return (
-    <div className={s.page} data-screen="Contract-Client-Live">
+    <div className={s.page} data-screen="Contract-Live" data-role={role}>
       <p className={s.crumb}>
-        <Link to="/c/contracts">내 계약</Link> › 계약서
+        <Link to={listHref}>내 계약</Link> › 계약서
       </p>
 
       <div className={s.head}>
@@ -84,7 +139,9 @@ export function LiveContract({ cid, styles }: { cid?: string; styles: Record<str
           <b className={s.bandTitle}>{headline}</b>
           <p className={s.bandBody}>
             {contract.status === 'PENDING_CONSENT'
-              ? '양측 서명이 끝나면 계약이 체결되고 예치 단계로 넘어갑니다.'
+              ? (mySignedAt === null
+                ? '서명하면 상대방에게 알림이 가고, 양측 서명이 끝나면 계약이 체결됩니다.'
+                : '내 서명은 완료되었습니다. 상대방 서명을 기다리고 있습니다.')
               : contract.paymentStatus === 'PENDING'
                 ? '서명이 끝났습니다. 예치가 완료되면 거래가 진행됩니다.'
                 : '예치가 완료되어 거래가 진행 중입니다.'}
@@ -120,10 +177,17 @@ export function LiveContract({ cid, styles }: { cid?: string; styles: Record<str
           <section className={s.card}>
             <div className={s.money}>
               <div className={s.moneyRow}><span className={s.moneyK}>합의 금액</span><b>{formatWon(document.agreedAmount)}</b></div>
-              <div className={s.moneyRow}><span className={s.moneyK}>의뢰인 수수료</span><b>{formatWon(document.clientFee)}</b></div>
-              <div className={s.moneyRow}><span className={s.moneyK}>공급자 수수료</span><b>{formatWon(document.supplierFee)}</b></div>
-              <div className={s.moneyRow}><span className={s.moneyK}>예치 금액</span><b>{formatWon(document.depositAmount)}</b></div>
-              <div className={s.moneyTot}><span>공급자 지급액</span><b className={s.moneyTotValue}>{formatWon(document.supplierPayout)}</b></div>
+              {isSupplier ? (
+                <>
+                  <div className={s.moneyRow}><span className={s.moneyK}>공급자 수수료</span><b>{formatWon(document.supplierFee)}</b></div>
+                  <div className={s.moneyTot}><span>받을 금액</span><b className={s.moneyTotValue}>{formatWon(document.supplierPayout)}</b></div>
+                </>
+              ) : (
+                <>
+                  <div className={s.moneyRow}><span className={s.moneyK}>의뢰인 수수료</span><b>{formatWon(document.clientFee)}</b></div>
+                  <div className={s.moneyTot}><span>예치 금액</span><b className={s.moneyTotValue}>{formatWon(document.depositAmount)}</b></div>
+                </>
+              )}
             </div>
           </section>
 
@@ -138,12 +202,57 @@ export function LiveContract({ cid, styles }: { cid?: string; styles: Record<str
             <p className={s.doneNote}>
               서명 시 문서 해시 <b>{document.contentHash.slice(0, 12)}…</b>를 그대로 전송해야 합니다.
             </p>
-            <Button variant="primary" full disabled disabledReason="서명은 계약 권한·확정 규칙 확인 후 연결합니다.">
-              서명
-            </Button>
+
+            {signNotice && <p role="status">{signNotice}</p>}
+            {signError && <p role="alert">{signError}</p>}
+
+            {canSign ? (
+              <Button variant="primary" full onClick={() => setSignOpen(true)} disabled={signing}>
+                {signing ? '서명 중' : '서명'}
+              </Button>
+            ) : (
+              <Button
+                variant="primary"
+                full
+                disabled
+                disabledReason={
+                  !CONTRACT_SIGN_ENABLED ? '배포 환경에서는 서명 기능이 비활성화되어 있습니다.'
+                    : mySignedAt !== null ? '이미 서명했습니다.'
+                      : contract.status !== 'PENDING_CONSENT' ? '서명할 수 있는 상태가 아닙니다.'
+                        : '서명 기한이 지났습니다.'
+                }
+              >
+                서명
+              </Button>
+            )}
+
+            {!isSupplier && contract.status === 'ACTIVE' && contract.paymentStatus === 'PENDING' && (
+              <p className={s.doneNote}>
+                다음 단계는 예치입니다. <Link to={`/c/contracts/${encodeURIComponent(cid)}/escrow`}>예치 화면 보기</Link>
+              </p>
+            )}
+            {isSupplier && contract.status === 'ACTIVE' && contract.paymentStatus === 'PENDING' && (
+              <p className={s.doneNote}>의뢰인의 예치를 기다리고 있습니다.</p>
+            )}
           </section>
         </aside>
       </div>
+
+      {signOpen && (
+        <ConfirmDialog
+          title="계약서에 서명할까요?"
+          confirmLabel="서명"
+          onConfirm={() => void sign()}
+          onCancel={() => setSignOpen(false)}
+        >
+          <p>
+            {formatWon(contract.agreedAmount)} · {contract.durationDays}일
+            <br />
+            서명 기한 {formatDateTime(contract.consentDeadline)}
+          </p>
+          <p>계약 내용과 금액·조건을 확인했습니다. 서명하면 상대방에게 알림이 가고, 양측 서명이 끝나면 계약이 체결됩니다.</p>
+        </ConfirmDialog>
+      )}
     </div>
   );
 }

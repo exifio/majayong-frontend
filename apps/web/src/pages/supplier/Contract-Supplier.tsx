@@ -26,9 +26,12 @@ import {
   type FeatureRow,
   type PartySign,
 } from './Contract-Supplier.data';
+import { useSession } from '@/app/session';
+import { LiveContract } from '@/components/contract/LiveContract';
 import s from './Contract-Supplier.module.css';
 
 export default function ContractSupplier() {
+  const { apiAccessToken } = useSession();
   const { cid = DEFAULT_CID } = useParams();
   const [params] = useSearchParams();
   const navigate = useNavigate();
@@ -45,6 +48,8 @@ export default function ContractSupplier() {
     setRejectOpen(next.rejectOpen);
     setReason('');
   }, [params]);
+
+  if (apiAccessToken.trim()) return <LiveContract cid={cid} styles={s} />;
 
   void cid;
 
