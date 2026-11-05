@@ -1,7 +1,7 @@
 /**
  * Same-origin proxy for the staging backend.
- * Vercel Root Directory: apps/web. Set BACKEND_API_URL (server-side, no /api/v1 suffix).
- * Functions are matched before the SPA rewrite, so /api/v1/* never falls through to index.html.
+ * /api/v1/:path* is rewritten here (Vercel Functions only match one dynamic segment).
+ * Set BACKEND_API_URL (server-side, no /api/v1 suffix).
  */
 const BACKEND = process.env.BACKEND_API_URL;
 
