@@ -22,7 +22,7 @@ afterEach(() => {
 });
 
 describe('Email signup end-to-end & reload persistence', () => {
-  it('전체 가입 흐름: /signup → /signup/role → /signup/client → 가입 완료 → /c', async () => {
+  it('의뢰인 흐름: /signup → /signup/role → 등록 → /signup/client → /c', async () => {
     const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(registerResponse('CLIENT'));
     vi.stubGlobal('fetch', fetchMock);
 
@@ -51,24 +51,13 @@ describe('Email signup end-to-end & reload persistence', () => {
     expect(roleHeading).toBeTruthy();
     expect(location.current.startsWith('/signup/role')).toBe(true);
 
-    // 역할 선택 후 "다음" 클릭
+    // 역할 선택 후 "다음": POST /auth/register 호출, 이어서 ③ 프로필로 이동
     fireEvent.click(screen.getByRole('button', { name: '다음' }));
 
-    // 3단계: /signup/client 도착
     await waitFor(() => expect(location.current.startsWith('/signup/client')).toBe(true));
     expect(screen.getByRole('heading', { level: 1, name: '의뢰인 프로필' })).toBeTruthy();
-    r2.unmount();
 
-    // 3단계 새로고침 시뮬레이션: initial session 없이 /signup/client 다시 마운트
-    const r3 = renderAt('/signup/client', null);
-    const clientHeading = await screen.findByRole('heading', { level: 1, name: '의뢰인 프로필' });
-    expect(clientHeading).toBeTruthy();
-    expect(location.current.startsWith('/signup/client')).toBe(true);
-
-    // 프로필에서 "가입 완료" 클릭
     fireEvent.click(screen.getByRole('button', { name: '가입 완료' }));
-
-    // 201 응답과 함께 /c 이동
     await waitFor(() => expect(location.current.startsWith('/c')).toBe(true));
 
     // register API 스키마 검증: { email, password, role, termsVersion: 'v0.7' }
@@ -81,13 +70,18 @@ describe('Email signup end-to-end & reload persistence', () => {
       termsVersion: 'v0.7',
     });
 
-    // 임시 비밀번호 및 가입 세션 정리 확인
+    // 역할 선택 완료 즉시 평문 비밀번호 및 가입 세션 정리 확인
     expect(window.sessionStorage.getItem('mj.signup.password')).toBeNull();
     expect(window.sessionStorage.getItem('mj.signup.session')).toBeNull();
   });
 
-  it('공급자 흐름: /signup/role → /signup/supplier → 가입 완료 → /s', async () => {
-    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(registerResponse('SUPPLIER'));
+  it('공급자 흐름: /signup/role → 등록 → /signup/supplier → NDA 저장 → /s', async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockImplementation(async (input) => {
+      const url = String(input);
+      return url.endsWith('/api/v1/auth/register')
+        ? registerResponse('SUPPLIER')
+        : jsonResponse({ data: {} });
+    });
     vi.stubGlobal('fetch', fetchMock);
 
     window.sessionStorage.setItem('mj.signup.email', 'supplier@example.com');
@@ -95,15 +89,11 @@ describe('Email signup end-to-end & reload persistence', () => {
     window.sessionStorage.setItem('mj.signup.terms', 'v0.7');
     window.sessionStorage.setItem('mj.signup.session', 'signup');
 
-    const r2 = renderAt(`/signup/role?mock=${encodeURIComponent('공급자 선택')}`, null);
+    renderAt(`/signup/role?mock=${encodeURIComponent('공급자 선택')}`, null);
     await screen.findByRole('heading', { level: 1, name: '어떤 쪽으로 시작하시나요?' });
     fireEvent.click(screen.getByRole('button', { name: '다음' }));
 
     await waitFor(() => expect(location.current.startsWith('/signup/supplier')).toBe(true));
-    r2.unmount();
-
-    const r3 = renderAt('/signup/supplier', null);
-    await screen.findByRole('heading', { level: 1, name: '공급자 프로필' });
     fireEvent.click(screen.getByRole('button', { name: '가입 완료' }));
 
     await waitFor(() => expect(location.current.startsWith('/s')).toBe(true));
@@ -115,6 +105,13 @@ describe('Email signup end-to-end & reload persistence', () => {
       role: 'SUPPLIER',
       termsVersion: 'v0.7',
     });
+    const profileCall = fetchMock.mock.calls.find(([path]) => String(path).endsWith('/api/v1/me/supplier-profile'));
+    expect(profileCall![1]?.method).toBe('PATCH');
+    expect(JSON.parse(String(profileCall![1]?.body))).toEqual({
+      displayName: '최준호',
+      ndaConsent: true,
+    });
+    expect(window.sessionStorage.getItem('mj.signup.password')).toBeNull();
   });
 
   it('가입 세션이 없는 게스트의 직접 접속은 /signup으로 가드 리다이렉트된다', async () => {

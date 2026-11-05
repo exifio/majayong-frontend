@@ -20,7 +20,16 @@ export function resolveGuard(guard: Guard, session: Session, here: string): stri
       return null;
     case 'signup-step':
       if (session.status === 'signup') return null;
-      if (session.status === 'user') return ROLE_HOME[session.role];
+      if (session.status === 'user') {
+        // 가입 등록 뒤 ③ 프로필은 로그인 상태에서 이어진다.
+        const profileRole = here.startsWith('/signup/client')
+          ? 'CLIENT'
+          : here.startsWith('/signup/supplier')
+            ? 'SUPPLIER'
+            : null;
+        if (profileRole) return session.role === profileRole ? null : ROLE_HOME[session.role];
+        return ROLE_HOME[session.role];
+      }
       return '/signup';
     case 'auth':
       if (session.status === 'user') return null;

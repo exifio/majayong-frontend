@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button, Note, TextAreaField, TextField } from '@/components/ui';
-import { AuthError } from '@/app/auth';
 import { useSession } from '@/app/session';
 import { DEMO } from './Signup-Client.data';
 import s from './Signup-Client.module.css';
@@ -35,64 +34,30 @@ function SignupStepper({ current }: { current: 1 | 2 | 3 }) {
 
 export default function SignupClient() {
   const navigate = useNavigate();
-  const { register } = useSession();
+  const { setDevSession } = useSession();
 
   const [biz, setBiz] = useState<string>(DEMO.bizValue);
   const [industry, setIndustry] = useState<string>(DEMO.industries[0]);
   const [scale, setScale] = useState<string>(DEMO.scaleValue);
   const [intro, setIntro] = useState<string>(DEMO.introValue);
   const [tried, setTried] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const bizEmpty = biz.trim().length === 0;
   const bizError = tried && bizEmpty ? DEMO.bizError : undefined;
-
-  const submitSignup = async () => {
-    let email = '';
-    let password = '';
-    let termsVersion = 'v0.7';
-    try {
-      email = window.sessionStorage.getItem('mj.signup.email') ?? '';
-      password = window.sessionStorage.getItem('mj.signup.password') ?? '';
-      termsVersion = window.sessionStorage.getItem('mj.signup.terms') ?? 'v0.7';
-    } catch { /* storage unavailable */ }
-
-    if (!email || !password) {
-      setError('이메일과 비밀번호를 다시 입력해 주세요.');
-      return;
-    }
-
-    setBusy(true);
-    setError(null);
-    try {
-      await register(email, password, 'CLIENT', termsVersion);
-      navigate('/c', { replace: true });
-    } catch (caught) {
-      setError(
-        caught instanceof AuthError && caught.code === 'EMAIL_ALREADY_REGISTERED'
-          ? '이미 가입된 이메일입니다. 로그인해 주세요.'
-          : caught instanceof AuthError
-            ? caught.message
-            : '가입을 완료하지 못했습니다. 다시 시도해 주세요.',
-      );
-    } finally {
-      setBusy(false);
-    }
-  };
 
   const finish = () => {
     if (bizEmpty) {
       setTried(true);
       return;
     }
-    void submitSignup();
+    setDevSession('client');
+    navigate('/c', { replace: true });
   };
 
   const skip = () => {
-    void submitSignup();
+    setDevSession('client');
+    navigate('/c', { replace: true });
   };
-
   return (
     <div className={s.page} data-screen="Signup-Client">
       <SignupStepper current={3} />
@@ -150,29 +115,15 @@ export default function SignupClient() {
         <Note title="연락처는 받지 않습니다">{DEMO.noContact}</Note>
       </div>
 
-      {error ? <p className={s.error} role="alert">{error}</p> : null}
-
       <div className={s.actions}>
         <Button variant="ghost" to={DEMO.backHref}>
           {DEMO.back}
         </Button>
         <div className={s.actionRight}>
-          <Button
-            variant="ghost"
-            type="button"
-            disabled={busy}
-            disabledReason={busy ? '가입 처리 중입니다' : undefined}
-            onClick={skip}
-          >
+          <Button variant="ghost" type="button" onClick={skip}>
             {DEMO.skip}
           </Button>
-          <Button
-            variant="primary"
-            type="button"
-            disabled={busy}
-            disabledReason={busy ? '가입 처리 중입니다' : undefined}
-            onClick={finish}
-          >
+          <Button variant="primary" type="button" onClick={finish}>
             {DEMO.submit}
           </Button>
         </div>
