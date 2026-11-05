@@ -1,7 +1,9 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import {
+  canonicalVercelUrl,
   consumeGoogleOAuthState,
   googleAuthorizationUrl,
+  googleOAuthRedirectUri,
   GOOGLE_OAUTH_STATE_KEY,
 } from './google-oauth';
 
@@ -22,6 +24,20 @@ describe('Google OAuth', () => {
     expect(url.searchParams.get('response_type')).toBe('code');
     expect(url.searchParams.get('scope')).toBe('openid email profile');
     expect(url.searchParams.get('state')).toBe('state-1');
+  });
+
+  it('uses the canonical production callback and the local origin during development', () => {
+    expect(googleOAuthRedirectUri('https://majayong-frontend.vercel.app', true))
+      .toBe('https://majayong.vercel.app/auth/google/callback');
+    expect(googleOAuthRedirectUri('http://localhost:5173', false))
+      .toBe('http://localhost:5173/auth/google/callback');
+  });
+
+  it('moves secondary Vercel URLs to the canonical host and preserves the route', () => {
+    expect(canonicalVercelUrl('https://majayong-frontend.vercel.app/signup?source=google#form'))
+      .toBe('https://majayong.vercel.app/signup?source=google#form');
+    expect(canonicalVercelUrl('https://majayong.vercel.app/signup')).toBeNull();
+    expect(canonicalVercelUrl('http://localhost:5173/signup')).toBeNull();
   });
 
   it('accepts the saved state once and removes it', () => {

@@ -1,4 +1,19 @@
 export const GOOGLE_OAUTH_STATE_KEY = 'mj.auth.google-state';
+const MAJAYONG_PRODUCTION_ORIGIN = 'https://majayong.vercel.app';
+const GOOGLE_CALLBACK_PATH = '/auth/google/callback';
+
+export function googleOAuthRedirectUri(origin: string, production: boolean): string {
+  return `${production ? MAJAYONG_PRODUCTION_ORIGIN : origin}${GOOGLE_CALLBACK_PATH}`;
+}
+
+export function canonicalVercelUrl(currentUrl: string): string | null {
+  const current = new URL(currentUrl);
+  if (!current.hostname.endsWith('.vercel.app') || current.hostname === 'majayong.vercel.app') return null;
+
+  current.protocol = 'https:';
+  current.host = 'majayong.vercel.app';
+  return current.href;
+}
 
 export function googleAuthorizationUrl(clientId: string, redirectUri: string, state: string): string {
   const query = new URLSearchParams({
@@ -23,7 +38,7 @@ export function startGoogleOAuth(): void {
   }
   window.location.assign(googleAuthorizationUrl(
     clientId,
-    `${window.location.origin}/auth/google/callback`,
+    googleOAuthRedirectUri(window.location.origin, import.meta.env.PROD),
     state,
   ));
 }
