@@ -53,12 +53,12 @@ function WithToken({ children }: { children: React.ReactNode }) {
   return ready ? children : null;
 }
 
-function renderLiveChat(initial = DEV_SESSIONS.client) {
+function renderLiveChat(initial = DEV_SESSIONS.client, pid?: string, sid?: string) {
   return render(
     <MemoryRouter initialEntries={['/c/chat']}>
       <SessionProvider initial={initial}>
         <WithToken>
-          <LiveChat styles={{}} />
+          <LiveChat styles={{}} pid={pid} sid={sid} />
         </WithToken>
       </SessionProvider>
     </MemoryRouter>,
@@ -110,6 +110,51 @@ describe('LiveChat', () => {
     expect(screen.getAllByText('공급자 테스트').length).toBeGreaterThan(0);
     await waitFor(() => expect(fetchMock.mock.calls.some(([url, init]) =>
       String(url).endsWith('/messages/read') && init?.method === 'POST')).toBe(true));
+  });
+
+  it('opens a room that has no messages yet through the client application', async () => {
+    fetchMock.mockImplementation(async (input, init) => {
+      const url = String(input);
+      if (url === '/api/v1/me/chats') return jsonResponse({ data: [] });
+      if (url === '/api/v1/me/applications') {
+        return jsonResponse({ data: [{
+          id: 'new-application',
+          projectId: 'new-project',
+          clientUserId: 'client-user-1',
+          supplierId: 'new-supplier',
+          revisionNo: 0,
+          specVersionNo: 1,
+          status: 'SUBMITTED',
+          totalAmount: 1_000_000,
+          durationDays: 7,
+          firstViewedAt: '2026-11-05T04:00:00.000Z',
+          submittedAt: '2026-11-05T04:10:00.000Z',
+        }] });
+      }
+      if (url === '/api/v1/applications/new-application/messages' && init?.method !== 'POST') {
+        return jsonResponse({ data: { messages: [], unreadCount: 0 } });
+      }
+      if (url === '/api/v1/applications/new-application/messages' && init?.method === 'POST') {
+        return jsonResponse({ data: {
+          ...clientMessage,
+          id: 'first-message',
+          applicationId: 'new-application',
+          body: JSON.parse(String(init.body)).body,
+        } }, 201);
+      }
+      return jsonResponse({ error: { code: 'NOT_FOUND', message: 'not found', requestId: 'r' } }, 404);
+    });
+    renderLiveChat(DEV_SESSIONS.client, 'new-project', 'new-supplier');
+
+    expect(await screen.findByText('아직 메시지가 없습니다.')).toBeTruthy();
+    const input = screen.getByLabelText('메시지 입력');
+    expect(input).toHaveProperty('disabled', false);
+    fireEvent.change(input, { target: { value: '첫 문의입니다.' } });
+    fireEvent.click(screen.getByRole('button', { name: '보내기' }));
+
+    expect((await screen.findAllByText('첫 문의입니다.')).length).toBeGreaterThan(0);
+    expect(fetchMock.mock.calls.some(([url, init]) =>
+      String(url) === '/api/v1/applications/new-application/messages' && init?.method === 'POST')).toBe(true);
   });
 
   it('shows the empty state when the server returns no rooms', async () => {

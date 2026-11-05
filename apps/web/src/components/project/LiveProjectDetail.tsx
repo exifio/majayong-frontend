@@ -7,6 +7,7 @@ import { Band, Button, Chip, Money, StatusChip } from '@/components/ui';
 import { useSession } from '@/app/session';
 import { ApiRequestError, apiRequest } from '@/lib/api';
 import { formatDate, formatWon } from '@/lib/format';
+import { industryLabel } from '@/lib/industry-label';
 import { projectDetailToScreen } from '@/lib/project-adapter';
 
 type State = 'loading' | 'success' | 'nda' | 'auth-error' | 'error';
@@ -113,7 +114,7 @@ export function LiveProjectDetail({ pid, styles }: { pid?: string; styles: Recor
       <div className={s.head}>
         <div>
           <div className={s.chips}>
-            <Chip tone="neutral">{detail.industry}</Chip>
+            <Chip tone="neutral">{industryLabel(detail.industry)}</Chip>
             <StatusChip status={detail.status} />
             {detail.deadline && <span>{formatDate(detail.deadline)} 마감</span>}
           </div>

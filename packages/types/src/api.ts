@@ -132,6 +132,24 @@ export interface SupplierProjectDetailDto {
   client: SupplierProjectClientDto;
 }
 
+/** Public supplier profile (GET /profiles/suppliers/{supplierId}). */
+export interface SupplierPublicProfileDto {
+  supplierId: string;
+  name: string | null;
+  profileImageUrl: string | null;
+  bio: string | null;
+  displayName: string;
+  createdAt: IsoDate;
+  industryCodes: string[];
+  skills: string[];
+  careerYears: number | null;
+  ratingAvg: number | null;
+  reviewCount: number;
+  completedContractCount: number;
+  portfolioSummary: string | null;
+  portfolioItems: { type: 'LINK' | 'FILE'; title?: string; url: string }[];
+}
+
 /** A API: one public project card (GET /projects). */
 export interface PublicProjectListItemDto {
   projectId: string;
@@ -498,6 +516,7 @@ export interface BApiResponses {
   removeBookmark: DataEnvelope<RemoveBookmarkResultDto>;
   listRecommendedProjects: DataEnvelope<RecommendedProjectDto[]>;
   /** A API operations, kept in this registry so the shared request module can call them. */
+  getSupplierProfile: DataEnvelope<SupplierPublicProfileDto>;
   listPublicProjects: DataEnvelope<PublicProjectListItemDto[]>;
   getSupplierProjectDetail: DataEnvelope<SupplierProjectDetailDto>;
   updateSupplierProfile: DataEnvelope<unknown>;

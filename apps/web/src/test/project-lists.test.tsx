@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SessionProvider, DEV_SESSIONS, useSession } from '@/app/session';
@@ -70,7 +70,7 @@ describe('LiveProjectList', () => {
     renderWithToken(<LiveProjectList styles={{}} />);
 
     expect(await screen.findByText('예약 기능 개발')).toBeTruthy();
-    expect(screen.getByText('RESTAURANT_RESERVATION')).toBeTruthy();
+    expect(screen.getByText('예약기반음식점')).toBeTruthy();
     expect(screen.getByText('300~400만원')).toBeTruthy();
     expect(screen.getByRole('link', { name: '상세 보기' }).getAttribute('href'))
       .toBe('/s/projects/project-1');
@@ -99,15 +99,108 @@ describe('LiveApplications', () => {
     vi.stubGlobal('fetch', fetchMock);
   });
 
-  it('shows the application fields from listProjectApplications', async () => {
-    fetchMock.mockResolvedValueOnce(jsonResponse({ data: [application] }));
+  it('shows the application fields and the public supplier name', async () => {
+    fetchMock.mockImplementation(async (input) => {
+      const url = String(input);
+      if (url === '/api/v1/projects/project-1/applications') return jsonResponse({ data: [application] });
+      if (url === '/api/v1/profiles/suppliers/supplier-user-1') {
+        return jsonResponse({ data: { supplierId: 'supplier-user-1', displayName: '최준우', profileImageUrl: null } });
+      }
+      return jsonResponse({ error: { code: 'NOT_FOUND', message: 'not found', requestId: 'r' } }, 404);
+    });
     const { container } = renderWithToken(<LiveApplications pid="project-1" styles={{}} />, DEV_SESSIONS.client);
 
-    expect(await screen.findByText('공급자 supplier')).toBeTruthy();
+    expect(await screen.findByText('최준우')).toBeTruthy();
     expect(screen.getByText(/3,255,000원/)).toBeTruthy();
     expect(screen.getByText(/21일/)).toBeTruthy();
     expect(screen.getByText(/경력 5년/)).toBeTruthy();
     expect(container.querySelector('[data-application-id="application-1"]')).toBeTruthy();
+  });
+
+  it('opens the application detail and starts chat through openChat', async () => {
+    const revision = {
+      ...application,
+      status: 'SUBMITTED',
+      specVersionNo: 1,
+      firstViewedAt: '2026-11-05T04:07:29.689Z',
+      message: '채팅 통합 테스트 지원입니다.',
+      questions: [{ text: '일정 조율은 언제 가능한가요?' }],
+      isMessageMasked: false,
+      revisionReason: null,
+      items: [
+        { specItemId: 'spec-item-1', isAvailable: true },
+        { specItemId: 'spec-item-2', isAvailable: false },
+      ],
+    };
+    fetchMock.mockImplementation(async (input, init) => {
+      const url = String(input);
+      if (url === '/api/v1/projects/project-1/applications') return jsonResponse({ data: [application] });
+      if (url === '/api/v1/profiles/suppliers/supplier-user-1') {
+        return jsonResponse({ data: { supplierId: 'supplier-user-1', displayName: '최준우', profileImageUrl: null } });
+      }
+      if (url === '/api/v1/applications/application-1' && init?.method !== 'POST') {
+        return jsonResponse({ data: revision });
+      }
+      if (url === '/api/v1/applications/application-1/agreement-preview') {
+        return jsonResponse({ data: { draft: {
+          items: [{ specItemId: 'spec-item-1', title: '예약 달력', conditions: [] }],
+          interimRatio: 50,
+          ratioState: 'PROPOSED',
+          cachedAt: '2026-11-05T04:00:00.000Z',
+          lastMessageAt: null,
+        }, stale: false, readOnly: true } });
+      }
+      if (url === '/api/v1/applications/application-1/chat/open' && init?.method === 'POST') {
+        return jsonResponse({ data: { opened: true } });
+      }
+      return jsonResponse({ error: { code: 'NOT_FOUND', message: 'not found', requestId: 'r' } }, 404);
+    });
+    renderWithToken(<LiveApplications pid="project-1" styles={{}} />, DEV_SESSIONS.client);
+
+    fireEvent.click(await screen.findByRole('button', { name: '지원서 보기' }));
+    expect(await screen.findByText('채팅 통합 테스트 지원입니다.')).toBeTruthy();
+    expect(screen.getByText('검토 중')).toBeTruthy();
+    expect(screen.getByText('예약 달력')).toBeTruthy();
+    expect(screen.getByText('일정 조율은 언제 가능한가요?')).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: '문의 채팅' }));
+    await waitFor(() => expect(fetchMock.mock.calls.some(([url, init]) =>
+      String(url) === '/api/v1/applications/application-1/chat/open' && init?.method === 'POST')).toBe(true));
+  });
+
+  it('keeps the list when the profile request fails', async () => {
+    fetchMock.mockImplementation(async (input) => {
+      const url = String(input);
+      if (url === '/api/v1/projects/project-1/applications') {
+        return jsonResponse({ data: [{ ...application, supplierId: 'supplier-fail-1' }] });
+      }
+      return jsonResponse({ error: { code: 'SUPPLIER_PROFILE_NOT_FOUND', message: 'not found', requestId: 'r' } }, 404);
+    });
+    renderWithToken(<LiveApplications pid="project-1" styles={{}} />, DEV_SESSIONS.client);
+
+    expect(await screen.findByText('공급자 supplier')).toBeTruthy();
+    expect(screen.getByText(/3,255,000원/)).toBeTruthy();
+  });
+
+  it('requests the same supplier profile once for duplicate applicants', async () => {
+    fetchMock.mockImplementation(async (input) => {
+      const url = String(input);
+      if (url === '/api/v1/projects/project-1/applications') {
+        return jsonResponse({ data: [
+          { ...application, supplierId: 'supplier-dup-1' },
+          { ...application, applicationId: 'application-2', supplierId: 'supplier-dup-1' },
+        ] });
+      }
+      if (url === '/api/v1/profiles/suppliers/supplier-dup-1') {
+        return jsonResponse({ data: { supplierId: 'supplier-dup-1', displayName: '중복 공급자', profileImageUrl: null } });
+      }
+      return jsonResponse({ error: { code: 'NOT_FOUND', message: 'not found', requestId: 'r' } }, 404);
+    });
+    renderWithToken(<LiveApplications pid="project-1" styles={{}} />, DEV_SESSIONS.client);
+
+    await screen.findByText('지원자 2건');
+    await waitFor(() => expect(fetchMock.mock.calls.filter(([url]) =>
+      String(url) === '/api/v1/profiles/suppliers/supplier-dup-1')).toHaveLength(1));
   });
 
   it('shows the empty state when there is no applicant', async () => {

@@ -7,6 +7,7 @@ import type { ChatMessageDto } from '@majayong/types/api';
 import { Button, MaskedText, StatusChip } from '@/components/ui';
 import { useSession } from '@/app/session';
 import { ApiRequestError, apiRequest } from '@/lib/api';
+import { applicationStatusLabel } from '@/lib/application-status';
 import { formatTime } from '@/lib/format';
 import {
   chatMessageText,
@@ -56,6 +57,7 @@ export function LiveChat({ pid, sid, styles }: { pid?: string; sid?: string; sty
   const [rawMessages, setRawMessages] = useState<ChatMessageDto[]>([]);
   const [messageState, setMessageState] = useState<LoadState>('loading');
   const [retry, setRetry] = useState(0);
+  const [fallbackRoom, setFallbackRoom] = useState<ChatRoomItem | null>(null);
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
@@ -75,7 +77,36 @@ export function LiveChat({ pid, sid, styles }: { pid?: string; sid?: string; sty
     return () => controller.abort();
   }, [apiAccessToken, role, retry]);
 
-  const selected = rooms.find((room) => room.projectId === pid && (!sid || room.supplierId === sid)) ?? rooms[0];
+  const matched = rooms.find((room) => room.projectId === pid && (!sid || room.supplierId === sid));
+
+  // A room appears in listChatRooms only after its first message; clients can open it directly.
+  useEffect(() => {
+    if (matched !== undefined || fallbackRoom !== null || role !== 'CLIENT' || !pid || !sid || listState !== 'success') return;
+    const controller = new AbortController();
+    apiRequest('listMyApplications', '/me/applications', { accessToken: apiAccessToken, signal: controller.signal })
+      .then((response) => {
+        const application = response.data.find((row) =>
+          row.projectId === pid && row.supplierId === sid &&
+          ['SUBMITTED', 'STALE', 'ACCEPTED'].includes(row.status));
+        if (!application) return;
+        setFallbackRoom({
+          applicationId: application.id,
+          projectId: application.projectId,
+          clientUserId: application.clientUserId,
+          supplierId: application.supplierId,
+          projectTitle: '',
+          counterpart: `공급자 ${application.supplierId.slice(0, 8)}`,
+          preview: '',
+          timeLabel: '',
+          statusLabel: applicationStatusLabel(application.status),
+          unreadCount: 0,
+        });
+      })
+      .catch(() => { /* fall back to the room list */ });
+    return () => controller.abort();
+  }, [matched, fallbackRoom, role, pid, sid, listState, apiAccessToken]);
+
+  const selected = matched ?? fallbackRoom ?? rooms[0];
   const applicationId = selected?.applicationId;
   const viewerId = selected === undefined ? '' : role === 'SUPPLIER' ? selected.supplierId : selected.clientUserId;
   const items = chatMessagesToItems(rawMessages, viewerId);
@@ -188,7 +219,7 @@ export function LiveChat({ pid, sid, styles }: { pid?: string; sid?: string; sty
                 <div className={s.whoNm}>
                   {selected.counterpart} <StatusChip status={selected.statusLabel} />
                 </div>
-                <div className={s.whoMt}>{selected.projectTitle}</div>
+                {selected.projectTitle && <div className={s.whoMt}>{selected.projectTitle}</div>}
               </div>
             </div>
           </div>

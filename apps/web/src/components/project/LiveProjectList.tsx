@@ -5,6 +5,7 @@ import { Attr, Button, Chip, StatusChip } from '@/components/ui';
 import { useSession } from '@/app/session';
 import { ApiRequestError, apiRequest } from '@/lib/api';
 import { formatDate } from '@/lib/format';
+import { industryLabel } from '@/lib/industry-label';
 import { projectStatusLabel } from '@/lib/project-adapter';
 
 type State = 'loading' | 'success' | 'auth-error' | 'error';
@@ -128,7 +129,7 @@ export function LiveProjectList({ styles }: { styles: Record<string, string> }) 
             >
               <div className={s.left}>
                 <div className={s.top}>
-                  <Chip tone="neutral">{project.industryCode}</Chip>
+                  <Chip tone="neutral">{industryLabel(project.industryCode)}</Chip>
                   <StatusChip status={projectStatusLabel(project.status)} />
                   {project.deadline && <span className={s.dl}>{formatDate(project.deadline)} 마감</span>}
                 </div>
