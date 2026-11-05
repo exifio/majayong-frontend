@@ -19,7 +19,7 @@ export function Footer() {
       <div className="mj-container">
         <div className={s.footTop}>
           <div className={s.footBrand}>
-            <Link to="/" className="" style={{ fontSize: 19, fontWeight: 600, color: 'var(--slate-900)', textDecoration: 'none' }}>마자용</Link>
+            <Link to="/" className={s.footBrandLink}>마자용</Link>
             <p>그려 드린 화면을 고치면 외주 명세가 완성됩니다.</p>
           </div>
           <div className={s.footCols}>
@@ -27,8 +27,8 @@ export function Footer() {
               <h3>서비스</h3>
               <ul>
                 <li><Link to="/#how">작동 방식</Link></li>
-                <li><Link to="/#safety">안전장치</Link></li>
-                <li><Link to="/#cost">비용</Link></li>
+                <li><Link to="/#safe">안전장치</Link></li>
+                <li><Link to="/#start">비용</Link></li>
                 <li><Link to="/supplier">공급자 안내</Link></li>
               </ul>
             </div>

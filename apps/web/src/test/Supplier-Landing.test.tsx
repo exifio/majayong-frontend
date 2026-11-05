@@ -7,13 +7,13 @@ import { slDemoOf } from '@/pages/public/Supplier-Landing.data';
 import { renderAt } from './render';
 
 describe('Supplier-Landing — 공급자 랜딩', () => {
-  it('히어로 · 앵커(quote · criteria · cost) · primary 하나', () => {
+  it('히어로 · 앵커(how · flow · price) · primary 하나', () => {
     const data = slDemoOf('기본');
     const { container } = renderAt('/supplier', 'guest');
     expect(screen.getByRole('heading', { level: 1, name: /글을 읽고 기능을 뽑는/ })).toBeTruthy();
-    expect(container.querySelector('#quote')).not.toBeNull();
-    expect(container.querySelector('#criteria')).not.toBeNull();
-    expect(container.querySelector('#cost')).not.toBeNull();
+    expect(container.querySelector('#how')).not.toBeNull();
+    expect(container.querySelector('#flow')).not.toBeNull();
+    expect(container.querySelector('#price')).not.toBeNull();
 
     const heroCta = screen
       .getAllByRole('link', { name: data.cta })
@@ -30,7 +30,7 @@ describe('Supplier-Landing — 공급자 랜딩', () => {
   it('비용: 수수료 5% · 원천징수 3.3% · 예시 금액(데이터)', () => {
     const data = slDemoOf('기본');
     const { container } = renderAt('/supplier', 'guest');
-    const cost = container.querySelector('#cost') as HTMLElement;
+    const cost = container.querySelector('#price') as HTMLElement;
     expect(within(cost).getByText('5%')).toBeTruthy();
     expect(within(cost).getByText('3.3%')).toBeTruthy();
     expect(within(cost).getByText(formatWon(data.costExampleNet))).toBeTruthy();

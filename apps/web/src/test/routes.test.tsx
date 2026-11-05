@@ -64,3 +64,18 @@ describe('알림 드롭다운(Notify-Client · Notify-Supplier)', () => {
     });
   }
 });
+
+describe('약관 셸', () => {
+  it('로그인 역할에 맞는 셸로 열린다', () => {
+    const client = renderAt('/terms/terms', 'client');
+    expect(client.container.querySelector('[data-shell]')?.getAttribute('data-shell')).toBe('client');
+    client.unmount();
+
+    const supplier = renderAt('/terms/terms', 'supplier');
+    expect(supplier.container.querySelector('[data-shell]')?.getAttribute('data-shell')).toBe('supplier');
+    supplier.unmount();
+
+    const guest = renderAt('/terms/terms', 'guest');
+    expect(guest.container.querySelector('[data-shell]')?.getAttribute('data-shell')).toBe('public');
+  });
+});

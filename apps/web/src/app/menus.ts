@@ -34,12 +34,12 @@ export const ADMIN_MENU_BOTTOM = { label: '이벤트 기록', to: '/admin/events
 export const LANDING_MENU = {
   client: [
     { label: '작동 방식', to: '#how' },
-    { label: '안전장치', to: '#safety' },
-    { label: '비용', to: '#cost' },
+    { label: '안전장치', to: '#safe' },
+    { label: '비용', to: '#start' },
   ],
   supplier: [
-    { label: '견적 방식', to: '#quote' },
-    { label: '고르는 기준', to: '#criteria' },
-    { label: '비용', to: '#cost' },
+    { label: '견적 방식', to: '#how' },
+    { label: '이용 흐름', to: '#flow' },
+    { label: '정산·비용', to: '#price' },
   ],
 } as const;

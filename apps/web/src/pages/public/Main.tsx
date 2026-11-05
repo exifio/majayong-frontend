@@ -131,8 +131,8 @@ export default function Main() {
         </div>
       </section>
 
-      {/* 안전장치 — 헤더 앵커 #safety */}
-      <section className={s.band} id="safety">
+      {/* 안전장치 — 헤더 앵커 #safe */}
+      <section className={s.band} id="safe">
         <div className={s.inner}>
           <h2 className={s.sh}>{data.safetyTitle}</h2>
           <p className={s.lead}>{data.safetyLead}</p>
@@ -149,8 +149,8 @@ export default function Main() {
         </div>
       </section>
 
-      {/* 비용 — 헤더 앵커 #cost */}
-      <section className={`${s.band} ${s.bandAlt}`} id="cost">
+      {/* 비용 — 헤더 앵커 #start */}
+      <section className={`${s.band} ${s.bandAlt}`} id="start">
         <div className={s.inner}>
           <div className={s.half}>
             <div>
@@ -173,7 +173,7 @@ export default function Main() {
       </section>
 
       {/* 하단 CTA — navy 위라 onnavy(본문에 primary 없음) */}
-      <section className={s.bandNavy} id="start">
+      <section className={s.bandNavy}>
         <div className={s.inner}>
           <h2 className={s.sh}>{data.ctaTitle}</h2>
           <p className={s.lead}>{data.ctaLead}</p>

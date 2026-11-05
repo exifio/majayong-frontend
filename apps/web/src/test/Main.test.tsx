@@ -7,12 +7,12 @@ import { MAIN_MOCKS, mainDemoOf } from '@/pages/public/Main.data';
 import { renderAt } from './render';
 
 describe('Main — 의뢰인 랜딩', () => {
-  it('히어로 · 섹션 앵커(how · safety · cost)가 있다', () => {
+  it('히어로 · 섹션 앵커(how · safe · start)가 있다', () => {
     const { container } = renderAt('/', 'guest');
     expect(screen.getByRole('heading', { level: 1, name: /요구사항을 쓰지 마세요/ })).toBeTruthy();
     expect(container.querySelector('#how')).not.toBeNull();
-    expect(container.querySelector('#safety')).not.toBeNull();
-    expect(container.querySelector('#cost')).not.toBeNull();
+    expect(container.querySelector('#safe')).not.toBeNull();
+    expect(container.querySelector('#start')).not.toBeNull();
   });
 
   it('본문 히어로 CTA는 tint로 /signup, 파란 primary는 헤더 하나뿐', () => {

@@ -50,7 +50,7 @@ export const SCREENS: ScreenRoute[] = [
   { board: 'Signup-Role', name: '회원가입 ② 역할', space: 'public', kind: 'page', path: '/signup/role', shell: 'public', guard: 'signup-step', milestone: 'M1', states: ['의뢰인 선택', '공급자 선택', '구글 가입'] },
   { board: 'Signup-Client', name: '회원가입 ③ 의뢰인 프로필', space: 'public', kind: 'page', path: '/signup/client', shell: 'public', guard: 'signup-step', milestone: 'M1', states: [] },
   { board: 'Signup-Supplier', name: '회원가입 ③ 공급자 프로필', space: 'public', kind: 'page', path: '/signup/supplier', shell: 'public', guard: 'signup-step', milestone: 'M1', states: [] },
-  { board: 'Terms', name: '약관 · 정책', space: 'public', kind: 'page', path: '/terms/:doc', shell: 'public', guard: 'none', milestone: 'M1',
+  { board: 'Terms', name: '약관 · 정책', space: 'public', kind: 'page', path: '/terms/:doc', shell: 'viewer', guard: 'none', milestone: 'M1',
     states: ['terms 이용약관', 'privacy 개인정보 처리방침', 'nda 명세 비밀유지', 'broker 중개자 고지'] },
   { board: 'Help', name: '고객센터', space: 'public', kind: 'page', path: '/help', shell: 'viewer', guard: 'none', milestone: 'M6',
     states: ['자주 묻는 질문', '검색 결과(?q=)', '1:1 문의 작성(/help/inquiry, 로그인)', '문의 보냄'] },

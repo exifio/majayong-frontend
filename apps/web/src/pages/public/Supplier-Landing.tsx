@@ -24,7 +24,7 @@ export default function SupplierLanding() {
                 <Button variant="primary" size="lg" to="/signup">
                   {data.cta}
                 </Button>
-                <Button variant="ghost" size="lg" to="#quote" className={s.ghostOnNavy}>
+                <Button variant="ghost" size="lg" to="#how" className={s.ghostOnNavy}>
                   {data.ctaGhost}
                 </Button>
               </div>
@@ -75,7 +75,7 @@ export default function SupplierLanding() {
         </div>
       </section>
 
-      <section className={s.band} id="quote">
+      <section className={s.band} id="how">
         <div className={s.inner}>
           <h2 className={s.sh}>{data.quoteTitle}</h2>
           <p className={s.lead}>{data.quoteLead}</p>
@@ -114,7 +114,7 @@ export default function SupplierLanding() {
         </div>
       </section>
 
-      <section className={s.band} id="criteria">
+      <section className={s.band} id="flow">
         <div className={s.inner}>
           <div className={s.half}>
             <div>
@@ -136,7 +136,7 @@ export default function SupplierLanding() {
         </div>
       </section>
 
-      <section className={`${s.band} ${s.bandAlt}`} id="cost">
+      <section className={`${s.band} ${s.bandAlt}`} id="price">
         <div className={s.inner}>
           <div className={s.half}>
             <div>
