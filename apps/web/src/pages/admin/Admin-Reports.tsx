@@ -13,6 +13,7 @@ import {
   StatusChip,
   TextAreaField,
 } from '@/components/ui';
+import { AdminDemoNotice } from '@/components/admin/AdminDemoNotice';
 import {
   ACTION_PREVIEWS,
   DEMO,
@@ -112,6 +113,8 @@ export default function AdminReports() {
         <h1 className={s.title}>{DEMO.title}</h1>
         <p className={s.sub}>{DEMO.sub}</p>
       </header>
+
+      {mock === '조치 작성' || mock === '계정 정지 선택' || mock === '처리 완료' ? <AdminDemoNotice /> : null}
 
       <div className={s.grid}>
         <section aria-label={DEMO.listLabel}>

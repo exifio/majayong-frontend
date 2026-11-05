@@ -11,6 +11,7 @@ import {
   StatusChip,
   TextAreaField,
 } from '@/components/ui';
+import { AdminDemoNotice } from '@/components/admin/AdminDemoNotice';
 import {
   DEMO,
   REASON_DEMO,
@@ -93,6 +94,8 @@ export default function AdminDisputes() {
         <h1 className={s.title}>{DEMO.title}</h1>
         <p className={s.sub}>{DEMO.sub}</p>
       </header>
+
+      {mock === '판정 작성' || mock === '판정 완료' ? <AdminDemoNotice /> : null}
 
       <div className={s.grid}>
         <section aria-label={DEMO.listLabel}>

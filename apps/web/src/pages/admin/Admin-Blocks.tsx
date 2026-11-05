@@ -11,6 +11,7 @@ import {
   TextAreaField,
   TextField,
 } from '@/components/ui';
+import { AdminDemoNotice } from '@/components/admin/AdminDemoNotice';
 import {
   BLOCKS,
   DEMO,
@@ -80,6 +81,8 @@ export default function AdminBlocks() {
         <h1 className={s.title}>{DEMO.title}</h1>
         <p className={s.sub}>{DEMO.sub}</p>
       </header>
+
+      {mock !== '새 블록 목록' ? <AdminDemoNotice /> : null}
 
       <div className={s.grid}>
         <section className={s.list} aria-label={DEMO.listLabel}>
