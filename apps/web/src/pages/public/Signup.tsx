@@ -47,14 +47,14 @@ export default function Signup() {
   const mock: SignupMock = resolveSignupMock(params.get('mock'));
   const demo = signupDemoOf(mock);
 
-  const [email, setEmail] = useState(demo.emailValue);
-  const [password, setPassword] = useState('password1234');
-  const [confirm, setConfirm] = useState('password1234');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
   const [agreed, setAgreed] = useState<Record<TermKey, boolean>>({
-    terms: true,
-    privacy: true,
-    nda: true,
-    broker: true,
+    terms: false,
+    privacy: false,
+    nda: false,
+    broker: false,
   });
   const [tried, setTried] = useState(false);
 
@@ -72,6 +72,11 @@ export default function Signup() {
   const onSubmit = () => {
     setTried(true);
     if (dup || pwErr || confirmErr || !allTerms) return;
+    try {
+      window.sessionStorage.setItem('mj.signup.email', email.trim());
+      window.sessionStorage.setItem('mj.signup.password', password);
+      window.sessionStorage.setItem('mj.signup.terms', 'v0.7');
+    } catch { /* storage unavailable */ }
     goNext();
   };
 

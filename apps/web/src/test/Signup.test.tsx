@@ -26,8 +26,17 @@ describe('Signup — 회원가입 ① 계정', () => {
   });
 
   it('다음: signup 세션 후 /signup/role', () => {
-    renderAt('/signup', 'guest');
-    fireEvent.click(screen.getByRole('button', { name: DEMO.next }));
+    const { container } = renderAt('/signup', 'guest');
+    const root = container.querySelector('[data-screen="Signup"]') as HTMLElement;
+    fireEvent.change(within(root).getByLabelText(/이메일/), { target: { value: 'test@example.com' } });
+    const pwInputs = within(root).getAllByLabelText(/비밀번호/);
+    fireEvent.change(pwInputs[0]!, { target: { value: 'password1234' } });
+    fireEvent.change(pwInputs[1]!, { target: { value: 'password1234' } });
+    const checks = within(root).getAllByRole('checkbox');
+    for (const c of checks) {
+      fireEvent.click(c);
+    }
+    fireEvent.click(within(root).getByRole('button', { name: DEMO.next }));
     expect(location.current.startsWith('/signup/role')).toBe(true);
   });
 
