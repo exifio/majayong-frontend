@@ -30,6 +30,8 @@ import {
 import { useSession } from '@/app/session';
 import { LiveContract } from '@/components/contract/LiveContract';
 import s from './Contract-Client.module.css';
+import { AuthRequired } from '@/components/system/AuthRequired';
+import { DEMO_DATA_ENABLED } from '@/lib/feature-flags';
 
 export default function ContractClient() {
   const { apiAccessToken } = useSession();
@@ -51,6 +53,8 @@ export default function ContractClient() {
   }, [params]);
 
   if (apiAccessToken.trim()) return <LiveContract cid={cid} styles={s} />;
+
+  if (!DEMO_DATA_ENABLED) return <AuthRequired />;
 
   const escrowTo = escrowHref(cid);
 

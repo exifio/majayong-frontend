@@ -24,6 +24,8 @@ import {
 import { useSession } from '@/app/session';
 import { LiveEscrow } from '@/components/contract/LiveEscrow';
 import s from './Escrow-Client.module.css';
+import { AuthRequired } from '@/components/system/AuthRequired';
+import { DEMO_DATA_ENABLED } from '@/lib/feature-flags';
 
 const PAY_OPTIONS = [
   {
@@ -67,6 +69,8 @@ export default function EscrowClient() {
   }, [params]);
 
   if (apiAccessToken.trim()) return <LiveEscrow cid={cid} styles={s} />;
+
+  if (!DEMO_DATA_ENABLED) return <AuthRequired />;
 
   const goMock = (next: string) => {
     navigate(`?mock=${encodeURIComponent(next)}`, { replace: true });

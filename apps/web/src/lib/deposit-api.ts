@@ -2,8 +2,6 @@
  * POST /contracts/{contractId}/deposits  { idempotencyKey, method, amount }
  * GET  /contracts/{contractId}/deposits  (응답 형식 D-21 대기)
  * 결제 요청은 Toss sandbox·webhook 검증 전까지 호출하지 않는다. */
-export const DEPOSIT_API_READY = false;
-
 export interface CreateDepositRequestDto {
   idempotencyKey: string;
   method: string;

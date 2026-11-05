@@ -31,6 +31,8 @@ import {
   type Msg,
 } from './Chat-Client.data';
 import s from './Chat-Client.module.css';
+import { AuthRequired } from '@/components/system/AuthRequired';
+import { DEMO_DATA_ENABLED } from '@/lib/feature-flags';
 
 export default function ChatClient() {
   const { apiAccessToken } = useSession();
@@ -61,6 +63,8 @@ export default function ChatClient() {
   }, [mock, sid]);
 
   if (apiAccessToken.trim()) return <LiveChat pid={pid} sid={sid} styles={s} />;
+
+  if (!DEMO_DATA_ENABLED) return <AuthRequired />;
 
   const messages = [...demo.messages, ...extra];
   const activeSid = demo.person.sid;

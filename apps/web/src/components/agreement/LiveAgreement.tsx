@@ -7,11 +7,11 @@ import { Button, Chip, ConfirmDialog } from '@/components/ui';
 import { useSession } from '@/app/session';
 import { ApiRequestError, apiRequest } from '@/lib/api';
 import { applicationStatusLabel } from '@/lib/application-status';
+import { AGREEMENT_CONFIRM_ENABLED } from '@/lib/feature-flags';
 import { formatWon } from '@/lib/format';
 import { supplierProfile, type SupplierProfileSummary } from '@/lib/supplier-profile';
 
-/* D-23 적용 확인(3100, bdc4751). 개발 빌드에서만 켜고 배포 활성화는 별도 결정한다. */
-const AGREEMENT_CONFIRM_ENABLED = import.meta.env.DEV;
+/* D-23 적용 확인(3100, bdc4751). 스테이징은 VITE_ENABLE_AGREEMENT_CONFIRM=true로 연다. */
 
 type State = 'loading' | 'success' | 'auth-error' | 'error';
 

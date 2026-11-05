@@ -26,6 +26,8 @@ import {
 import { useSession } from '@/app/session';
 import { LiveProjectList } from '@/components/project/LiveProjectList';
 import s from './Find-Supplier.module.css';
+import { AuthRequired } from '@/components/system/AuthRequired';
+import { DEMO_DATA_ENABLED } from '@/lib/feature-flags';
 
 function initialBookmarks(): Set<string> {
   return new Set(PROJECTS.filter((p) => p.bookmarked).map((p) => p.id));
@@ -90,6 +92,8 @@ export default function FindSupplier() {
   ]);
 
   if (apiAccessToken.trim()) return <LiveProjectList styles={s} />;
+
+  if (!DEMO_DATA_ENABLED) return <AuthRequired />;
 
   const empty = forceEmpty || rows.length === 0;
 

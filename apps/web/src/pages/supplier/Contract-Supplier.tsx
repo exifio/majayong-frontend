@@ -29,6 +29,8 @@ import {
 import { useSession } from '@/app/session';
 import { LiveContract } from '@/components/contract/LiveContract';
 import s from './Contract-Supplier.module.css';
+import { AuthRequired } from '@/components/system/AuthRequired';
+import { DEMO_DATA_ENABLED } from '@/lib/feature-flags';
 
 export default function ContractSupplier() {
   const { apiAccessToken } = useSession();
@@ -50,6 +52,8 @@ export default function ContractSupplier() {
   }, [params]);
 
   if (apiAccessToken.trim()) return <LiveContract cid={cid} styles={s} />;
+
+  if (!DEMO_DATA_ENABLED) return <AuthRequired />;
 
   void cid;
 

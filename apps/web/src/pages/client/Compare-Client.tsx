@@ -32,6 +32,8 @@ import {
 import { useSession } from '@/app/session';
 import { LiveApplications } from '@/components/project/LiveApplications';
 import s from './Compare-Client.module.css';
+import { AuthRequired } from '@/components/system/AuthRequired';
+import { DEMO_DATA_ENABLED } from '@/lib/feature-flags';
 
 export default function CompareClient() {
   const { apiAccessToken } = useSession();
@@ -52,6 +54,8 @@ export default function CompareClient() {
   }, [mock]);
 
   if (apiAccessToken.trim()) return <LiveApplications pid={pid} styles={s} />;
+
+  if (!DEMO_DATA_ENABLED) return <AuthRequired />;
 
   const setMock = (next: string | null) => {
     const q = new URLSearchParams(params);

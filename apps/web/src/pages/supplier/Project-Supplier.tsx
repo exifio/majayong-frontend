@@ -28,6 +28,8 @@ import {
 import { useSession } from '@/app/session';
 import { LiveProjectDetail } from '@/components/project/LiveProjectDetail';
 import s from './Project-Supplier.module.css';
+import { AuthRequired } from '@/components/system/AuthRequired';
+import { DEMO_DATA_ENABLED } from '@/lib/feature-flags';
 
 export default function ProjectSupplier() {
   const { apiAccessToken } = useSession();
@@ -42,6 +44,8 @@ export default function ProjectSupplier() {
   }, [params]);
 
   if (apiAccessToken.trim()) return <LiveProjectDetail pid={pid} styles={s} />;
+
+  if (!DEMO_DATA_ENABLED) return <AuthRequired />;
 
   const nFn = demo.features.length;
 

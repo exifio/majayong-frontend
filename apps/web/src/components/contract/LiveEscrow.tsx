@@ -6,7 +6,7 @@ import { Band, Button, Deadline, Money, StatusChip } from '@/components/ui';
 import { useSession } from '@/app/session';
 import { ApiRequestError, apiRequest } from '@/lib/api';
 import { contractDisplayLabel } from '@/lib/contract-status';
-import { DEPOSIT_API_READY } from '@/lib/deposit-api';
+import { DEPOSIT_ENABLED } from '@/lib/feature-flags';
 import { formatDateTime, formatWon } from '@/lib/format';
 import { paymentStatusLabel } from '@/lib/payment-status';
 import { supplierProfile, type SupplierProfileSummary } from '@/lib/supplier-profile';
@@ -186,9 +186,9 @@ export function LiveEscrow({ cid, styles }: { cid?: string; styles: Record<strin
               <Button
                 variant="primary"
                 full
-                disabled={!DEPOSIT_API_READY || !waiting}
+                disabled={!DEPOSIT_ENABLED || !waiting}
                 disabledReason={
-                  !DEPOSIT_API_READY
+                  !DEPOSIT_ENABLED
                     ? 'Toss sandbox·webhook 검증 완료 후 예치를 활성화합니다.'
                     : !waiting
                       ? '지금은 예치할 수 있는 상태가 아닙니다.'
@@ -198,7 +198,7 @@ export function LiveEscrow({ cid, styles }: { cid?: string; styles: Record<strin
                 예치하기
               </Button>
             </div>
-            {!DEPOSIT_API_READY && (
+            {!DEPOSIT_ENABLED && (
               <p className={s.hint} role="status">
                 결제 요청은 아직 전송되지 않습니다. 화면의 금액은 실제 계약 데이터입니다.
               </p>

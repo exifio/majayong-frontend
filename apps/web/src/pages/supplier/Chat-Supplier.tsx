@@ -29,6 +29,8 @@ import {
 import { useSession } from '@/app/session';
 import { LiveChat } from '@/components/chat/LiveChat';
 import s from './Chat-Supplier.module.css';
+import { AuthRequired } from '@/components/system/AuthRequired';
+import { DEMO_DATA_ENABLED } from '@/lib/feature-flags';
 
 export default function ChatSupplier() {
   const { apiAccessToken } = useSession();
@@ -66,6 +68,8 @@ export default function ChatSupplier() {
   }, [params]);
 
   if (apiAccessToken.trim()) return <LiveChat pid={pid} styles={s} />;
+
+  if (!DEMO_DATA_ENABLED) return <AuthRequired />;
 
   const messages = [...demo.messages, ...extra];
 

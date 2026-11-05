@@ -7,10 +7,10 @@ import { Button, Chip, ConfirmDialog, StatusChip } from '@/components/ui';
 import { useSession } from '@/app/session';
 import { ApiRequestError, apiRequest } from '@/lib/api';
 import { contractDisplayLabel } from '@/lib/contract-status';
+import { CONTRACT_SIGN_ENABLED } from '@/lib/feature-flags';
 import { formatDateTime, formatWon } from '@/lib/format';
 
 /* 배포에서 서명을 열지 여부는 별도 설정으로 관리한다. */
-const CONTRACT_SIGN_ENABLED = import.meta.env.DEV;
 
 type State = 'loading' | 'success' | 'auth-error' | 'error';
 

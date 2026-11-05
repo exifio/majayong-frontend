@@ -21,6 +21,8 @@ import {
 import { useSession } from '@/app/session';
 import { LiveAgreement } from '@/components/agreement/LiveAgreement';
 import s from './Agreement-Client.module.css';
+import { AuthRequired } from '@/components/system/AuthRequired';
+import { DEMO_DATA_ENABLED } from '@/lib/feature-flags';
 
 export default function AgreementClient() {
   const { apiAccessToken } = useSession();
@@ -40,6 +42,8 @@ export default function AgreementClient() {
   }, [params]);
 
   if (apiAccessToken.trim()) return <LiveAgreement styles={s} />;
+
+  if (!DEMO_DATA_ENABLED) return <AuthRequired />;
 
   return (
     <div className={s.page} data-screen="Agreement-Client">

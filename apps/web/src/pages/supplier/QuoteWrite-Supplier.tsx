@@ -22,6 +22,8 @@ import {
 import { useSession } from '@/app/session';
 import { LiveQuoteWrite } from '@/components/project/LiveQuoteWrite';
 import s from './QuoteWrite-Supplier.module.css';
+import { AuthRequired } from '@/components/system/AuthRequired';
+import { DEMO_DATA_ENABLED } from '@/lib/feature-flags';
 
 export default function QuoteWriteSupplier() {
   const { apiAccessToken } = useSession();
@@ -54,6 +56,8 @@ export default function QuoteWriteSupplier() {
   }, [params]);
 
   if (apiAccessToken.trim()) return <LiveQuoteWrite pid={pid} styles={s} />;
+
+  if (!DEMO_DATA_ENABLED) return <AuthRequired />;
 
   const okCnt = seed.items.filter((it) => okById[it.id]).length;
   const allNo = okCnt === 0;
