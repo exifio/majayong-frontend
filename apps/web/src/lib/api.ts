@@ -1,4 +1,5 @@
 import type { DataEnvelope, ErrorEnvelope } from '@majayong/types/common';
+import { refreshAccessToken } from './auth-refresh-bridge';
 import type {
   BApiEmptyJsonBodyOperation,
   BApiOperationId,
@@ -99,13 +100,6 @@ export async function apiRequest<Operation extends BApiOperationId>(
     throw new ApiRequestError(401, 'UNAUTHENTICATED', '로그인이 필요합니다.');
   }
 
-  const headers = new Headers(suppliedHeaders);
-  headers.set('Accept', 'application/json');
-  if (body !== undefined) {
-    headers.set('Content-Type', 'application/json');
-  }
-  headers.set('Authorization', `Bearer ${accessToken.trim()}`);
-
   const search = new URLSearchParams();
   if (query) {
     for (const [key, value] of Object.entries(query)) {
@@ -115,20 +109,35 @@ export async function apiRequest<Operation extends BApiOperationId>(
   const queryString = search.toString();
   const requestPath = `${API_BASE_PATH}${path}${queryString ? `${path.includes('?') ? '&' : '?'}${queryString}` : ''}`;
 
-  let response: Response;
-  try {
-    response = await fetch(
-      requestPath,
-      body === undefined
-        ? { ...init, headers }
-        : { ...init, headers, body: JSON.stringify(body) },
-    );
-  } catch (error) {
-    if (error instanceof Error && error.name === 'AbortError') throw error;
-    throw new ApiRequestError(0, 'NETWORK_ERROR', '서버에 연결할 수 없습니다.');
+  async function send(token: string): Promise<Response> {
+    const headers = new Headers(suppliedHeaders);
+    headers.set('Accept', 'application/json');
+    if (body !== undefined) headers.set('Content-Type', 'application/json');
+    headers.set('Authorization', `Bearer ${token.trim()}`);
+    try {
+      return await fetch(
+        requestPath,
+        body === undefined
+          ? { ...init, headers }
+          : { ...init, headers, body: JSON.stringify(body) },
+      );
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') throw error;
+      throw new ApiRequestError(0, 'NETWORK_ERROR', '서버에 연결할 수 없습니다.');
+    }
   }
 
-  const payload = await readJson(response);
+  let response = await send(accessToken);
+  let payload = await readJson(response);
+
+  // Expired access token: refresh once (concurrent callers share one refresh) and retry once.
+  if (response.status === 401 && isErrorEnvelope(payload) && payload.error.code === 'INVALID_ACCESS_TOKEN') {
+    const fresh = await refreshAccessToken();
+    if (fresh) {
+      response = await send(fresh);
+      payload = await readJson(response);
+    }
+  }
   if (!response.ok) {
     if (isErrorEnvelope(payload)) {
       throw new ApiRequestError(

@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from 'react';
 import type { Role } from '@majayong/types';
+import { registerRefreshHandler } from '@/lib/auth-refresh-bridge';
 import {
   loginWithPassword,
   logoutAuthSession,
@@ -69,7 +70,7 @@ export function SessionProvider({ initial, children }: { initial?: Session; chil
   const [devToken, setDevToken] = useState('');
   const [auth, setAuth] = useState<AuthState>(() => (initial ? { status: 'guest' } : { status: 'loading' }));
   const [authReady, setAuthReady] = useState(Boolean(initial));
-  const refreshing = useRef<Promise<void> | null>(null);
+  const refreshing = useRef<Promise<string | null> | null>(null);
 
   const applySession = useCallback((session: AuthSession) => {
     setAuth({
@@ -80,18 +81,23 @@ export function SessionProvider({ initial, children }: { initial?: Session; chil
     });
   }, []);
 
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async (): Promise<string | null> => {
     if (refreshing.current) return refreshing.current;
     const token = storedRefreshToken();
     if (!token) {
       setAuth({ status: 'guest' });
-      return;
+      return null;
     }
     const request = refreshAuthSession(token)
-      .then(applySession)
+      .then((session) => {
+        applySession(session);
+        return session.accessToken;
+      })
       .catch(() => {
+        // Reused/expired refresh token: clear the session instead of retrying forever.
         storeRefreshToken(null);
         setAuth({ status: 'guest' });
+        return null;
       })
       .finally(() => {
         refreshing.current = null;
@@ -99,6 +105,12 @@ export function SessionProvider({ initial, children }: { initial?: Session; chil
     refreshing.current = request;
     return request;
   }, [applySession]);
+
+  // Let apiRequest refresh an expired access token and retry once.
+  useEffect(() => {
+    registerRefreshHandler(refresh);
+    return () => registerRefreshHandler(null);
+  }, [refresh]);
 
   useEffect(() => {
     if (initial) return;

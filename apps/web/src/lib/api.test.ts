@@ -1,5 +1,6 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiRequestError, apiRequest } from './api';
+import { registerRefreshHandler } from './auth-refresh-bridge';
 
 const jsonResponse = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
@@ -29,6 +30,10 @@ describe('apiRequest', () => {
     fetchMock.mockReset();
     fetchMock.mockResolvedValue(jsonResponse({ data: {} }));
     vi.stubGlobal('fetch', fetchMock);
+  });
+
+  afterEach(() => {
+    registerRefreshHandler(null);
   });
 
   it.each(emptyBodyOperations)('%s sends an empty JSON body', async (operationId, path, method) => {
@@ -74,6 +79,70 @@ describe('apiRequest', () => {
 
     expect(error).toBeInstanceOf(ApiRequestError);
     expect(error).toMatchObject({ status: 500, code: 'HTTP_ERROR' });
+  });
+
+  it('refreshes once and retries the original request with the new token', async () => {
+    let refreshCalls = 0;
+    registerRefreshHandler(async () => {
+      refreshCalls += 1;
+      return 'fresh-token';
+    });
+    fetchMock
+      .mockResolvedValueOnce(jsonResponse({
+        error: { code: 'INVALID_ACCESS_TOKEN', message: 'expired', requestId: 'r1' },
+      }, 401))
+      .mockResolvedValueOnce(jsonResponse({ data: { ok: true } }));
+
+    const result = await request('listNotifications', '/me/notifications', { accessToken: 'old-token' });
+
+    expect(result).toEqual({ data: { ok: true } });
+    expect(refreshCalls).toBe(1);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    const retryHeaders = new Headers(fetchMock.mock.calls[1]![1]?.headers);
+    expect(retryHeaders.get('Authorization')).toBe('Bearer fresh-token');
+  });
+
+  it('does not refresh for other 401 codes', async () => {
+    let refreshCalls = 0;
+    registerRefreshHandler(async () => {
+      refreshCalls += 1;
+      return 'fresh-token';
+    });
+    fetchMock.mockResolvedValueOnce(jsonResponse({
+      error: { code: 'UNAUTHENTICATED', message: 'login required', requestId: 'r1' },
+    }, 401));
+
+    await expect(request('listNotifications', '/me/notifications', { accessToken: 'token' }))
+      .rejects.toMatchObject({ status: 401, code: 'UNAUTHENTICATED' });
+    expect(refreshCalls).toBe(0);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not loop when the retried request is still unauthorized', async () => {
+    let refreshCalls = 0;
+    registerRefreshHandler(async () => {
+      refreshCalls += 1;
+      return 'fresh-token';
+    });
+    fetchMock.mockImplementation(async () => jsonResponse({
+      error: { code: 'INVALID_ACCESS_TOKEN', message: 'expired', requestId: 'r1' },
+    }, 401));
+
+    await expect(request('listNotifications', '/me/notifications', { accessToken: 'old-token' }))
+      .rejects.toMatchObject({ status: 401, code: 'INVALID_ACCESS_TOKEN' });
+    expect(refreshCalls).toBe(1);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('throws the original 401 when refresh fails', async () => {
+    registerRefreshHandler(async () => null);
+    fetchMock.mockResolvedValueOnce(jsonResponse({
+      error: { code: 'INVALID_ACCESS_TOKEN', message: 'expired', requestId: 'r1' },
+    }, 401));
+
+    await expect(request('listNotifications', '/me/notifications', { accessToken: 'old-token' }))
+      .rejects.toMatchObject({ status: 401, code: 'INVALID_ACCESS_TOKEN' });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it('serializes the notification unread filter as a query parameter', async () => {
