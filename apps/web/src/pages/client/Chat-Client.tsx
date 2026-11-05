@@ -13,6 +13,8 @@ import {
   StatusChip,
 } from '@/components/ui';
 import { formatWon } from '@/lib/format';
+import { useSession } from '@/app/session';
+import { LiveChat } from './Chat-Client.live';
 import {
   CONTRACT_HREF,
   DEMO,
@@ -31,6 +33,7 @@ import {
 import s from './Chat-Client.module.css';
 
 export default function ChatClient() {
+  const { apiAccessToken } = useSession();
   const { pid = DEFAULT_PID, sid } = useParams();
   const [params] = useSearchParams();
   const mock = resolveChatMock(params.get('mock'));
@@ -56,6 +59,8 @@ export default function ChatClient() {
     setReason(next.reportOpen ? 'contact' : null);
     setReportDesc('');
   }, [mock, sid]);
+
+  if (apiAccessToken.trim()) return <LiveChat pid={pid} sid={sid} />;
 
   const messages = [...demo.messages, ...extra];
   const activeSid = demo.person.sid;

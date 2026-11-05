@@ -25,6 +25,11 @@ export function formatDateTime(iso: string): string {
   return `${formatDate(iso)} ${dayjs(iso).tz(TZ).format('HH:mm')}`;
 }
 
+/** '14:20' */
+export function formatTime(iso: string): string {
+  return dayjs(iso).tz(TZ).format('HH:mm');
+}
+
 /**
  * 기한까지 남은 날 — 서울 날짜 기준.
  * 남았으면 'D-7', 오늘이면 'D-day', 지났으면 '2일 지남'
