@@ -11,3 +11,4 @@ docs/
 AGENTS.md
 CLAUDE.md
 .cursor/
+.vercel
