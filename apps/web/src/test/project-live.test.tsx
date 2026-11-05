@@ -94,6 +94,19 @@ describe('LiveProjectDetail', () => {
       .toBe('/s/projects/project-1/quote');
   });
 
+  it('shows the submitted application instead of the quote CTA', async () => {
+    fetchMock.mockImplementation(async (input) => {
+      const url = String(input);
+      if (url === '/api/v1/projects/project-1') return jsonResponse({ data: detail });
+      if (url === '/api/v1/me/applications') return jsonResponse({ data: [application] });
+      return jsonResponse({ error: { code: 'NOT_FOUND', message: 'not found', requestId: 'r' } }, 404);
+    });
+    renderLive(<LiveProjectDetail pid="project-1" styles={{}} />);
+
+    expect(await screen.findByText('지원함')).toBeTruthy();
+    expect(screen.queryByRole('link', { name: '견적 작성하기' })).toBeNull();
+  });
+
   it('asks for NDA consent on 403 and reloads after consent', async () => {
     fetchMock
       .mockResolvedValueOnce(jsonResponse({ error: { code: 'SUPPLIER_NDA_REQUIRED', message: 'NDA 필요', requestId: 'r1' } }, 403))

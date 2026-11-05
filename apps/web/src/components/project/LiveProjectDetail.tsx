@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { SupplierProjectDetail } from '@majayong/types';
+import type { ApplicationRecordDto } from '@majayong/types/api';
 import { Band, Button, Chip, Money, StatusChip } from '@/components/ui';
 import { useSession } from '@/app/session';
 import { ApiRequestError, apiRequest } from '@/lib/api';
@@ -18,6 +19,7 @@ export function LiveProjectDetail({ pid, styles }: { pid?: string; styles: Recor
   const [retry, setRetry] = useState(0);
   const [consenting, setConsenting] = useState(false);
   const [consentError, setConsentError] = useState<string | null>(null);
+  const [myApplication, setMyApplication] = useState<ApplicationRecordDto | null>(null);
 
   useEffect(() => {
     if (!pid) return;
@@ -29,6 +31,13 @@ export function LiveProjectDetail({ pid, styles }: { pid?: string; styles: Recor
     }).then((response) => {
       setDetail(projectDetailToScreen(response.data));
       setState('success');
+      apiRequest('listMyApplications', '/me/applications', {
+        accessToken: apiAccessToken,
+        signal: controller.signal,
+      }).then((applications) => {
+        setMyApplication(applications.data.find((application) =>
+          application.projectId === pid && ['SUBMITTED', 'STALE', 'ACCEPTED'].includes(application.status)) ?? null);
+      }).catch(() => { /* 지원 상태는 상세 표시를 막지 않는다 */ });
     }).catch((error: unknown) => {
       if (error instanceof Error && error.name === 'AbortError') return;
       if (error instanceof ApiRequestError && error.status === 403 && error.code === 'SUPPLIER_NDA_REQUIRED') {
@@ -181,11 +190,21 @@ export function LiveProjectDetail({ pid, styles }: { pid?: string; styles: Recor
                 </div>
               )}
             </div>
-            <div className={s.ctaGap}>
-              <Button variant="primary" full to={`/s/projects/${encodeURIComponent(pid)}/quote`}>
-                견적 작성하기
-              </Button>
-            </div>
+            {myApplication ? (
+              <div className={s.myq}>
+                <div className={s.myqRow}>
+                  <span className={s.myqK}>지원함</span>
+                </div>
+                <div className={s.myqAmt}>{formatWon(myApplication.totalAmount)}</div>
+                <p className={s.myqM}>{myApplication.durationDays}일 · 지원서를 제출했습니다.</p>
+              </div>
+            ) : (
+              <div className={s.ctaGap}>
+                <Button variant="primary" full to={`/s/projects/${encodeURIComponent(pid)}/quote`}>
+                  견적 작성하기
+                </Button>
+              </div>
+            )}
           </section>
         </aside>
       </div>
