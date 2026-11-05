@@ -115,7 +115,8 @@ function FirstFocus() {
 }
 
 function RecommendRow({ card }: { card: RecommendCard }) {
-  const n = card.matchedSkills.length;
+  const matched = card.matchedSkills ?? [];
+  const n = matched.length;
   return (
     <Link className={s.pr} to={PROJECT_HREF} aria-label={card.title}>
       <div>
@@ -131,7 +132,7 @@ function RecommendRow({ card }: { card: RecommendCard }) {
           {card.requiredSkills.map((t) => (
             <span
               key={t}
-              className={`${s.tag} ${card.matchedSkills.includes(t) ? s.tagOn : ''}`}
+              className={`${s.tag} ${matched.includes(t) ? s.tagOn : ''}`}
             >
               {t}
             </span>

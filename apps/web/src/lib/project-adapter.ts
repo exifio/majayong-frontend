@@ -41,8 +41,6 @@ export function projectDetailToScreen(dto: SupplierProjectDetailDto): SupplierPr
     budgetRange: dto.hopeBudgetBand ?? '',
     deadline: dto.deadline,
     requiredSkills: dto.requiredSkills,
-    matchedSkills: [],
-    bookmarked: false,
     items: dto.items.map((item) => ({
       specItemId: item.specItemId,
       title: item.title,
@@ -50,7 +48,6 @@ export function projectDetailToScreen(dto: SupplierProjectDetailDto): SupplierPr
       conditions: conditionsOf(item.conditions),
     })),
     hopeBudget: dto.hopeBudget,
-    interimRatioGuide: '',
     client: {
       name: dto.client.name,
       businessName: dto.client.businessName,

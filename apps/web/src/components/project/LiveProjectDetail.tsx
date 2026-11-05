@@ -53,15 +53,10 @@ export function LiveProjectDetail({ pid, styles }: { pid?: string; styles: Recor
     setConsenting(true);
     setConsentError(null);
     try {
-      // The profile upsert needs a display name even when the row already exists.
-      const profile = await apiRequest('getSupplierProfile', '/me/supplier-profile', {
-        accessToken: apiAccessToken,
-      });
-      const displayName = profile.data?.displayName;
       await apiRequest('updateSupplierProfile', '/me/supplier-profile', {
         method: 'PATCH',
         accessToken: apiAccessToken,
-        jsonBody: { ndaConsent: true, ...(displayName ? { displayName } : {}) },
+        jsonBody: { ndaConsent: true },
       });
       setRetry((count) => count + 1);
     } catch (error) {

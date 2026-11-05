@@ -29,9 +29,12 @@ import {
   withFee,
   type CompareCard,
 } from './Compare-Client.data';
+import { useSession } from '@/app/session';
+import { LiveApplications } from '@/components/project/LiveApplications';
 import s from './Compare-Client.module.css';
 
 export default function CompareClient() {
+  const { apiAccessToken } = useSession();
   const { pid = DEFAULT_PID } = useParams();
   const [params, setParams] = useSearchParams();
   const mock = resolveCompareMock(params.get('mock'));
@@ -47,6 +50,8 @@ export default function CompareClient() {
     setReject(next.openReject ? { sid: next.rejectSid, name: next.rejectName } : null);
     setReason('');
   }, [mock]);
+
+  if (apiAccessToken.trim()) return <LiveApplications pid={pid} styles={s} />;
 
   const setMock = (next: string | null) => {
     const q = new URLSearchParams(params);

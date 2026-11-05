@@ -23,6 +23,8 @@ import {
   type ProjectCard,
   type SortKey,
 } from './Find-Supplier.data';
+import { useSession } from '@/app/session';
+import { LiveProjectList } from '@/components/project/LiveProjectList';
 import s from './Find-Supplier.module.css';
 
 function initialBookmarks(): Set<string> {
@@ -30,6 +32,7 @@ function initialBookmarks(): Set<string> {
 }
 
 export default function FindSupplier() {
+  const { apiAccessToken } = useSession();
   const [params, setParams] = useSearchParams();
   const navigate = useNavigate();
   const mock = resolveFindMock(params.get('mock'), params.get('view'));
@@ -85,6 +88,8 @@ export default function FindSupplier() {
     bookmarked,
     sort,
   ]);
+
+  if (apiAccessToken.trim()) return <LiveProjectList styles={s} />;
 
   const empty = forceEmpty || rows.length === 0;
 

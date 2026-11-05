@@ -110,7 +110,6 @@ describe('LiveProjectDetail', () => {
   it('asks for NDA consent on 403 and reloads after consent', async () => {
     fetchMock
       .mockResolvedValueOnce(jsonResponse({ error: { code: 'SUPPLIER_NDA_REQUIRED', message: 'NDA 필요', requestId: 'r1' } }, 403))
-      .mockResolvedValueOnce(jsonResponse({ data: { displayName: '공급자 테스트', ndaAgreedAt: null, ndaVersion: null } }))
       .mockResolvedValueOnce(jsonResponse({ data: { displayName: '공급자 테스트' } }))
       .mockResolvedValueOnce(jsonResponse({ data: detail }));
     renderLive(<LiveProjectDetail pid="project-1" styles={{}} />);
@@ -121,7 +120,7 @@ describe('LiveProjectDetail', () => {
     const patch = fetchMock.mock.calls.find(([url, init]) =>
       String(url) === '/api/v1/me/supplier-profile' && init?.method === 'PATCH');
     expect(patch).toBeTruthy();
-    expect(JSON.parse(String(patch![1]!.body))).toEqual({ ndaConsent: true, displayName: '공급자 테스트' });
+    expect(JSON.parse(String(patch![1]!.body))).toEqual({ ndaConsent: true });
   });
 });
 

@@ -12,8 +12,10 @@ export interface SupplierProjectCard {
   budgetRange: string;       // 희망 예산 구간 '400~600만원'
   deadline: IsoDate | null;
   requiredSkills: string[];
-  matchedSkills: string[];   // 내 기술 스택과 같은 태그(점수 · 순위 없음)
-  bookmarked: boolean;
+  /** Not provided by the A detail/list contract; omit instead of showing empty. */
+  matchedSkills?: string[];
+  /** Not provided by the A detail/list contract. */
+  bookmarked?: boolean;
 }
 
 /** 상세 공개 — 열람 기록이 남는다 */
@@ -21,7 +23,8 @@ export interface SupplierProjectDetail extends SupplierProjectCard {
   status: ProjectDisplayStatus;
   items: { specItemId: string; title: string; description: string; conditions: { key: string; text: string; note?: string }[] }[];
   hopeBudget: Won | null;
-  interimRatioGuide: string;
+  /** Not provided by the A detail contract. */
+  interimRatioGuide?: string;
   client: { name: string | null; businessName: string; industryField: string | null; storeAddress: string | null; websiteUrl: string | null; bio: string | null };
   myApplication: { status: ApplicationDisplayStatus; totalAmount: Won; durationDays: number } | null;
 }

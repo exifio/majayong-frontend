@@ -132,11 +132,16 @@ export interface SupplierProjectDetailDto {
   client: SupplierProjectClientDto;
 }
 
-/** A API: the fields this client reads from the supplier profile. */
-export interface SupplierProfileDto {
-  displayName: string;
-  ndaAgreedAt: IsoDate | null;
-  ndaVersion: string | null;
+/** A API: one public project card (GET /projects). */
+export interface PublicProjectListItemDto {
+  projectId: string;
+  title: string;
+  industryCode: string;
+  requiredSkills: string[];
+  status: ApiProjectStatus;
+  deadline: IsoDate | null;
+  itemCount: number;
+  hopeBudgetBand: string | null;
 }
 
 export interface RecommendedProjectDto {
@@ -463,6 +468,14 @@ export interface BApiRequestBodies {
 
 /** Query DTOs accepted by the matching handlers. */
 export interface BApiQueryParams {
+  listPublicProjects: {
+    industryCode?: string;
+    skill?: string;
+    status?: ApiProjectStatus;
+    minBudget?: number;
+    maxBudget?: number;
+    page?: number;
+  };
   listRecommendedProjects: { /** Integer cap, from 1 through 50. */ limit?: number };
   listMessages: { /** ISO 8601 date-time cursor. */ after?: IsoDate };
   listNotifications: { /** Only the string value "true" enables the filter. */ unreadOnly?: boolean };
@@ -485,8 +498,8 @@ export interface BApiResponses {
   removeBookmark: DataEnvelope<RemoveBookmarkResultDto>;
   listRecommendedProjects: DataEnvelope<RecommendedProjectDto[]>;
   /** A API operations, kept in this registry so the shared request module can call them. */
+  listPublicProjects: DataEnvelope<PublicProjectListItemDto[]>;
   getSupplierProjectDetail: DataEnvelope<SupplierProjectDetailDto>;
-  getSupplierProfile: DataEnvelope<SupplierProfileDto | null>;
   updateSupplierProfile: DataEnvelope<unknown>;
   listChatRooms: DataEnvelope<ChatRoomSummaryDto[]>;
   openChat: DataEnvelope<OpenChatResultDto>;
