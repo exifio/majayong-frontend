@@ -27,9 +27,12 @@ import {
   type FeatureRow,
   type PartySign,
 } from './Contract-Client.data';
+import { useSession } from '@/app/session';
+import { LiveContract } from '@/components/contract/LiveContract';
 import s from './Contract-Client.module.css';
 
 export default function ContractClient() {
+  const { apiAccessToken } = useSession();
   const { cid = DEFAULT_CID } = useParams();
   const [params] = useSearchParams();
   const navigate = useNavigate();
@@ -46,6 +49,8 @@ export default function ContractClient() {
     setCancelOpen(next.cancelOpen);
     setReason('');
   }, [params]);
+
+  if (apiAccessToken.trim()) return <LiveContract cid={cid} styles={s} />;
 
   const escrowTo = escrowHref(cid);
 

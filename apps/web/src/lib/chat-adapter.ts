@@ -2,6 +2,7 @@ import type { ChatMessageDto, ChatRoomSummaryDto } from '@majayong/types/api';
 import type { ApplicationDisplayStatus, ContractDisplayStatus, Role } from '@majayong/types/common';
 import { CONTACT_MASK_TOKEN } from '@majayong/types';
 import { applicationStatusLabel } from './application-status';
+import { contractStatusLabel } from './contract-status';
 import { formatDate, formatTime } from './format';
 
 /** Server stores this placeholder in masked message bodies. */
@@ -12,14 +13,6 @@ export function chatMessageText(message: Pick<ChatMessageDto, 'body' | 'isMasked
     ? message.body.split(SERVER_MASK_PLACEHOLDER).join(CONTACT_MASK_TOKEN)
     : message.body;
 }
-
-const CONTRACT_LABEL: Record<NonNullable<ChatRoomSummaryDto['contractStatus']>, ContractDisplayStatus> = {
-  PENDING_CONSENT: '서명 대기',
-  ACTIVE: '진행 중',
-  CANCEL_REQUESTED: '취소 요청 중',
-  COMPLETED: '완료',
-  CANCELLED: '취소',
-};
 
 /** Screen model for one chat room. Names are not in the chat API, so the real id is shown. */
 export interface ChatRoomItem {
@@ -51,7 +44,7 @@ export function chatRoomToItem(room: ChatRoomSummaryDto): ChatRoomItem {
     counterpart: room.counterpartDisplayName,
     preview: room.lastMessage ? chatMessageText(room.lastMessage) : '아직 메시지가 없습니다.',
     timeLabel: room.lastMessage ? formatTime(room.lastMessage.createdAt) : '',
-    statusLabel: room.contractStatus ? CONTRACT_LABEL[room.contractStatus] : applicationStatusLabel(room.status),
+    statusLabel: room.contractStatus ? contractStatusLabel(room.contractStatus) : applicationStatusLabel(room.status),
     unreadCount: room.unreadCount,
   };
 }

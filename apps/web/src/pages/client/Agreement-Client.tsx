@@ -18,9 +18,12 @@ import {
   type CondView,
   type FeatureView,
 } from './Agreement-Client.data';
+import { useSession } from '@/app/session';
+import { LiveAgreement } from '@/components/agreement/LiveAgreement';
 import s from './Agreement-Client.module.css';
 
 export default function AgreementClient() {
+  const { apiAccessToken } = useSession();
   const { pid = DEFAULT_PID, sid = DEFAULT_SID } = useParams();
   const [params] = useSearchParams();
   const mock = resolveAgreementMock(params.get('mock'));
@@ -35,6 +38,8 @@ export default function AgreementClient() {
     const next = agreementDemoOf(resolveAgreementMock(params.get('mock')));
     setPopCond(next.popOpen ? DEMO.popDefaultCond : null);
   }, [params]);
+
+  if (apiAccessToken.trim()) return <LiveAgreement styles={s} />;
 
   return (
     <div className={s.page} data-screen="Agreement-Client">

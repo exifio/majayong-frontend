@@ -132,6 +132,19 @@ export interface SupplierProjectDetailDto {
   client: SupplierProjectClientDto;
 }
 
+/** A API: client's own project row (GET /me/projects). */
+export interface MyProjectDto {
+  projectId: string;
+  title: string;
+  status: ApiProjectStatus;
+  displayState: string;
+  deadline: IsoDate | null;
+  selectionEndsAt: IsoDate | null;
+  currentVersion: number;
+  applicationCount: number;
+  detailViewCount: number;
+}
+
 /** Public supplier profile (GET /profiles/suppliers/{supplierId}). */
 export interface SupplierPublicProfileDto {
   supplierId: string;
@@ -506,7 +519,8 @@ export interface BApiQueryParams {
 export interface BApiResponses {
   listProjectApplications: DataEnvelope<SupplierApplicationCardDto[]>;
   submitApplication: DataEnvelope<ApplicationRevisionDto>;
-  listMyApplications: DataEnvelope<ApplicationRecordDto[]>;
+  listMyApplications: DataEnvelope<ApplicationRevisionDto[]>;
+  listMyProjects: DataEnvelope<MyProjectDto[]>;
   getApplication: DataEnvelope<ApplicationRevisionDto>;
   withdrawApplication: DataEnvelope<ApplicationStatusResultDto>;
   rejectApplication: DataEnvelope<ApplicationStatusResultDto>;

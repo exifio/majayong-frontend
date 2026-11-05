@@ -222,6 +222,17 @@ export function LiveChat({ pid, sid, styles }: { pid?: string; sid?: string; sty
                 {selected.projectTitle && <div className={s.whoMt}>{selected.projectTitle}</div>}
               </div>
             </div>
+            {role === 'CLIENT' && (
+              <div className={s.acts}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  to={`/c/chat/${encodeURIComponent(selected.projectId)}/${encodeURIComponent(selected.supplierId)}/agreement?applicationId=${encodeURIComponent(selected.applicationId)}`}
+                >
+                  합의 미리보기
+                </Button>
+              </div>
+            )}
           </div>
 
           <div className={s.msgs}>

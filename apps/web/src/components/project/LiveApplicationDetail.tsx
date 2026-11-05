@@ -170,6 +170,12 @@ export function LiveApplicationDetail({
             <Button variant="tint" onClick={() => void openChat()} disabled={chatBusy}>
               {chatBusy ? '여는 중' : '문의 채팅'}
             </Button>
+            <Button
+              variant="ghost"
+              to={`/c/chat/${encodeURIComponent(projectId)}/${encodeURIComponent(supplierId)}/agreement?applicationId=${encodeURIComponent(applicationId)}`}
+            >
+              합의 미리보기
+            </Button>
             {canReject && (
               <Button variant="warn" onClick={() => setConfirming(true)} disabled={rejecting}>
                 {rejecting ? '거절 중' : '지원 거절'}
