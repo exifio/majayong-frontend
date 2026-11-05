@@ -21,6 +21,8 @@ import {
   escrowDemoOf,
   resolveEscrowMock,
 } from './Escrow-Client.data';
+import { useSession } from '@/app/session';
+import { LiveEscrow } from '@/components/contract/LiveEscrow';
 import s from './Escrow-Client.module.css';
 
 const PAY_OPTIONS = [
@@ -45,6 +47,7 @@ const PAY_OPTIONS = [
 ];
 
 export default function EscrowClient() {
+  const { apiAccessToken } = useSession();
   const { cid = DEFAULT_CID } = useParams();
   const [params] = useSearchParams();
   const navigate = useNavigate();
@@ -62,6 +65,8 @@ export default function EscrowClient() {
       if (doneTimer.current != null) window.clearTimeout(doneTimer.current);
     };
   }, [params]);
+
+  if (apiAccessToken.trim()) return <LiveEscrow cid={cid} styles={s} />;
 
   const goMock = (next: string) => {
     navigate(`?mock=${encodeURIComponent(next)}`, { replace: true });

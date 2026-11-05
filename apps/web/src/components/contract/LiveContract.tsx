@@ -188,6 +188,8 @@ export function LiveContract({ cid, styles }: { cid?: string; styles: Record<str
                   <div className={s.moneyTot}><span>예치 금액</span><b className={s.moneyTotValue}>{formatWon(document.depositAmount)}</b></div>
                 </>
               )}
+              <div className={s.moneyRow}><span className={s.moneyK}>예치 금액</span><b>{formatWon(document.depositAmount)}</b></div>
+              <div className={s.moneyRow}><span className={s.moneyK}>예치됨</span><b>{formatWon(contract.totalDeposited)}</b></div>
             </div>
           </section>
 
