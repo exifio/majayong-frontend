@@ -2,7 +2,7 @@
  * - 화면 파일은 pages/<공간>/<보드>.tsx (보드 이름 = 파일 이름)
  * - 모달 화면은 부모 경로 + ?modal=<이름> (결정메모 #2). 닫기 = 그 쿼리를 지움, 뒤로 가기도 닫힘
  * - 가드는 guards.ts, 셸은 components/layout/Shell.tsx */
-import { useCallback, type ComponentType, type ReactNode } from 'react';
+import { useCallback, useEffect, useState, type ComponentType, type ReactNode } from 'react';
 import { Navigate, Route, Routes, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SCREENS, type Guard, type ScreenRoute, type Shell } from './routes';
@@ -11,7 +11,9 @@ import { ROLE_HOME, SessionProvider, useSession, type Session } from './session'
 import { useDevDesignChecks } from './devChecks';
 import { DevSessionPanel } from './DevSessionPanel';
 import { AppShell } from '@/components/layout/Shell';
-import { Modal } from '@/components/ui';
+import { Modal, EmptyState } from '@/components/ui';
+import { apiRequest } from '@/lib/api';
+import type { ChatRoomSummaryDto } from '@majayong/types/api';
 import NotFound from '@/pages/system/NotFound';
 import Suspended from '@/pages/system/Suspended';
 import UiCatalog from '@/pages/dev/UiCatalog';
@@ -71,11 +73,55 @@ function ScreenPage({ screen }: { screen: ScreenRoute }) {
   );
 }
 
-/** /c/chat · /s/chat — 가장 최근 대화로(M0 목업: 시연 대화). 대화가 없으면 빈 상태는 M3에서 */
+/** /c/chat · /s/chat — 내 최근 대화로. 대화가 없으면 빈 상태. */
+function ChatIndexRedirect({ space }: { space: 'client' | 'supplier' }) {
+  const { apiAccessToken } = useSession();
+  const [state, setState] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [latest, setLatest] = useState<ChatRoomSummaryDto | null>(null);
+  const shell = space === 'client' ? 'client' : 'supplier';
+
+  useEffect(() => {
+    const controller = new AbortController();
+    setState('loading');
+    apiRequest('listChatRooms', '/me/chats', { accessToken: apiAccessToken, signal: controller.signal })
+      .then((response) => {
+        setLatest(response.data[0] ?? null);
+        setState('ready');
+      })
+      .catch((error: unknown) => {
+        if (error instanceof Error && error.name === 'AbortError') return;
+        setState('error');
+      });
+    return () => controller.abort();
+  }, [apiAccessToken]);
+
+  if (state === 'loading') {
+    return <AppShell shell={shell}><p role="status" style={{ padding: 24 }}>대화를 불러오는 중입니다.</p></AppShell>;
+  }
+  if (state === 'error') {
+    return <AppShell shell={shell}><p role="alert" style={{ padding: 24 }}>대화 목록을 불러오지 못했습니다. 다시 시도해 주세요.</p></AppShell>;
+  }
+  if (latest === null) {
+    return (
+      <AppShell shell={shell}>
+        <EmptyState title="아직 대화가 없습니다">
+          프로젝트에서 대화가 시작되면 이곳에 표시됩니다.
+        </EmptyState>
+      </AppShell>
+    );
+  }
+  return (
+    <Navigate
+      to={space === 'client' ? `/c/chat/${latest.projectId}/${latest.supplierId}` : `/s/chat/${latest.projectId}`}
+      replace
+    />
+  );
+}
+
 function ChatIndex({ space }: { space: 'client' | 'supplier' }) {
   return (
     <Guarded guard={space}>
-      <Navigate to={space === 'client' ? '/c/chat/p-ondo/s-junho' : '/s/chat/p-ondo'} replace />
+      <ChatIndexRedirect space={space} />
     </Guarded>
   );
 }

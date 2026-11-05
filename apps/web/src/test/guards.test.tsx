@@ -23,9 +23,7 @@ const cases: [string, Parameters<typeof renderAt>[1], string][] = [
   // 정지 계정 → 안내만
   ['/c/contracts', 'suspended', '/suspended'],
   ['/help', 'suspended', '/suspended'],
-  // 보조 경로
-  ['/c/chat', 'client', '/c/chat/p-ondo/s-junho'],
-  ['/s/chat', 'supplier', '/s/chat/p-ondo'],
+  // 보조 경로 — /c/chat · /s/chat은 최근 대화 API 결과에 따르므로 App.test.tsx에서 검증한다.
   ['/admin', 'admin', '/admin/blocks'],
   ['/help/inquiry', 'guest', '/?modal=login&next=%2Fhelp%2Finquiry'],
 ];
