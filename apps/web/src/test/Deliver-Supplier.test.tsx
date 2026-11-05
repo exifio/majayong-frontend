@@ -46,6 +46,11 @@ describe('Deliver-Supplier — 납품', () => {
     expect(screen.getByRole('button', { name: '검수 기다리는 중' })).toHaveProperty('disabled', true);
   });
 
+  it('제출 후에는 시연 상태임을 알린다', () => {
+    renderAt(`${PATH}?mock=${encodeURIComponent('제출함 · 검수 대기')}`, 'supplier');
+    expect(screen.getByRole('note').textContent).toContain('서버에 저장되지 않았습니다');
+  });
+
   it('보완 요청: amber 띠 · 다시 제출', () => {
     const { container } = renderAt(`${PATH}?mock=${encodeURIComponent('보완 요청')}`, 'supplier');
     expect(container.querySelector('[data-band="warn"]')).toBeTruthy();

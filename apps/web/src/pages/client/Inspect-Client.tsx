@@ -48,11 +48,13 @@ export default function InspectClient() {
   );
   const [approveOpen, setApproveOpen] = useState(demo.approveOpen);
   const [showFix, setShowFix] = useState(demo.fixForm);
+  const [fixSent, setFixSent] = useState(false);
 
   useEffect(() => {
     const next = inspectDemoOf(resolveInspectMock(params.get('mock')));
     setApproveOpen(next.approveOpen);
     setShowFix(next.fixForm);
+    setFixSent(false);
     setFixItem(next.items.find((i) => i.status !== 'ok')?.id ?? '');
     setFixReason(
       next.fixForm
@@ -253,14 +255,20 @@ export default function InspectClient() {
                 <Button
                   variant="tint"
                   size="sm"
-                  disabled={!canSendFix}
-                  disabledReason={!canSendFix ? DEMO.fixEmpty : undefined}
-                  onClick={() => goMock('검수 대기')}
+                  disabled={!canSendFix || fixSent}
+                  disabledReason={!canSendFix ? DEMO.fixEmpty : fixSent ? '보완 요청을 보냈습니다' : undefined}
+                  onClick={() => setFixSent(true)}
                 >
                   {DEMO.fixSend}
                 </Button>
               </div>
             </div>
+          ) : null}
+
+          {fixSent ? (
+            <p className={s.actsHint} role="status">
+              보완 요청을 보냈습니다. 시연 상태라 서버에는 저장되지 않았습니다.
+            </p>
           ) : null}
 
           <div className={s.acts}>

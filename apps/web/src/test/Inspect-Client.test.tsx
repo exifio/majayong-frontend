@@ -43,6 +43,14 @@ describe('Inspect-Client — 검수', () => {
     );
   });
 
+  it('보완 요청을 보내면 상태가 남고 다시 보낼 수 없다', () => {
+    renderAt(`${PATH}?mock=${encodeURIComponent('보완 요청 작성')}`, 'client');
+    const send = screen.getByRole('button', { name: DEMO.fixSend });
+    fireEvent.click(send);
+    expect(screen.getByRole('status').textContent).toContain('보완 요청을 보냈습니다');
+    expect(screen.getByRole('button', { name: DEMO.fixSend })).toHaveProperty('disabled', true);
+  });
+
   it('검수 기한 하루 전: amber 띠', () => {
     renderAt(`${PATH}?mock=${encodeURIComponent('검수 기한 하루 전')}`, 'client');
     expect(screen.getByText(DEMO.dueTitle)).toBeTruthy();

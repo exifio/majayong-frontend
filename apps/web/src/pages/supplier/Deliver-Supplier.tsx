@@ -72,6 +72,12 @@ export default function DeliverSupplier() {
         {DEMO.pageTitle}
       </p>
 
+      {demo.submitted ? (
+        <p role="note" className={s.submitNote}>
+          시연 상태 — 이 제출은 서버에 저장되지 않았습니다.
+        </p>
+      ) : null}
+
       <div className={s.head}>
         <div>
           <div className={s.titleRow}>
