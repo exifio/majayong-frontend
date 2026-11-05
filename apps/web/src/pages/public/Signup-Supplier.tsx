@@ -35,13 +35,13 @@ function SignupStepper({ current }: { current: 1 | 2 | 3 }) {
 
 export default function SignupSupplier() {
   const navigate = useNavigate();
-  const { apiAccessToken } = useSession();
+  const { apiAccessToken, authUser } = useSession();
 
-  const [name, setName] = useState<string>(DEMO.nameValue);
+  const [name, setName] = useState('');
   const [type, setType] = useState<'personal' | 'business'>('personal');
-  const [career, setCareer] = useState<string>(DEMO.careerValue);
-  const [skills, setSkills] = useState<string[]>([...DEMO.skillSelected]);
-  const [portfolio, setPortfolio] = useState<string>(DEMO.portfolioValue);
+  const [career, setCareer] = useState('');
+  const [skills, setSkills] = useState<string[]>([]);
+  const [portfolio, setPortfolio] = useState('');
   const [ndaOk, setNdaOk] = useState(true);
   const [feeOk, setFeeOk] = useState(true);
   const [aiOk, setAiOk] = useState(true);
@@ -59,17 +59,14 @@ export default function SignupSupplier() {
     );
   };
 
-  const saveProfile = async (displayName?: string) => {
+  const saveProfile = async (displayName: string) => {
     setBusy(true);
     setError(null);
     try {
       await apiRequest('updateSupplierProfile', '/me/supplier-profile', {
         method: 'PATCH',
         accessToken: apiAccessToken,
-        jsonBody: {
-          ...(displayName ? { displayName } : {}),
-          ndaConsent: true,
-        },
+        jsonBody: { displayName, ndaConsent: true },
       });
       navigate('/s', { replace: true });
     } catch {
@@ -90,7 +87,8 @@ export default function SignupSupplier() {
 
   const skip = () => {
     if (!agreesOk) return;
-    void saveProfile();
+    const emailName = authUser?.email.split('@', 1)[0]?.trim();
+    void saveProfile(name.trim() || emailName || '공급자');
   };
   return (
     <div className={s.page} data-screen="Signup-Supplier">

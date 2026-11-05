@@ -37,10 +37,10 @@ export default function SignupClient() {
   const navigate = useNavigate();
   const { apiAccessToken } = useSession();
 
-  const [biz, setBiz] = useState<string>(DEMO.bizValue);
-  const [industry, setIndustry] = useState<string>(DEMO.industries[0]);
-  const [scale, setScale] = useState<string>(DEMO.scaleValue);
-  const [intro, setIntro] = useState<string>(DEMO.introValue);
+  const [biz, setBiz] = useState('');
+  const [industry, setIndustry] = useState('');
+  const [scale, setScale] = useState('');
+  const [intro, setIntro] = useState('');
   const [tried, setTried] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -57,7 +57,7 @@ export default function SignupClient() {
         accessToken: apiAccessToken,
         jsonBody: {
           businessName: biz.trim(),
-          industryField: industry,
+          ...(industry ? { industryField: industry } : {}),
           ...(intro.trim() ? { bio: intro.trim() } : {}),
         },
       });
@@ -90,6 +90,7 @@ export default function SignupClient() {
       <div className={s.fields}>
         <TextField
           label={DEMO.biz}
+          placeholder={DEMO.bizPlaceholder}
           required
           value={biz}
           onChange={(e) => setBiz(e.target.value)}
@@ -107,6 +108,7 @@ export default function SignupClient() {
             value={industry}
             onChange={(e) => setIndustry(e.target.value)}
           >
+            <option value="">{DEMO.industryPlaceholder}</option>
             {DEMO.industries.map((opt) => (
               <option key={opt} value={opt}>
                 {opt}
@@ -118,6 +120,7 @@ export default function SignupClient() {
 
         <TextField
           label={DEMO.scale}
+          placeholder={DEMO.scalePlaceholder}
           optional
           value={scale}
           onChange={(e) => setScale(e.target.value)}
@@ -126,6 +129,7 @@ export default function SignupClient() {
 
         <TextAreaField
           label={DEMO.intro}
+          placeholder={DEMO.introPlaceholder}
           optional
           value={intro}
           onChange={(e) => setIntro(e.target.value)}

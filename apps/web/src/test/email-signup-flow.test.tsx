@@ -6,9 +6,9 @@ import { location, renderAt } from './render';
 const jsonResponse = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
 
-const registerResponse = (role: 'CLIENT' | 'SUPPLIER') => jsonResponse({
+const registerResponse = (role: 'CLIENT' | 'SUPPLIER', email = 'newuser@example.com') => jsonResponse({
   data: {
-    user: { id: 'user-new', email: 'newuser@example.com', role },
+    user: { id: 'user-new', email, role },
     accessToken: 'access-token-123',
     refreshToken: 'refresh-token-123',
     accessExpiresAt: new Date(Date.now() + 3_600_000).toISOString(),
@@ -62,6 +62,12 @@ describe('Email signup end-to-end & reload persistence', () => {
     await waitFor(() => expect(location.current.startsWith('/signup/client')).toBe(true));
     expect(screen.getByRole('heading', { level: 1, name: '의뢰인 프로필' })).toBeTruthy();
 
+    const clientRoot = screen.getByRole('heading', { level: 1, name: '의뢰인 프로필' })
+      .closest('[data-screen="Signup-Client"]') as HTMLElement;
+    fireEvent.change(within(clientRoot).getByLabelText(/상호/), { target: { value: '실제 의뢰인 상호' } });
+    fireEvent.change(within(clientRoot).getByLabelText(/업종/), { target: { value: '기타 (직접 입력)' } });
+    fireEvent.change(within(clientRoot).getByLabelText(/한 줄 소개/), { target: { value: '실제 가게 소개' } });
+
     fireEvent.click(screen.getByRole('button', { name: '가입 완료' }));
     await waitFor(() => expect(location.current.startsWith('/c')).toBe(true));
 
@@ -77,10 +83,11 @@ describe('Email signup end-to-end & reload persistence', () => {
     const profileCall = fetchMock.mock.calls.find(([path]) => String(path).endsWith('/api/v1/me/client-profile'));
     expect(profileCall![1]?.method).toBe('PATCH');
     expect(JSON.parse(String(profileCall![1]?.body))).toEqual({
-      businessName: '온도 다이닝',
-      industryField: '예약 기반 음식점',
-      bio: '카운터 10석 코스 레스토랑을 3년째 운영하고 있습니다. 외주는 처음입니다.',
+      businessName: '실제 의뢰인 상호',
+      industryField: '기타 (직접 입력)',
+      bio: '실제 가게 소개',
     });
+
 
     // 역할 선택 완료 즉시 평문 비밀번호 및 가입 세션 정리 확인
     expect(window.sessionStorage.getItem('mj.signup.password')).toBeNull();
@@ -91,7 +98,7 @@ describe('Email signup end-to-end & reload persistence', () => {
     const fetchMock = vi.fn<typeof fetch>().mockImplementation(async (input) => {
       const url = String(input);
       return url.endsWith('/api/v1/auth/register')
-        ? registerResponse('SUPPLIER')
+        ? registerResponse('SUPPLIER', 'supplier@example.com')
         : jsonResponse({ data: [] });
     });
     vi.stubGlobal('fetch', fetchMock);
@@ -106,6 +113,10 @@ describe('Email signup end-to-end & reload persistence', () => {
     fireEvent.click(screen.getByRole('button', { name: '다음' }));
 
     await waitFor(() => expect(location.current.startsWith('/signup/supplier')).toBe(true));
+    const supplierRoot = screen.getByRole('heading', { level: 1, name: '공급자 프로필' })
+      .closest('[data-screen="Signup-Supplier"]') as HTMLElement;
+    fireEvent.change(within(supplierRoot).getByLabelText(/활동 이름/), { target: { value: '실제 공급자' } });
+
     fireEvent.click(screen.getByRole('button', { name: '가입 완료' }));
 
     await waitFor(() => expect(location.current).toBe('/s'));
@@ -120,11 +131,45 @@ describe('Email signup end-to-end & reload persistence', () => {
     const profileCall = fetchMock.mock.calls.find(([path]) => String(path).endsWith('/api/v1/me/supplier-profile'));
     expect(profileCall![1]?.method).toBe('PATCH');
     expect(JSON.parse(String(profileCall![1]?.body))).toEqual({
-      displayName: '최준호',
+      displayName: '실제 공급자',
       ndaConsent: true,
     });
+
     expect(window.sessionStorage.getItem('mj.signup.password')).toBeNull();
   });
+  it('공급자 건너뛰기: 이메일 아이디를 활동 이름으로 보내고 NDA PATCH 후 /s로 이동한다', async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockImplementation(async (input) => {
+      const url = String(input);
+      return url.endsWith('/api/v1/auth/register')
+        ? registerResponse('SUPPLIER', 'supplier@example.com')
+        : jsonResponse({ data: { ndaAgreedAt: '2026-11-06T00:00:00.000Z', ndaVersion: 'v0.7' } });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    window.sessionStorage.setItem('mj.signup.email', 'supplier@example.com');
+    window.sessionStorage.setItem('mj.signup.password', 'password1234');
+    window.sessionStorage.setItem('mj.signup.terms', 'v0.7');
+    window.sessionStorage.setItem('mj.signup.session', 'signup');
+
+    renderAt(`/signup/role?mock=${encodeURIComponent('공급자 선택')}`, null);
+    await screen.findByRole('heading', { level: 1, name: '어떤 쪽으로 시작하시나요?' });
+    fireEvent.click(screen.getByRole('button', { name: '다음' }));
+
+    await waitFor(() => expect(location.current.startsWith('/signup/supplier')).toBe(true));
+    const supplierRoot = screen.getByRole('heading', { level: 1, name: '공급자 프로필' })
+      .closest('[data-screen="Signup-Supplier"]') as HTMLElement;
+    expect((within(supplierRoot).getByLabelText(/활동 이름/) as HTMLInputElement).value).toBe('');
+    fireEvent.click(within(supplierRoot).getByRole('button', { name: '나중에 입력하기' }));
+
+    await waitFor(() => expect(location.current).toBe('/s'));
+    const profileCall = fetchMock.mock.calls.find(([path]) => String(path).endsWith('/api/v1/me/supplier-profile'));
+    expect(profileCall?.[1]?.method).toBe('PATCH');
+    expect(JSON.parse(String(profileCall?.[1]?.body))).toEqual({
+      displayName: 'supplier',
+      ndaConsent: true,
+    });
+  });
+
 
   it('가입 세션이 없는 게스트의 직접 접속은 /signup으로 가드 리다이렉트된다', async () => {
     renderAt('/signup/role', null);

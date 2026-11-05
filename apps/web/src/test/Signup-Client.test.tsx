@@ -22,9 +22,23 @@ describe('Signup-Client — 회원가입 ③ 의뢰인 프로필', () => {
     expect(within(root).getByLabelText('가입 단계')).toBeTruthy();
     expect(within(root).getByLabelText(/상호/)).toBeTruthy();
     expect(within(root).queryByLabelText(/연락처|전화/)).toBeNull();
+    const biz = within(root).getByLabelText(/상호/) as HTMLInputElement;
+    const industry = within(root).getByLabelText(/업종/) as HTMLSelectElement;
+    const scale = within(root).getByLabelText(/규모/) as HTMLInputElement;
+    const intro = within(root).getByLabelText(/한 줄 소개/) as HTMLTextAreaElement;
+    expect(biz.value).toBe('');
+    expect(industry.value).toBe('');
+    expect(scale.value).toBe('');
+    expect(intro.value).toBe('');
+
     const submit = within(root).getByRole('button', { name: DEMO.submit });
     expect(submit.getAttribute('data-btn')).toBe('primary');
     expect(root.querySelectorAll('[data-btn="primary"]').length).toBe(1);
+
+    fireEvent.change(biz, { target: { value: '실제 의뢰인 상호' } });
+    fireEvent.change(industry, { target: { value: DEMO.industries[1] } });
+    fireEvent.change(scale, { target: { value: '20석' } });
+    fireEvent.change(intro, { target: { value: '실제 가게 소개' } });
 
     fireEvent.click(submit);
 
@@ -33,9 +47,9 @@ describe('Signup-Client — 회원가입 ③ 의뢰인 프로필', () => {
     expect(path).toBe('/api/v1/me/client-profile');
     expect(init?.method).toBe('PATCH');
     expect(JSON.parse(String(init?.body))).toEqual({
-      businessName: DEMO.bizValue,
-      industryField: DEMO.industries[0],
-      bio: DEMO.introValue,
+      businessName: '실제 의뢰인 상호',
+      industryField: DEMO.industries[1],
+      bio: '실제 가게 소개',
     });
     expect(findDesignViolations(container)).toEqual([]);
   });

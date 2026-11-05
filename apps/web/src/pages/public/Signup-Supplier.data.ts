@@ -10,7 +10,6 @@ export const DEMO = {
   ] as const,
   name: '활동 이름',
   nameHint: '제작사라면 상호를 적으셔도 됩니다.',
-  nameValue: '최준호',
   nameError: '활동 이름을 입력해 주세요',
   typeLabel: '개인 / 사업자',
   personalKey: 'personal',
@@ -21,7 +20,6 @@ export const DEMO = {
   businessDesc: '법인 · 개인사업자로 활동합니다.',
   career: '경력',
   careerHint: '연 단위로 적어 주세요.',
-  careerValue: '5',
   skills: '기술 스택',
   skillsHint: '의뢰인 명세의 필요 기술과 맞춰보는 데 씁니다.',
   skillOptions: [
@@ -35,10 +33,8 @@ export const DEMO = {
     'Firebase',
     '디자인',
   ] as const,
-  skillSelected: ['React', 'Next.js', 'Supabase'] as const,
   portfolio: '포트폴리오 링크',
   portfolioHint: '작업한 사이트, 깃허브, 노션 등.',
-  portfolioValue: 'https://junho.work',
   agreeTitle: '가입 전 확인',
   agrees: [
     {
@@ -61,5 +57,5 @@ export const DEMO = {
   backHref: '/signup/role',
   skip: '나중에 입력하기',
   submit: '가입 완료',
-  skipHint: '프로필은 건너뛰셔도 되지만, 비밀유지 동의는 가입에 꼭 필요합니다.',
+  skipHint: '건너뛰기 시 활동 이름을 비워 두면 이메일 아이디가 의뢰인에게 표시됩니다. 다른 이름을 쓰려면 활동 이름을 입력해 주세요.',
 } as const;
