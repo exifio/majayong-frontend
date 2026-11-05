@@ -140,7 +140,7 @@ export function LiveContract({ cid, styles }: { cid?: string; styles: Record<str
           <p className={s.bandBody}>
             {contract.status === 'PENDING_CONSENT'
               ? (mySignedAt === null
-                ? '서명하면 상대방에게 알림이 가고, 양측 서명이 끝나면 계약이 체결됩니다.'
+                ? '서명하면 계약에 서명한 것으로 기록되고, 양측 서명이 끝나면 계약이 체결됩니다.'
                 : '내 서명은 완료되었습니다. 상대방 서명을 기다리고 있습니다.')
               : contract.paymentStatus === 'PENDING'
                 ? '서명이 끝났습니다. 예치가 완료되면 거래가 진행됩니다.'
@@ -250,7 +250,7 @@ export function LiveContract({ cid, styles }: { cid?: string; styles: Record<str
             <br />
             서명 기한 {formatDateTime(contract.consentDeadline)}
           </p>
-          <p>계약 내용과 금액·조건을 확인했습니다. 서명하면 상대방에게 알림이 가고, 양측 서명이 끝나면 계약이 체결됩니다.</p>
+          <p>계약 내용과 금액·조건을 확인했습니다. 서명하면 계약에 서명한 것으로 기록되고, 양측 서명이 끝나면 계약이 체결됩니다.</p>
         </ConfirmDialog>
       )}
     </div>
