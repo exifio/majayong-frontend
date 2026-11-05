@@ -36,6 +36,16 @@ describe('가드', () => {
     });
   }
 
+  it('가입 등록 후 목적지 이동 전에는 이전 역할 URL에서 홈으로 보내지 않는다', () => {
+    const rolePage = renderAt('/signup/role', 'client');
+    expect(rolePage.container.querySelector('[data-screen="Signup-Role"]')).not.toBeNull();
+    expect(location.current).toBe('/signup/role');
+    rolePage.unmount();
+
+    renderAt('/signup/client', 'supplier');
+    expect(location.current).toBe('/s');
+  });
+
   it('통과하는 경로는 그대로 둔다', () => {
     renderAt('/c/contracts', 'client');
     expect(location.current).toBe('/c/contracts');

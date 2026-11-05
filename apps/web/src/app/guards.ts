@@ -21,6 +21,8 @@ export function resolveGuard(guard: Guard, session: Session, here: string): stri
     case 'signup-step':
       if (session.status === 'signup') return null;
       if (session.status === 'user') {
+        // 등록이 라우터의 프로필 이동보다 먼저 인증을 바꿔도 역할 URL에서 홈으로 튕기지 않는다.
+        if (here.startsWith('/signup/role')) return null;
         // 가입 등록 뒤 ③ 프로필은 로그인 상태에서 이어진다.
         const profileRole = here.startsWith('/signup/client')
           ? 'CLIENT'

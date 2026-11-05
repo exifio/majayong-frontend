@@ -59,14 +59,17 @@ export default function SignupSupplier() {
     );
   };
 
-  const saveProfile = async (displayName: string) => {
+  const saveProfile = async (displayName?: string) => {
     setBusy(true);
     setError(null);
     try {
       await apiRequest('updateSupplierProfile', '/me/supplier-profile', {
         method: 'PATCH',
         accessToken: apiAccessToken,
-        jsonBody: { displayName },
+        jsonBody: {
+          ...(displayName ? { displayName } : {}),
+          ndaConsent: true,
+        },
       });
       navigate('/s', { replace: true });
     } catch {
@@ -87,7 +90,7 @@ export default function SignupSupplier() {
 
   const skip = () => {
     if (!agreesOk) return;
-    navigate('/s', { replace: true });
+    void saveProfile();
   };
   return (
     <div className={s.page} data-screen="Signup-Supplier">

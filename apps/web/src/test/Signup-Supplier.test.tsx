@@ -28,17 +28,18 @@ describe('Signup-Supplier — 회원가입 ③ 공급자 프로필', () => {
 
     fireEvent.click(submit);
 
-    await waitFor(() => expect(location.current.startsWith('/s')).toBe(true));
+    await waitFor(() => expect(location.current).toBe('/s'));
     const [path, init] = fetchMock.mock.calls[0]!;
     expect(path).toBe('/api/v1/me/supplier-profile');
     expect(init?.method).toBe('PATCH');
     expect(JSON.parse(String(init?.body))).toEqual({
       displayName: DEMO.nameValue,
+      ndaConsent: true,
     });
     expect(findDesignViolations(container)).toEqual([]);
   });
 
-  it('나중에 입력하기: 프로필을 저장하지 않고 /s로 이동한다', () => {
+  it('나중에 입력하기: NDA 동의를 PATCH한 뒤 /s로 이동한다', async () => {
     const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(jsonResponse({ data: {} }));
     vi.stubGlobal('fetch', fetchMock);
     const { container } = renderAt('/signup/supplier', 'supplier', undefined, 'test-token');
@@ -46,8 +47,11 @@ describe('Signup-Supplier — 회원가입 ③ 공급자 프로필', () => {
 
     fireEvent.click(within(root).getByRole('button', { name: DEMO.skip }));
 
-    expect(location.current.startsWith('/s')).toBe(true);
-    expect(fetchMock.mock.calls.some(([path]) => String(path).endsWith('/me/supplier-profile'))).toBe(false);
+    await waitFor(() => expect(location.current).toBe('/s'));
+    const [path, init] = fetchMock.mock.calls[0]!;
+    expect(path).toBe('/api/v1/me/supplier-profile');
+    expect(init?.method).toBe('PATCH');
+    expect(JSON.parse(String(init?.body))).toEqual({ ndaConsent: true });
   });
 
   it('저장 실패: 서버 오류를 안내하고 프로필 단계에 머문다', async () => {

@@ -108,7 +108,7 @@ describe('Email signup end-to-end & reload persistence', () => {
     await waitFor(() => expect(location.current.startsWith('/signup/supplier')).toBe(true));
     fireEvent.click(screen.getByRole('button', { name: '가입 완료' }));
 
-    await waitFor(() => expect(location.current.startsWith('/s')).toBe(true));
+    await waitFor(() => expect(location.current).toBe('/s'));
 
     const registerCall = fetchMock.mock.calls.find(([path]) => String(path).endsWith('/api/v1/auth/register'));
     expect(JSON.parse(String(registerCall![1]!.body))).toEqual({
@@ -121,6 +121,7 @@ describe('Email signup end-to-end & reload persistence', () => {
     expect(profileCall![1]?.method).toBe('PATCH');
     expect(JSON.parse(String(profileCall![1]?.body))).toEqual({
       displayName: '최준호',
+      ndaConsent: true,
     });
     expect(window.sessionStorage.getItem('mj.signup.password')).toBeNull();
   });
