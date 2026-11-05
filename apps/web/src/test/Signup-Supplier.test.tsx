@@ -23,6 +23,14 @@ describe('Signup-Supplier — 회원가입 ③ 공급자 프로필', () => {
     for (const skill of DEMO.skillOptions) {
       expect(within(root).getByRole('button', { name: skill }).getAttribute('aria-pressed')).toBe('false');
     }
+    const consents = within(root).getAllByRole('checkbox') as HTMLInputElement[];
+    expect(consents.map((consent) => consent.checked)).toEqual([false, false, false]);
+    const submit = within(root).getByRole('button', { name: DEMO.submit });
+    expect(submit.hasAttribute('disabled')).toBe(true);
+    expect(within(root).getByText(DEMO.agreeNeed)).toBeTruthy();
+    const skip = within(root).getByRole('button', { name: DEMO.skip });
+    expect(skip.hasAttribute('disabled')).toBe(true);
+    expect(within(root).getByText(DEMO.ndaNeed)).toBeTruthy();
   });
 
   it('가입 완료: 활동 이름·NDA 동의를 PATCH하고 /s로 이동한다', async () => {
@@ -39,8 +47,11 @@ describe('Signup-Supplier — 회원가입 ③ 공급자 프로필', () => {
     expect(root.querySelectorAll('[data-btn="primary"]').length).toBe(1);
 
     fireEvent.change(within(root).getByLabelText(/활동 이름/), { target: { value: '실제 공급자' } });
+    for (const consent of within(root).getAllByRole('checkbox')) fireEvent.click(consent);
+    const enabledSubmit = within(root).getByRole('button', { name: DEMO.submit });
+    expect(enabledSubmit.hasAttribute('disabled')).toBe(false);
 
-    fireEvent.click(submit);
+    fireEvent.click(enabledSubmit);
 
     await waitFor(() => expect(location.current).toBe('/s'));
     const [path, init] = fetchMock.mock.calls[0]!;
@@ -61,6 +72,12 @@ describe('Signup-Supplier — 회원가입 ③ 공급자 프로필', () => {
     const root = container.querySelector('[data-screen="Signup-Supplier"]') as HTMLElement;
 
     fireEvent.change(within(root).getByLabelText(/활동 이름/), { target: { value: '내 활동명' } });
+    const consents = within(root).getAllByRole('checkbox') as HTMLInputElement[];
+    fireEvent.click(consents[0]!);
+    expect(consents[0]!.checked).toBe(true);
+    expect(consents[1]!.checked).toBe(false);
+    expect(consents[2]!.checked).toBe(false);
+    expect(within(root).getByRole('button', { name: DEMO.skip }).hasAttribute('disabled')).toBe(false);
 
     fireEvent.click(within(root).getByRole('button', { name: DEMO.skip }));
 
@@ -78,6 +95,7 @@ describe('Signup-Supplier — 회원가입 ③ 공급자 프로필', () => {
     const { container } = renderAt('/signup/supplier', 'supplier', undefined, 'test-token');
     const root = container.querySelector('[data-screen="Signup-Supplier"]') as HTMLElement;
     fireEvent.change(within(root).getByLabelText(/활동 이름/), { target: { value: '테스트 공급자' } });
+    for (const consent of within(root).getAllByRole('checkbox')) fireEvent.click(consent);
 
     fireEvent.click(within(root).getByRole('button', { name: DEMO.submit }));
 
@@ -89,6 +107,7 @@ describe('Signup-Supplier — 회원가입 ③ 공급자 프로필', () => {
     const { container } = renderAt('/signup/supplier', 'signup');
     const root = container.querySelector('[data-screen="Signup-Supplier"]') as HTMLElement;
     const checks = within(root).getAllByRole('checkbox');
+    for (const check of checks) fireEvent.click(check);
     fireEvent.click(checks[0]!);
     const submit = within(root).getByRole('button', { name: DEMO.submit });
     expect(submit.hasAttribute('disabled')).toBe(true);

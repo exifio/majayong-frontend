@@ -116,6 +116,7 @@ describe('Email signup end-to-end & reload persistence', () => {
     const supplierRoot = screen.getByRole('heading', { level: 1, name: '공급자 프로필' })
       .closest('[data-screen="Signup-Supplier"]') as HTMLElement;
     fireEvent.change(within(supplierRoot).getByLabelText(/활동 이름/), { target: { value: '실제 공급자' } });
+    for (const consent of within(supplierRoot).getAllByRole('checkbox')) fireEvent.click(consent);
 
     fireEvent.click(screen.getByRole('button', { name: '가입 완료' }));
 
@@ -159,6 +160,10 @@ describe('Email signup end-to-end & reload persistence', () => {
     const supplierRoot = screen.getByRole('heading', { level: 1, name: '공급자 프로필' })
       .closest('[data-screen="Signup-Supplier"]') as HTMLElement;
     expect((within(supplierRoot).getByLabelText(/활동 이름/) as HTMLInputElement).value).toBe('');
+    const consents = within(supplierRoot).getAllByRole('checkbox') as HTMLInputElement[];
+    fireEvent.click(consents[0]!);
+    expect(consents[1]!.checked).toBe(false);
+    expect(consents[2]!.checked).toBe(false);
     fireEvent.click(within(supplierRoot).getByRole('button', { name: '나중에 입력하기' }));
 
     await waitFor(() => expect(location.current).toBe('/s'));

@@ -1,0 +1,297 @@
+# FRONTEND_TASKS — 방식 B: 저장소별 실행 TASKS
+
+> **작업본 안내:** 원본 자료집의 FE 기준은 `f9427a9`입니다. 현재 작업본의 코드 차이·경로·누락 자료는 [프론트엔드 작업 시작 안내](../FRONTEND_WORKSPACE.md)를 먼저 확인하세요. 원본의 과거 진단과 미실행 상태를 현재 사실로 단정하지 않습니다.
+
+
+> 대상: **FE 작업 AI 전용**. 다른 저장소 코드를 직접 수정하지 말고 공동 계약은 [통합 TASKS](../TASKS.md)의 Integration 담당으로 넘깁니다. 버전 v0.7.3, 기준 2026-11-05 (KST). 아래 작업은 모두 **미실행/대기**입니다.
+>
+> 각 태스크는 다른 AI가 읽어도 같은 결과를 내도록 파일·API·수용 기준·최소 QA를 명시했습니다. 작업에 명시되지 않은 전면 리팩터링/자동 테스트 대량 생성 금지.
+
+| id | 우선순위 | 단계 | 작업 | 의존 | 난이도 |
+|---|:---:|:---:|---|---|:---:|
+| FE-00 | P0 | Now | 실제 배포 FE 기준선·UI 경로 확인 | INT-00 | 하 |
+| FE-01 | P0 | Now | 이메일 회원가입 3단계 실제 API 연결 | BE-01, FE-00 | 상 |
+| FE-02 | P1 | Now | 비밀번호 재설정 실제 API·초기값 정리 | BE-01, FE-00 | 중 |
+| FE-03 | P1 | Now | 고객센터 FAQ 분리 및 신규 1:1 문의 화면 | BE-02, FE-05 | 중 |
+| FE-04 | P1 | Next | 운영자 1:1 문의 페이지 신규 구현 | BE-02, FE-05 | 중 |
+| FE-05 | P1 | Now | 푸터·메뉴·약관 셸 공통 수정 | FE-00 | 중 |
+| FE-06 | P2 | Later | 랜딩 2종 디자인 차이 최소 반영 | FE-05 | 중 |
+| FE-07 | P1 | Next | 알림 문의 답변 링크 추가·상태 유지 | FE-03, BE-03 | 하 |
+| FE-08 | P2 | Next | 계정 설정의 증빙·정산 계좌 UI 정리 | BE-00, FE-05 | 중 |
+| FE-09 | P2 | Later | 운영자 후처리 UI 상태 보완 | FE-05, BE-05 | 중 |
+| FE-10 | P1 | Next | 검수·납품의 보완/완료 후 상태 보완 | BE-05, FE-11 | 중 |
+| FE-11 | P1 | Next | 계약·정산 목록의 실데이터 경계 정리 | BE-04, FE-00 | 상 |
+| FE-12 | P0 | Now | Toss 예치 UI 사실표시·승인 연결 게이트 | BE-06, BE-07, INT-02 | 상 |
+| FE-13 | P1 | Next | 기존 NDA·지원·채팅·합의·서명 보호 회귀 | BE-04, INT-00 | 중 |
+| FE-14 | P1 | Now | ChatIndex 고정 데모 링크 제거 | BE-04, FE-00 | 하 |
+| FE-15 | P2 | Later | 선택 검색/취소 철회 UI 확장 보류 관리 | BE-09, BE-10 | 하 |
+| FE-16 | P1 | Next | 변경 영역별 가벼운 QA와 57보드 비교 마감 | FE-13, FE-03 | 하 |
+
+## FE-00 — 실제 배포 FE 기준선·UI 경로 확인
+
+- **상태/난이도:** 완료 / 2026-11-06 프로덕션 읽기 전용 확인 / 하 · **우선순위:** P0 · **단계:** Now.
+- **선행:** INT-00.
+- **대상:** `apps/web/vercel.json; src/app/App.tsx; src/app/routes.ts`.
+- **목표/범위:** 기존 배포 URL/현재 main SHA/문의 경로/ChatIndex 위험을 코드와 대조.
+- **보존:** 기존 SPA rewrite와 /api/v1 프록시.
+- **API 계약:** GET /health는 백엔드 호스트에서 확인.
+- **실행:** 배포 SHA와 Git main 일치 여부 기록. /help/inquiry가 현재 Help를 재사용하는 점과 57↔55 차이를 기록.
+- **완료 조건:** 환경별 FE SHA, API 연결 목적지, 화면 접근/미검증 결과 정리.
+- **최소 QA:** 프로덕션 변경 없이 새로고침/직접 URL/401 확인.
+- **확인 결과(2026-11-06 KST):**
+  - 프로덕션 `https://majayong.vercel.app` (alias `majayong-frontend.vercel.app`). 최신 Production 배포 `dpl_4VsWK4rURxQwDGyMYWjXvp5gqakX`, 생성 2026-11-05 23:45:55 KST.
+  - 배포 SHA: Vercel inspect가 git 메타데이터를 노출하지 않음. 배포 생성이 `e89e743` 커밋 36초 후이고, 배포 번들에 그 커밋에서만 추가된 `/me/client-profile`·`updateClientProfile` 문자열이 있어 **`e89e743`로 대조**. Git 자동 배포 연동 자체는 미확인.
+  - API: `/api/v1/*` → `/api/proxy` rewrite 유지. 무토큰 `GET /api/v1/me/notifications`가 백엔드 `401 INVALID_ACCESS_TOKEN` 봉투와 `x-request-id`를 반환 → 프록시 실연결. 백엔드 호스트·`GET /health`는 서버 환경값이라 미기록/미확인.
+  - 화면: `/`, `/help/inquiry`, `/c/chat`, `/s/chat`, `/signup` 모두 200(SPA 셸). `/help/inquiry`는 기존 `Help` 재사용, `/c/chat`·`/s/chat`은 `p-ondo` 고정 경로로 이동(FE-14 위험 유지). 코드 화면 수는 55.
+  - 미검증: 브라우저 실제 렌더·로그인 후 리다이렉트, Vercel Git 메타데이터, 프로덕션 백엔드 `/health`.
+- **보고 형식:** 기준 SHA·변경 파일·통과/미검증·실제 요청·남은 위험을 5줄 이내로 보고. 범위 확대가 필요하면 작업을 멈추고 별도 제안.
+
+## FE-01 — 이메일 회원가입 3단계 실제 API 연결
+
+> **현행 코드 메모:** 현재 `main` `e89e743`에는 `/auth/register` 호출과 가입 단계 연동이 있습니다. 아래 원본 수용 기준에 따라 기존 코드의 미충족 부분부터 확인합니다. API를 중복 구현하지 않으며, 실HTTP·프로필·역할·약관·비밀번호 보관·삭제 검증 전에는 Done 처리하지 않습니다. [현재 코드 근거](../FRONTEND_WORKSPACE.md#현재-코드에서-확인한-차이).
+>
+> **2026-11-05 작업 기록(`e89e743`):** 등록 시점을 ② 역할 선택으로 옮기고 성공 시 ③ 프로필로 이어지게 수정. ③ 의뢰인은 `PATCH /me/client-profile`(`businessName`, `industryField`, `bio`), ③ 공급자는 `PATCH /me/supplier-profile`(`displayName`)을 호출. 가드 `signup-step`은 등록 후 로그인 사용자가 ③에 머물 수 있게 허용.
+>
+> **로컬 실HTTP 확인(2026-11-05, `localhost:3000`):** `POST /auth/register` 201, 중복 409 `EMAIL_ALREADY_REGISTERED`, `POST /auth/login` 200, `POST /auth/refresh` 200, 보호 GET 200. `PATCH /me/client-profile` 200(저장값 재조회 확인), `PATCH /me/supplier-profile` `displayName` 단독 200. **`ndaConsent: true`는 서버에 `SUPPLIER_NDA_VERSION`이 없어 503 `NDA_UNAVAILABLE`** → 가입 단계에서는 NDA를 전송하지 않고, 명세 열람 시점의 기존 NDA 게이트를 사용한다. Vitest 445/445, typecheck, build 통과. staging·배포 환경과 BE-01 공식 결과는 미확인.
+>
+> **NDA 방향 결정(2026-11-06):** ② 채택 — FE는 가입 ③에서 `ndaConsent: true`를 계속 전송하고, BE 환경에 `SUPPLIER_NDA_VERSION`을 설정한다. 로컬 `.env`에 `v0.7`을 넣고 재기동 후 `PATCH /me/supplier-profile` **200**, `ndaVersion=v0.7`·`ndaAgreedAt` 저장을 확인했다. staging 백엔드(`majayong-backend-staging`)에는 `SUPPLIER_NDA_VERSION`이 non-empty로 설정되어 있고 `/health` 200·보호 API 401을 확인했다. 값은 승인된 NDA 문서 버전과 일치해야 한다.
+>
+> **FE-01 후속 — 초기값·공급자 건너뛰기:** 가입 프로필의 CLIENT 상호·규모·소개와 SUPPLIER 활동 이름·경력·기술 스택·포트폴리오는 빈 상태로 시작합니다. CLIENT 업종도 placeholder로 시작하며 선택하지 않으면 `industryField`를 보내지 않습니다. 공급자 건너뛰기는 입력한 활동 이름 또는 가입 이메일의 local-part를 `displayName`으로 사용하고 `ndaConsent: true`와 함께 PATCH합니다. 화면에 local-part가 활동 이름으로 표시됨을 안내합니다. API/DTO는 변경하지 않았으며, 현재 DTO에 없는 규모·경력·기술 스택·포트폴리오 필드는 보내지 않습니다.
+>
+> **검증:** supplier skip 단위 테스트는 이전에 `displayName` 없는 payload에 mock 200을 반환했고, 통합 흐름은 가입 완료만 다뤄 서버 422를 못 잡았습니다. 현재 `pnpm --filter @majayong/web test` 83파일/457테스트 통과, production build 통과. 로컬 production preview에서 실제 이메일·비밀번호·약관·공급자 역할 입력 후 mock register 201 및 supplier PATCH 200(`ndaAgreedAt`, `ndaVersion`)을 반환시켜 `/s` 도착과 payload를 확인했습니다. 실백엔드·배포 환경 호출은 이번 검증에서 하지 않았습니다.
+>
+> **공급자 동의 기본값 보정(2026-11-06):** 공급자 진입 시 NDA·수수료 5%·AI 동의는 모두 미체크입니다. `가입 완료`는 세 동의 모두, `나중에 입력하기`는 NDA 동의만 요구합니다. 83파일/459테스트와 production build 통과. 로컬 production preview에서 실제 가입 폼 입력으로 세 동의의 초기·버튼 상태와 NDA-only skip을 확인했고, mock register 201·PATCH 200 응답으로 `/s` 이동과 `{displayName: "supplier-consent", ndaConsent: true}` 요청을 확인했습니다. 이번 확인은 실백엔드에 호출하지 않았습니다.
+>
+
+
+- **상태/난이도:** 진행 / 로컬 실HTTP 통과, staging·BE-01 미검증 / 상 · **우선순위:** P0 · **단계:** Now.
+- **선행:** BE-01, FE-00.
+- **대상:** `public/Signup.tsx; Signup-Role.tsx; Signup-Client.tsx; Signup-Supplier.tsx; app/session.tsx`.
+- **목표/범위:** DEMO 초깃값이 아닌 실제 계정 생성 및 프로필 저장; NDA 동의 단계 명확화.
+- **보존:** Google OAuth, 기존 React 가입 단계/브라우저 가드.
+- **API 계약:** POST /auth/register; POST /auth/login; PATCH /me/client-profile|supplier-profile.
+- **실행:** sessionStorage와 setDevSession만으로 완료 처리하지 않음. role+termsVersion은 서버 계약 사용. 역할이 2단계에서 정해지므로 등록 시점은 역할 선택 이후로 맞추고 평문 비밀번호를 sessionStorage에 장기 보관하지 않음; 실승인 동의 버전 매핑.
+- **완료 조건:** 신규 계정으로 로그인 후 역할 홈 이동, 리로드해도 유지; 프로필 건너뛰기 정책과 필수 동의 일치.
+- **최소 QA:** 각 변경 TSX 옆 한국어 컴포넌트 테스트+가입/중복/권한 최소 통합 1회.
+- **보고 형식:** 기준 SHA·변경 파일·통과/미검증·실제 요청·남은 위험을 5줄 이내로 보고. 범위 확대가 필요하면 작업을 멈추고 별도 제안.
+
+## FE-02 — 비밀번호 재설정 실제 API·초기값 정리
+
+- **상태/난이도:** 진행 / 코드·테스트·confirm 실HTTP 완료, request 200은 로컬 메일 발송 미구성 / 중 · **우선순위:** P1 · **단계:** Now.
+- **선행:** BE-01, FE-00.
+- **대상:** `public/Reset.tsx; Reset.data.ts`.
+- **목표/범위:** DEMO.emailValue 초기값과 ?mock 성공 전환 제거, 요청/확정 2단계.
+- **보존:** 현재 Reset UI와 폼 디자인.
+- **API 계약:** POST /auth/password-reset/request|confirm.
+- **실행:** request 성공 시 메일 수신을 단정하지 않음; token 없을 때 실패 처리, 예시 값 입력 금지.
+- **완료 조건:** 빈 이메일로 시작, request/confirm 200 처리, 만료/오류 화면 정상.
+- **최소 QA:** Reset.test.tsx 인접; 초기값/성공/만료 3개 검증.
+- **확인 결과(2026-11-06 KST):** `?mock`·`DEMO.emailValue`·`pwValue` 제거. `/reset`은 빈 이메일로 시작하고, `?token=`이 있으면 확정 단계로 바로 진입한다. 요청 성공 시 메일 수신을 단정하지 않고 마스킹된 주소만 표시한다. `POST /auth/password-reset/confirm`은 실제 토큰으로 **200** + 새 비밀번호 로그인 **200** 확인. 잘못된 토큰은 401 `RESET_TOKEN_INVALID` → 링크 만료 화면. `POST /auth/password-reset/request`는 로컬·프로덕션 모두 **503 `DELIVERY_UNAVAILABLE`** — BE에 메일 발송 구현이 연결되지 않아 200 경로는 **BE-01 선행 필요**. Reset.test.tsx 6건·Vitest 450/450·typecheck·build 통과.
+- **보고 형식:** 기준 SHA·변경 파일·통과/미검증·실제 요청·남은 위험을 5줄 이내로 보고. 범위 확대가 필요하면 작업을 멈추고 별도 제안.
+
+## FE-03 — 고객센터 FAQ 분리 및 신규 1:1 문의 화면
+
+- **상태/난이도:** 진행 / 실 API·화면 분리 완료, FAQ 14개 콘텐츠·첨부 미제공 / 중 · **우선순위:** P1 · **단계:** Now.
+- **선행:** BE-02, FE-05.
+- **대상:** `public/Help.tsx; 신규 Help-Inquiry.tsx/.data.ts/.module.css; app/routes.ts`.
+- **목표/범위:** Help의 FAQ/공지와 Help-Inquiry의 작성/내 문의/보낸 뒤 상태 분리. 빠른 검색 불일치 수정.
+- **보존:** 기존 Help FAQ UI, 인증 가드, 1:1 링크.
+- **API 계약:** GET/POST /support/inquiries; GET /support/inquiries/{inquiryId}.
+- **실행:** /help/inquiry 비로그인 접근은 안내만, 실제 쓰기 API는 로그인 후; 실계약만 선택.
+- **완료 조건:** FAQ 14개 확인, ?q= 검색, ?tab=notice, 문의 작성→내 문의 이동, 자기 문의만 조회.
+- **최소 QA:** Help.test.tsx/Help-Inquiry.test.tsx 인접; 검색/guest/전송/응답 확인.
+- **확인 결과(2026-11-06 KST):** `Help-Inquiry` 화면을 신설해 비로그인 안내, 문의 작성, 내 문의 목록, 상세(답변)를 분리했다. `GET/POST /support/inquiries`, `GET /support/inquiries/{id}`만 사용하고, 실호출로 **POST 201 → 목록 200(1건) → 상세 200**을 확인했다. Help는 `?q=` 검색과 `?tab=notice`(공지 우선)를 유지한다. 1:1 문의 라우트 가드는 `none`으로 바꿔 비로그인은 안내만 본다. **현재 FAQ는 8개로, 완료 조건의 14개 콘텐츠가 제공되지 않았고 첨부 3개 UI도 미구현**이다.
+- **보고 형식:** 기준 SHA·변경 파일·통과/미검증·실제 요청·남은 위험을 5줄 이내로 보고. 범위 확대가 필요하면 작업을 멈추고 별도 제안.
+
+## FE-04 — 운영자 1:1 문의 페이지 신규 구현
+
+- **상태/난이도:** 진행 / 로컬 실 API·권한·답변 완료, staging 미검증 / 중 · **우선순위:** P1 · **단계:** Next.
+- **선행:** BE-02, FE-05.
+- **대상:** `신규 admin/Admin-Inquiries.tsx/.data.ts/.module.css; app/menus.ts; routes.ts`.
+- **목표/범위:** 보드 목록/상세/답변·완료 상태 React 구현, 운영자 메뉴 배지.
+- **보존:** 운영자 공통 셸, 접근 가드, 기존 운영자 다른 화면.
+- **API 계약:** GET /admin/support/inquiries; POST /admin/support/inquiries/{inquiryId}/answer.
+- **실행:** 없는 admin 상세 GET 호출 금지. 목록 DTO로 가능한지 검증 후 부족할 때 BE 계약 요청.
+- **완료 조건:** 운영자만 접근, WAITING→ANSWERED, 입력 빈값 차단, 타인 정보 최소 노출.
+- **최소 QA:** Admin-Inquiries.test.tsx 인접; 권한/답변/빈값.
+- **확인 결과(2026-11-06 KST):** `Admin-Inquiries` 화면과 운영자 메뉴 `1:1 문의`를 추가했다. `GET /admin/support/inquiries`, `POST /admin/support/inquiries/{id}/answer`만 사용하고 별도 상세 GET은 호출하지 않는다. 로컬 관리자 토큰으로 목록 200(1건) → 답변 200 → 사용자 상세에서 `ANSWERED`·답변 확인, 비관리자 요청 403 확인. 답변 빈값은 전송 전에 차단한다. 인접 테스트 5건·전체 449/449·typecheck·build 통과. **staging 운영자 계정 검증은 미실행**, 메뉴 배지는 실제 대기 건수 연동 전이라 0으로 둔다.
+- **보고 형식:** 기준 SHA·변경 파일·통과/미검증·실제 요청·남은 위험을 5줄 이내로 보고. 범위 확대가 필요하면 작업을 멈추고 별도 제안.
+
+## FE-05 — 푸터·메뉴·약관 셸 공통 수정
+
+- **상태/난이도:** 완료 / 2026-11-06 기능·1440/390 렌더 확인 / 중 · **우선순위:** P1 · **단계:** Now.
+- **선행:** FE-00.
+- **대상:** `components/layout/Footer.tsx; layout.module.css; app/menus.ts; app/routes.ts; public/Terms.tsx`.
+- **목표/범위:** 11/04 navy-900 3줄 푸터, 랜딩 anchor, Terms viewer, ADMIN 문의 메뉴.
+- **보존:** 기존 Chrome/Shell, tokens.css, 역할 가드.
+- **API 계약:** 라우트만 변경; API 계약 수정 없음.
+- **실행:** 공통 파일은 한 AI가 먼저 수정, 화면별 CSS 복붙 금지; 법률·사업자 값은 임의 생성하지 않음.
+- **완료 조건:** /help/inquiry 링크, Terms 로그인별 셸, 랜딩 anchor, 푸터 샘플 정보 고지 일치.
+- **최소 QA:** 공통 UI 인접 컴포넌트 테스트+1440/390 주요 4화면.
+- **확인 결과(2026-11-06 KST):** 푸터를 navy-900으로 바꾸고 `--on-navy*` 토큰으로 글자·구분선을 맞췄다. `/help/inquiry` 링크와 사업자 예시 정보·중개자 고지·저작권 3줄을 `Footer.test.tsx`로 고정. Terms 셸을 `public → viewer`로 바꿔 로그인 역할별 GNB가 적용된다(`routes.test.tsx`). 랜딩 앵커를 DESIGN 3.1에 맞춰 `#how/#safe/#start`(의뢰인), `#how/#flow/#price`(공급자)로 통일하고 `menus.ts`·Footer·CTA를 함께 수정. Vitest 454/454·typecheck·build 통과. **ADMIN 1:1 문의 메뉴는 FE-04 화면이 없어 보류**했고, 57보드 원본 비교는 FE-16에서 다룬다. 2026-11-06 화면 QA: `/`, `/supplier`, `/help`, `/terms/terms`를 1440·390에서 확인해 가로 overflow 0, 푸터 navy-900(`rgb(11,37,69)`), Terms 셸이 guest=public·로그인=client로 바뀌는 것을 확인했다.
+- **보고 형식:** 기준 SHA·변경 파일·통과/미검증·실제 요청·남은 위험을 5줄 이내로 보고. 범위 확대가 필요하면 작업을 멈추고 별도 제안.
+
+## FE-06 — 랜딩 2종 디자인 차이 최소 반영
+
+- **상태/난이도:** 완료 / 2026-11-06 3장 가치 카드·정적 히어로·1440/390 확인 / 중 · **우선순위:** P2 · **단계:** Later.
+- **선행:** FE-05.
+- **대상:** `public/Main.tsx/.data.ts/.module.css; Supplier-Landing.tsx/.data.ts/.module.css`.
+- **목표/범위:** 3장면 9초/감속 설정, 가치 카드 3장, 최신 #anchor, 과장된 결제 문구 제거.
+- **보존:** 랜딩 React 구조와 버튼 동작.
+- **API 계약:** API 없음; 결제 기능 완료 주장 금지.
+- **실행:** MVP 일정 충돌 시 애니메이션 대신 접근성 있는 정적 마지막 장면 우선.
+- **완료 조건:** 1440/390과 prefers-reduced-motion 정상, CTA 실제 경로 동작.
+- **최소 QA:** 해당 화면 인접 테스트 2~3개, 빌드와 수동 화면 QA.
+- **확인 결과(2026-11-06 KST):** 의뢰인 가치 카드를 **3장**으로 줄이고 결제 완료를 단정하던 예치 문구를 제거했다. 공급자 '구간 정산'은 "결제 연동이 완료된 뒤 적용"으로 바꿨다. 앵커는 FE-05에서 `#how/#safe/#start`·`#how/#flow/#price`로 정리됨. 1440·390에서 두 랜딩 모두 **가로 overflow 0**, CTA `/signup` 링크 테스트 통과. **3장면 9초 애니메이션은 57보드 원본이 없어 정적 히어로(접근성 우선)로 유지**했고, `prefers-reduced-motion`에서도 애니메이션이 없어 그대로 동작한다. Vitest 459/459·typecheck·build 통과.
+- **보고 형식:** 기준 SHA·변경 파일·통과/미검증·실제 요청·남은 위험을 5줄 이내로 보고. 범위 확대가 필요하면 작업을 멈추고 별도 제안.
+
+## FE-07 — 알림 문의 답변 링크 추가·상태 유지
+
+- **상태/난이도:** 진행 / 링크·테스트 완료, 실제 답변 알림 미검증 / 하 · **우선순위:** P1 · **단계:** Next.
+- **선행:** FE-03, BE-03.
+- **대상:** `components/layout/Chrome.tsx; lib/notification-adapter.ts`.
+- **목표/범위:** Notify-Client/Notify-Supplier 보드를 기존 공통 드롭다운에서 처리.
+- **보존:** GET·읽음·일괄 읽음 실API 코드.
+- **API 계약:** GET /me/notifications; PATCH /me/notifications/{id}/read.
+- **실행:** INQUIRY_ANSWERED targetUrl=/help/inquiry?tab=my&id=... 그대로 이용, 민감 내용 노출 금지.
+- **완료 조건:** 문의 답변 알림에서 정확한 내 문의 상세 이동, 읽음 수 갱신.
+- **최소 QA:** Chrome.test.tsx 또는 adapter.test.ts 인접; 한국어 2개.
+- **확인 결과(2026-11-06 KST):** `notification-adapter`가 `INQUIRY_ANSWERED`에서 서버 `targetUrl`(`/help/inquiry?tab=my&id=...`)을 그대로 사용하고, 없을 때만 같은 형식으로 보정한다. 알림 문구는 고정 안내만 노출하며 payload 내용을 쓰지 않는다. `notification-adapter.test.ts` 2건 통과. **실제 답변 알림 이벤트와 읽음 수 갱신 실화면은 BE-03 전이라 미검증.**
+- **보고 형식:** 기준 SHA·변경 파일·통과/미검증·실제 요청·남은 위험을 5줄 이내로 보고. 범위 확대가 필요하면 작업을 멈추고 별도 제안.
+
+## FE-08 — 계정 설정의 증빙·정산 계좌 UI 정리
+
+- **상태/난이도:** 완료 / 2026-11-06 로컬 실 PATCH·마스킹 확인 / 중 · **우선순위:** P2 · **단계:** Next.
+- **선행:** BE-00, FE-05.
+- **대상:** `client/Account-Client.tsx; supplier/Account-Supplier.tsx`.
+- **목표/범위:** 증빙 정보와 계좌 검증 상태/금액·끝자리 표시를 최신 보드에 맞춤.
+- **보존:** 기존 계정 화면의 변경·탈퇴 흐름.
+- **API 계약:** PATCH /me/client-tax-info; PATCH /me/payout-account; POST /me/payout-account/verify.
+- **실행:** API에 없는 1원 발송을 성공 구현한 것처럼 표시 금지. 서버 근거 없으면 안내/보류.
+- **완료 조건:** 계정 역할 분리, 수신정보 비공개, 보류된 인증을 성공으로 표시하지 않음.
+- **최소 QA:** 인접 폼 테스트+권한 확인.
+- **확인 결과(2026-11-06 KST):** `LiveSettlementInfo`로 증빙·정산 정보를 실제 API에 연결했다. 의뢰인 `PATCH /me/client-tax-info` **200**(`******7890`, 이메일 반환), 공급자 `PATCH /me/payout-account` **200**(`******2048`), `POST /me/payout-account/verify`는 로컬 503 `PAYOUT_VERIFICATION_UNAVAILABLE` → 성공으로 표시하지 않고 안내만 한다. 기존 가짜 계좌 모달·데모 값은 제거. 로컬 BE에 `PROFILE_DATA_KEY`가 비어 있어 503 `PROFILE_DATA_UNAVAILABLE`이 발생하므로 dev 키를 설정했다(staging에도 필요). **세금계산서 이메일은 GET 프로필 응답에 없어 저장 직후에만 표시**되고, 1원 인증 실제 성공은 미검증이다.
+- **보고 형식:** 기준 SHA·변경 파일·통과/미검증·실제 요청·남은 위험을 5줄 이내로 보고. 범위 확대가 필요하면 작업을 멈추고 별도 제안.
+
+## FE-09 — 운영자 후처리 UI 상태 보완
+
+- **상태/난이도:** 진행 / 시연 상태 고지·비활성 규칙 완료, 실제 저장은 BE-05 대기 / 중 · **우선순위:** P2 · **단계:** Later.
+- **선행:** FE-05, BE-05.
+- **대상:** `admin/Admin-Blocks.tsx; Admin-Reports.tsx; Admin-Disputes.tsx`.
+- **목표/범위:** 병합·조치·판정의 성공/실패/완료 상태와 비활성 버튼 규칙 반영.
+- **보존:** 기존 보드 UI·관리자 접근 가드.
+- **API 계약:** POST /admin/blocks/{id}/actions; /admin/reports/{id}/resolve; /admin/inspection-requests/{id}/decision.
+- **실행:** 실데이터 저장 여부 확인 전 ?mock 상태를 완료로 오인 금지.
+- **완료 조건:** 해당 결과 상태를 각 화면에서 명확히 표시.
+- **최소 QA:** 변경 3화면의 인접 테스트와 승인 결과 상태 확인.
+- **확인 결과(2026-11-06 KST):** `AdminDemoNotice`를 추가해 세 화면의 `?mock` 완료/조치/판정 상태가 **서버에 저장된 결과가 아님**을 명시했다(기본 목록에서는 숨김). 대상은 Admin-Reports(조치 작성·계정 정지·처리 완료), Admin-Disputes(판정 작성·판정 완료), Admin-Blocks(병합·단가·비활성화). 테스트 4건·전체 457/457·typecheck·build 통과. **실제 POST 저장 연결은 목록이 데모 ID 기반이라 BE-05에서 실데이터·ID 계약이 확인된 뒤 진행**해야 한다.
+- **보고 형식:** 기준 SHA·변경 파일·통과/미검증·실제 요청·남은 위험을 5줄 이내로 보고. 범위 확대가 필요하면 작업을 멈추고 별도 제안.
+
+## FE-10 — 검수·납품의 보완/완료 후 상태 보완
+
+- **상태/난이도:** 진행 / 보완 후 상태·중복 차단 완료, 실 API는 BE-05 대기 / 중 · **우선순위:** P1 · **단계:** Next.
+- **선행:** BE-05, FE-11.
+- **대상:** `client/Inspect-Client.tsx; supplier/Deliver-Supplier.tsx`.
+- **목표/범위:** 11/04 보완 요청 후/도움 요청 후/완료 상태를 기존 컴포넌트에 반영.
+- **보존:** 기존 계약 항목·구간 상태 매핑.
+- **API 계약:** POST /installments/{id}/deliveries; /contract-items/{id}/approve; /rework-requests.
+- **실행:** API가 검증되지 않으면 UI만 표기/실행 차단, 지급 완료는 PG 검증 연동 전 확정 금지.
+- **완료 조건:** 요청 후 사용자에게 상태가 보여지고 중복 제출 차단.
+- **최소 QA:** 각 화면 .test.tsx 인접, 관련 단위/통합 최소 1회.
+- **확인 결과(2026-11-06 KST):** 의뢰인 검수에서 '보완 요청 보내기'가 완료 화면으로 사라지지 않고 `role="status"`로 **「보완 요청을 보냈습니다」**를 남기며 버튼이 비활성화된다(중복 전송 차단). 공급자 납품은 제출 후 상태에 **「시연 상태 — 서버에 저장되지 않았습니다」**를 표시하고, 기존 `submitted` 조건으로 재제출을 막는다. API는 BE-05에서 `contractItemId`·deliveryId 계약이 확인되기 전이라 호출하지 않았다. 테스트 2건 추가·전체 461/461·typecheck·build 통과.
+- **보고 형식:** 기준 SHA·변경 파일·통과/미검증·실제 요청·남은 위험을 5줄 이내로 보고. 범위 확대가 필요하면 작업을 멈추고 별도 제안.
+
+## FE-11 — 계약·정산 목록의 실데이터 경계 정리
+
+- **상태/난이도:** 진행 / 실 API·빈 상태·테스트 완료, 계약 있는 계정 실확인 미검증 / 상 · **우선순위:** P1 · **단계:** Next.
+- **선행:** BE-04, FE-00.
+- **대상:** `client/Contracts-Client.tsx; supplier/Contracts-Supplier.tsx; client/Settle-Client.tsx; supplier/Settle-Supplier.tsx`.
+- **목표/범위:** 현재 DEMO 기반 카드/금액을 실제 데이터 또는 명시적 빈 상태로 전환, 데이터 adapter 재사용.
+- **보존:** 문서/서명·채팅·정산 내역 기존 URL.
+- **API 계약:** GET /me/contracts; GET /me/payment-statements; GET /contracts/{id}/installments.
+- **실행:** Mock 결제를 정상 거래처럼 표시하지 않음; 계약 paymentStatus 구분.
+- **완료 조건:** 역할별 목록·빈 상태·권한·새로고침 값 일치.
+- **최소 QA:** 계약 목록 인접 테스트와 API 통합 1회.
+- **확인 결과(2026-11-06 KST):** 4개 화면의 DEMO 카드·금액을 제거하고 `LiveContractsList`(GET /me/contracts)와 `LiveSettlements`(GET /me/payment-statements)로 교체했다. 빈 목록은 명시적 빈 상태, 실패는 `role="alert"`, 계약 상태는 `contractDisplayLabel(status, paymentStatus)`로 예치 대기/진행 중을 구분한다. 정산의 `simulated`·`transferNote`는 서버 문구를 그대로 표시하고 가짜 영수증 버튼은 제거했다. 로컬 실HTTP `GET /me/contracts` 200 `[]`, `GET /me/payment-statements` 200(빈 statements, simulated 고지) 확인. 컴포넌트 8건 포함 Vitest 440/440·typecheck·build 통과. **계약·정산 데이터가 있는 계정의 실화면은 미검증.**
+- **보고 형식:** 기준 SHA·변경 파일·통과/미검증·실제 요청·남은 위험을 5줄 이내로 보고. 범위 확대가 필요하면 작업을 멈추고 별도 제안.
+
+## FE-12 — Toss 예치 UI 사실표시·승인 연결 게이트
+
+- **상태/난이도:** 대기 / 실호출 미검증 / 상 · **우선순위:** P0 · **단계:** Now.
+- **선행:** BE-06, BE-07, INT-02.
+- **대상:** `client/Escrow-Client.tsx; components/contract/LiveEscrow.tsx; lib/deposit-api.ts; lib/feature-flags.ts`.
+- **목표/범위:** 현재는 불가·확인 중·실제 완료를 구분, 승인 API 계약 완료 뒤에만 SDK 연결.
+- **보존:** DEPOSIT_ENABLED OFF, 기존 계약 상태 조회/권한.
+- **API 계약:** POST /contracts/{id}/deposits는 PENDING 생성; 승인 API 미확정.
+- **실행:** PAY-01~06 검증 전 VITE_ENABLE_DEPOSIT=false. 프론트에 Toss 서버 키 금지.
+- **완료 조건:** PENDING을 완료로 표시하지 않음; 실제 PG 검증 후만 COMPLETED/DEPOSITED.
+- **최소 QA:** 형태/상태 단위 테스트 + sandbox E2E는 INT-02.
+- **보고 형식:** 기준 SHA·변경 파일·통과/미검증·실제 요청·남은 위험을 5줄 이내로 보고. 범위 확대가 필요하면 작업을 멈추고 별도 제안.
+
+## FE-13 — 기존 NDA·지원·채팅·합의·서명 보호 회귀
+
+- **상태/난이도:** 진행 / 코드 변경 없이 로컬 회귀 통과, staging 1~7 미검증 / 중 · **우선순위:** P1 · **단계:** Next.
+- **선행:** BE-04, INT-00.
+- **대상:** `components/project/Live*; components/chat/LiveChat.tsx; components/agreement/LiveAgreement.tsx; components/contract/LiveContract.tsx`.
+- **목표/범위:** 변경 없이 베이스라인 보호, 누락된 오류 핸들링만 최소 수정.
+- **보존:** specItemId/토큰 갱신/계약 문서 해시/권한.
+- **API 계약:** A·B API 명세 v1.0.1 + 현행 DTO.
+- **실행:** 스키마/DTO·ID 재생성 금지, 화면 구조와 API 어댑터를 전면 교체하지 않음.
+- **완료 조건:** CLIENT/SUPPLIER 핵심 단계 1~7을 staging에서 성공/실패로 구분.
+- **최소 QA:** 각 영향 변경 파일만 단위/통합; 전체 E2E 반복 금지.
+- **확인 결과(2026-11-06 KST):** 보호 대상 코드는 수정하지 않았다. `project-live`(NDA→specItemId→지원), `chat-live`, `agreement-live`, `contract-live` 4개 파일 **23/23 통과**. 무토큰 로컬 실호출은 `/api/v1/me/chats`·`/api/v1/me/contracts` 모두 401로 권한 차단 확인. **staging에서 CLIENT/SUPPLIER 1~7단계 성공/실패 구분은 테스트 계정·데이터가 없어 미실행** — INT-00/BE-04 산출물 필요.
+- **보고 형식:** 기준 SHA·변경 파일·통과/미검증·실제 요청·남은 위험을 5줄 이내로 보고. 범위 확대가 필요하면 작업을 멈추고 별도 제안.
+
+## FE-14 — ChatIndex 고정 데모 링크 제거
+
+- **상태/난이도:** 진행 / 코드·테스트 완료, 프로덕션 배포 전 / 하 · **우선순위:** P1 · **단계:** Now.
+- **선행:** BE-04, FE-00.
+- **대상:** `apps/web/src/app/App.tsx; lib/chat-adapter.ts`.
+- **목표/범위:** /c/chat와 /s/chat은 고정 p-ondo 대신 현재 사용자 최근 채팅 또는 빈 상태.
+- **보존:** 개별 /c/chat/:pid/:sid 및 /s/chat/:pid 라우트.
+- **API 계약:** GET /me/chats.
+- **실행:** 로그인한 계정의 실제 list; 목록 없으면 빈 상태. 데모 ID로 리디렉션 금지.
+- **완료 조건:** 프로덕션에서 임의 타인 채팅 경로로 이동하지 않음.
+- **최소 QA:** App/routes 인접 테스트, 빈 목록/방 선택 2건.
+- **확인 결과(2026-11-06 KST):** `ChatIndex`가 `GET /me/chats`의 첫 항목(서버 최근순)으로 이동하고, 빈 목록이면 `EmptyState`, 실패 시 `role="alert"`를 표시한다. 고정 `p-ondo` 경로 제거. `src/app/App.test.tsx` 4건(빈 목록/최근 대화/공급자/오류)과 Vitest 전체 450/450, typecheck, build 통과. 프로덕션 `majayong.vercel.app` 배포 번들에 `/me/chats`·빈 상태 문구 반영 확인. **로그인 후 실데이터로 이동하는 장면은 미검증.**
+- **보고 형식:** 기준 SHA·변경 파일·통과/미검증·실제 요청·남은 위험을 5줄 이내로 보고. 범위 확대가 필요하면 작업을 멈추고 별도 제안.
+
+## FE-15 — 선택 검색/취소 철회 UI 확장 보류 관리
+
+- **상태/난이도:** 대기 / 확인 완료, 계약 결정 전 보류 / 하 · **우선순위:** P2 · **단계:** Later.
+- **선행:** BE-09, BE-10.
+- **대상:** `supplier/Find-Supplier.tsx; client/Cancel-Client.tsx; supplier/Cancel-Supplier.tsx`.
+- **목표/범위:** 현재 존재하는 필터/취소 UI만 기능 설명, 미지원 검색·철회 확장 비활성.
+- **보존:** 기존 지원/취소 흐름.
+- **API 계약:** GET /projects 현재 6파라미터; 취소 철회 API 없음.
+- **실행:** 승인되지 않은 신규 query/path 임의 추가 금지.
+- **완료 조건:** 화면·문구에 미지원 동작 없음.
+- **최소 QA:** 해당 화면 확인만, UI 변경 시 인접 1~2개.
+- **확인 결과(2026-11-06 KST):** 코드 변경 없음. `Find-Supplier`의 정렬·마감 필터는 기존 화면 범위이고, 취소 화면에 철회 버튼/문구는 없다. 신규 query·path를 추가하지 않아 미지원 동작이 노출되지 않는다.
+- **보고 형식:** 기준 SHA·변경 파일·통과/미검증·실제 요청·남은 위험을 5줄 이내로 보고. 범위 확대가 필요하면 작업을 멈추고 별도 제안.
+
+## FE-16 — 변경 영역별 가벼운 QA와 57보드 비교 마감
+
+- **상태/난이도:** 진행 / 변경 영역 QA 완료, 57보드 비교 미실행 / 하 · **우선순위:** P1 · **단계:** Next.
+- **선행:** FE-13, FE-03.
+- **대상:** `변경한 TSX/CSS/테스트 및 Chrome/Footer`.
+- **목표/범위:** B/C 화면 중심 1440/390, 접근성 label, 조작·오류상태 확인.
+- **보존:** 단위/컴포넌트는 인접 배치, 한글 test 제목, locator 우선.
+- **API 계약:** 고유 API 재호출·PG 승인 여부 검증은 INT/BE.
+- **실행:** 기존 중앙 tests 전체 이동 금지. UI만이면 전체 회귀 지양.
+- **완료 조건:** 수정한 화면/인터랙션에 필요한 최소 테스트 증거와 누락 리스트.
+- **최소 QA:** pnpm typecheck, pnpm build, 변경한 파일의 Vitest만, 필요한 E2E만.
+- **확인 결과(2026-11-06 KST):** 변경 영역 Vitest 전체 **443/443**, `pnpm typecheck`, `pnpm build` 통과. 화면별 접근성 label·빈/오류 상태는 각 인접 테스트로 확인. **1440/390 시각 비교는 57보드 원본이 없어 미실행**, 누락 리스트는 각 FE 티켓의 '미검증' 항목을 따른다.
+- **보고 형식:** 기준 SHA·변경 파일·통과/미검증·실제 요청·남은 위험을 5줄 이내로 보고. 범위 확대가 필요하면 작업을 멈추고 별도 제안.
+
+## 공통 개발 준수 사항
+
+코드 경로는 [실제 경로 안내](../FRONTEND_WORKSPACE.md#실제-경로와-실행-환경)를 따릅니다. [저장소 지침](../../AGENTS.md)을 함께 적용하고, 이 파일의 상태·증거를 바꾸면 통합 TASKS의 동일 ID도 맞춥니다.
+
+
+- [공통 규약](../AGENTS.md)의 실제 프론트/백 저장소별 실행 규칙을 모두 준수합니다.
+- TypeScript strict, DTO 추론/unknown 타입 가드, `as any` 남용 금지. 라이브러리·테스트 도구는 현재 package.json 범위로 유지합니다.
+- **테스트 인접형(Test Colocation)**: 대상 `Foo.ts` 옆 `Foo.test.ts` / `Foo.tsx` 옆 `Foo.test.tsx`; `test/describe/it` 제목은 한국어, 간결하게, 한 테스트는 하나의 행위.
+- UI 컴포넌트는 Testing Library 의미 기반 `getByRole/getByLabelText`, 브라우저 E2E는 Playwright Locator. 함수/BE 단위 테스트에 Locator를 억지로 사용하지 않습니다.
+- 기존 테스트가 `apps/web/src/test`에 있어도 이번 변경과 무관한 파일을 전부 이동하지 않습니다. 변경 코드만 신규/수정 인접 테스트로 관리하고 충돌/중복을 없앱니다.
+- 서버 주소/비밀값/민감정보는 문서·테스트 결과에 쓰지 않고 실제 결제는 sandbox에서만 수행합니다.

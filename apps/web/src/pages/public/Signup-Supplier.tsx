@@ -42,9 +42,9 @@ export default function SignupSupplier() {
   const [career, setCareer] = useState('');
   const [skills, setSkills] = useState<string[]>([]);
   const [portfolio, setPortfolio] = useState('');
-  const [ndaOk, setNdaOk] = useState(true);
-  const [feeOk, setFeeOk] = useState(true);
-  const [aiOk, setAiOk] = useState(true);
+  const [ndaOk, setNdaOk] = useState(false);
+  const [feeOk, setFeeOk] = useState(false);
+  const [aiOk, setAiOk] = useState(false);
   const [tried, setTried] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -86,7 +86,7 @@ export default function SignupSupplier() {
   };
 
   const skip = () => {
-    if (!agreesOk) return;
+    if (!ndaOk) return;
     const emailName = authUser?.email.split('@', 1)[0]?.trim();
     void saveProfile(name.trim() || emailName || '공급자');
   };
@@ -203,8 +203,8 @@ export default function SignupSupplier() {
           <Button
             variant="ghost"
             type="button"
-            disabled={busy}
-            disabledReason={busy ? '저장 중입니다' : undefined}
+            disabled={!ndaOk || busy}
+            disabledReason={busy ? '저장 중입니다' : !ndaOk ? DEMO.ndaNeed : undefined}
             onClick={skip}
           >
             {DEMO.skip}

@@ -53,9 +53,10 @@ export const DEMO = {
     },
   ] as const,
   agreeNeed: '가입 전 확인에 모두 동의해 주세요',
+  ndaNeed: '비밀유지 의무 동의가 필요합니다',
   back: '이전',
   backHref: '/signup/role',
   skip: '나중에 입력하기',
   submit: '가입 완료',
-  skipHint: '건너뛰기 시 활동 이름을 비워 두면 이메일 아이디가 의뢰인에게 표시됩니다. 다른 이름을 쓰려면 활동 이름을 입력해 주세요.',
+  skipHint: '나중에 입력하기에도 비밀유지 의무 동의가 필요합니다. 활동 이름을 비워 두면 가입 이메일 아이디가 의뢰인에게 표시됩니다.',
 } as const;
