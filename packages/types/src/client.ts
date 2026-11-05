@@ -1,4 +1,4 @@
-/* 의뢰인 공간 응답 타입(/api/c) — AI 예상 총액 · 단가 분석은 초안 단계에서만 여기에 있다(PRD F-04, 디자인 시스템 10.3) */
+/* 의뢰인 화면 모델. API 전송 DTO는 ./api.ts에 둔다. */
 import type { ApplicationDisplayStatus, ConditionLine, ContractDisplayStatus, IsoDate, ProjectDisplayStatus, Won } from './common';
 
 export interface ClientDraftBlock {

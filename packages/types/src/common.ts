@@ -67,7 +67,19 @@ export interface Me {
   chatRestrictedUntil: IsoDate | null;
 }
 
+/** Backend success envelope: payload DTOs remain endpoint-specific. */
+export interface DataEnvelope<T> {
+  data: T;
+  meta?: Record<string, unknown>;
+}
+
 export interface ApiError {
   code: string;
   message: string;
+  requestId: string;
+}
+
+/** Backend error envelope. */
+export interface ErrorEnvelope {
+  error: ApiError;
 }

@@ -1,7 +1,4 @@
-/* 공급자 공간 응답 타입(/api/s)
- * PRD 7절: 공급자 API는 블록 단가 · 예상 총액 필드를 응답 타입에 두지 않는다.
- *          의뢰인 원문 · 계정 이메일 · 증빙 · 정산 정보(상대 것)도 없다.
- * 아래 SupplierNoForbiddenKeys 검사가 컴파일 단계에서 이를 막는다. */
+/* 공급자 화면 모델. API 전송 DTO는 ./api.ts에 두며, 공개 범위는 아래 검사로 제한한다. */
 import type { ApplicationDisplayStatus, ConditionLine, ContractDisplayStatus, IsoDate, Won } from './common';
 
 /** 전체 공개 — 프로젝트 찾기 카드 */

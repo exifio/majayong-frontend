@@ -5,7 +5,8 @@ import { Bell, CalendarClock, CheckCircle2, MessageSquare, Info as InfoIcon } fr
 import type { NotificationItem, NotificationType } from '@majayong/types';
 import { CLIENT_MENU, LANDING_MENU, SUPPLIER_MENU } from '@/app/menus';
 import { ROLE_HOME, useSession } from '@/app/session';
-import { DEMO_NOTIFICATIONS } from '@/mocks/demo';
+import { ApiRequestError, apiRequest } from '@/lib/api';
+import { notificationToItem } from '@/lib/notification-adapter';
 import { Button, Tabs } from '@/components/ui';
 import s from './layout.module.css';
 
@@ -80,14 +81,83 @@ function usePopover() {
 
 /* ── 의뢰인 · 공급자 GNB ── */
 export function Gnb({ space }: { space: 'client' | 'supplier' }) {
-  const { session } = useSession();
+  const { session, apiAccessToken } = useSession();
   const { pathname, search } = useLocation();
   const q = new URLSearchParams(search);
   const navy = space === 'supplier';
   const menu = navy ? SUPPLIER_MENU : CLIENT_MENU;
   const name = session.status === 'user' ? session.name : '';
-  const notifications = DEMO_NOTIFICATIONS[navy ? 'SUPPLIER' : 'CLIENT'];
-  const unread = notifications.some((n) => !n.isRead);
+  const role = navy ? 'SUPPLIER' : 'CLIENT';
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [loadState, setLoadState] = useState<NotificationLoadState>('idle');
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+
+  useEffect(() => {
+    if (!apiAccessToken.trim()) {
+      setNotifications([]);
+      setUnreadCount(0);
+      setLoadState('idle');
+      setActionError(null);
+      return;
+    }
+
+    const controller = new AbortController();
+    setNotifications([]);
+    setUnreadCount(0);
+    setLoadState('loading');
+    setActionError(null);
+    apiRequest('listNotifications', '/me/notifications', {
+      accessToken: apiAccessToken,
+      signal: controller.signal,
+    }).then((response) => {
+      setNotifications(response.data.map((item) => notificationToItem(item, role)));
+      setUnreadCount(response.meta.unreadCount);
+      setLoadState('success');
+    }).catch((error: unknown) => {
+      if (error instanceof Error && error.name === 'AbortError') return;
+      setLoadState(error instanceof ApiRequestError && error.status === 401 ? 'auth-error' : 'error');
+    });
+
+    return () => controller.abort();
+  }, [apiAccessToken, retryCount, role]);
+
+  async function markRead(notification: NotificationItem) {
+    if (notification.isRead || !apiAccessToken.trim()) return;
+    try {
+      await apiRequest('readNotification', `/me/notifications/${encodeURIComponent(notification.id)}/read`, {
+        method: 'PATCH',
+        accessToken: apiAccessToken,
+      });
+      setNotifications((current) => current.map((item) =>
+        item.id === notification.id ? { ...item, isRead: true } : item,
+      ));
+      setUnreadCount((count) => Math.max(0, count - 1));
+      setActionError(null);
+    } catch (error) {
+      setActionError(error instanceof ApiRequestError && error.status === 401
+        ? 'API 토큰 인증에 실패했습니다.'
+        : '알림을 읽음 처리하지 못했습니다. 다시 시도해 주세요.');
+    }
+  }
+
+  async function markAllRead() {
+    if (unreadCount === 0 || !apiAccessToken.trim()) return;
+    try {
+      await apiRequest('readAllNotifications', '/me/notifications/read-all', {
+        method: 'POST',
+        accessToken: apiAccessToken,
+      });
+      setNotifications((current) => current.map((item) => ({ ...item, isRead: true })));
+      setUnreadCount(0);
+      setActionError(null);
+    } catch (error) {
+      setActionError(error instanceof ApiRequestError && error.status === 401
+        ? 'API 토큰 인증에 실패했습니다.'
+        : '알림을 모두 읽음 처리하지 못했습니다. 다시 시도해 주세요.');
+    }
+  }
 
   return (
     <header className={`${s.bar} ${navy ? s.onNavy : ''}`} data-gnb={space}>
@@ -107,17 +177,24 @@ export function Gnb({ space }: { space: 'client' | 'supplier' }) {
             <MessageSquare size={22} strokeWidth={1.8} />
             <span className={s.dot} aria-hidden="true" />
           </Link>
-          <NotificationDropdown items={notifications} hasUnread={unread} />
+          <NotificationDropdown
+            items={notifications}
+            unreadCount={unreadCount}
+            loadState={loadState}
+            actionError={actionError}
+            onMarkRead={markRead}
+            onMarkAllRead={markAllRead}
+            onRetry={() => setRetryCount((count) => count + 1)}
+          />
           <AvatarMenu space={space} name={name} />
         </div>
       </div>
     </header>
   );
 }
-
 function AvatarMenu({ space, name }: { space: 'client' | 'supplier'; name: string }) {
   const { open, setOpen, ref, btnRef } = usePopover();
-  const { setDevSession } = useSession();
+  const { setDevSession, setApiAccessToken } = useSession();
   const base = space === 'client' ? '/c' : '/s';
   return (
     <div ref={ref} style={{ position: 'relative' }}>
@@ -130,7 +207,7 @@ function AvatarMenu({ space, name }: { space: 'client' | 'supplier'; name: strin
           <li role="none"><Link role="menuitem" to={`${base}/profile`} onClick={() => setOpen(false)}>내 프로필</Link></li>
           <li role="none"><Link role="menuitem" to={`${base}/account`} onClick={() => setOpen(false)}>계정 설정</Link></li>
           <li role="none"><hr /></li>
-          <li role="none"><button role="menuitem" className={s.logout} onClick={() => setDevSession('guest')}>로그아웃</button></li>
+          <li role="none"><button role="menuitem" className={s.logout} onClick={() => { setApiAccessToken(''); setDevSession('guest'); }}>로그아웃</button></li>
         </ul>
       )}
     </div>
@@ -146,58 +223,93 @@ const ICON_KIND: Record<NotificationType, 'neutral' | 'message' | 'done' | 'dead
 const ICON = { neutral: InfoIcon, message: MessageSquare, done: CheckCircle2, deadline: CalendarClock };
 
 /* ── 알림 드롭다운 ── 페이지 없음, 폭 440, 최근 30일. 데이터 연결은 M3 */
-export function NotificationDropdown({ items, hasUnread }: { items: NotificationItem[]; hasUnread: boolean }) {
+type NotificationLoadState = 'idle' | 'loading' | 'success' | 'auth-error' | 'error';
+
+export function NotificationDropdown({
+  items,
+  unreadCount,
+  loadState,
+  actionError,
+  onMarkRead,
+  onMarkAllRead,
+  onRetry,
+}: {
+  items: NotificationItem[];
+  unreadCount: number;
+  loadState: NotificationLoadState;
+  actionError: string | null;
+  onMarkRead: (notification: NotificationItem) => void;
+  onMarkAllRead: () => void;
+  onRetry: () => void;
+}) {
   const { open, setOpen, ref, btnRef } = usePopover();
   const [tab, setTab] = useState('all');
-  const [read, setRead] = useState<Set<string>>(new Set());
-  const isRead = (n: NotificationItem) => n.isRead || read.has(n.id);
-  const unreadCount = items.filter((n) => !isRead(n)).length;
-  const shown = tab === 'unread' ? items.filter((n) => !isRead(n)) : items;
+  const shown = tab === 'unread' ? items.filter((item) => !item.isRead) : items;
 
   return (
     <div ref={ref} style={{ position: 'relative' }}>
-      <button ref={btnRef} type="button" className={s.iconBtn} aria-label="알림" aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(!open)}>
+      <button type="button" ref={btnRef} className={s.iconBtn} aria-label="알림" aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(!open)}>
         <Bell size={22} strokeWidth={1.8} />
-        {hasUnread && unreadCount > 0 && <span className={s.dot} aria-hidden="true" />}
+        {unreadCount > 0 && <span className={s.dot} aria-hidden="true" />}
       </button>
       {open && (
         <div className={s.dropdown} role="dialog" aria-label="알림" data-dropdown="notifications">
           <div className={s.ddHead}>
             <p className={s.ddTitle}>알림{unreadCount > 0 && <span className={s.ddCount}>{unreadCount}</span>}</p>
-            <Button variant="text" onClick={() => setRead(new Set(items.map((n) => n.id)))}>모두 읽음</Button>
+            <Button variant="text" onClick={onMarkAllRead} disabled={unreadCount === 0 || loadState !== 'success'} disabledReason="읽지 않은 알림이 없습니다.">모두 읽음</Button>
           </div>
           <div className={s.ddTabs}>
             <Tabs label="알림 거르기" value={tab} onChange={setTab}
               items={[{ key: 'all', label: '전체', count: items.length }, { key: 'unread', label: '안 읽음', count: unreadCount }]} />
           </div>
           <p className={s.ddGroup}>최근</p>
+          {actionError && <p role="alert" style={{ padding: '8px 16px' }}>{actionError}</p>}
           <ul className={s.ddList}>
-            {shown.map((n) => {
-              const kind = ICON_KIND[n.type];
+            {loadState === 'idle' && (
+              <li><p role="status" style={{ padding: '12px 16px' }}>
+                {import.meta.env.DEV ? '개발 세션 패널에 API 토큰을 입력해 주세요.' : '로그인 후 알림을 확인할 수 있습니다.'}
+              </p></li>
+            )}
+            {loadState === 'loading' && <li><p role="status" style={{ padding: '12px 16px' }}>알림을 불러오는 중입니다.</p></li>}
+            {loadState === 'auth-error' && (
+              <li>
+                <p role="alert" style={{ padding: '12px 16px' }}>API 토큰 인증에 실패했습니다. 토큰을 확인해 주세요.</p>
+                <Button variant="text" onClick={onRetry}>다시 시도</Button>
+              </li>
+            )}
+            {loadState === 'error' && (
+              <li>
+                <p role="alert" style={{ padding: '12px 16px' }}>알림을 불러오지 못했습니다.</p>
+                <Button variant="text" onClick={onRetry}>다시 시도</Button>
+              </li>
+            )}
+            {loadState === 'success' && shown.length === 0 && (
+              <li><p role="status" style={{ padding: '12px 16px' }}>{tab === 'unread' ? '안 읽은 알림이 없습니다.' : '새 알림이 없습니다.'}</p></li>
+            )}
+            {loadState === 'success' && shown.map((notification) => {
+              const kind = ICON_KIND[notification.type];
               const Icon = ICON[kind];
               return (
-                <li key={n.id}>
-                  <Link className={s.ddRow} to={n.targetUrl} data-unread={!isRead(n)}
-                    onClick={() => { setRead(new Set([...read, n.id])); setOpen(false); }}>
+                <li key={notification.id}>
+                  <Link className={s.ddRow} to={notification.targetUrl} data-unread={!notification.isRead}
+                    onClick={() => { onMarkRead(notification); setOpen(false); }}>
                     <span className={`${s.ddIcon} ${s[`ic-${kind}`]}`} aria-hidden="true"><Icon size={16} /></span>
                     <span className={s.ddText}>
-                      <p className={s.ddMsg}>{n.message}</p>
-                      <p className={s.ddTarget}>{n.target}</p>
+                      <p className={s.ddMsg}>{notification.message}</p>
+                      <p className={s.ddTarget}>{notification.target}</p>
                     </span>
-                    {!isRead(n) && <span className={s.ddUnreadDot} aria-label="안 읽음" />}
+                    {!notification.isRead && <span className={s.ddUnreadDot} aria-label="안 읽음" />}
                   </Link>
                 </li>
               );
             })}
           </ul>
-          <p className={s.ddFoot}>최근 30일 알림입니다. 예치 · 납품 · 검수 · 지급 소식은 내 계약에서 상태로 보여 드리고, 알림으로는 기한 안내만 보냅니다.</p>
+          <p className={s.ddFoot}>최근 30일 알림입니다. 예치 납품 검수 · 지급 소식은 내 계약에서 상태로 보여 드리고, 알림으로는 안내만 보냅니다.</p>
         </div>
       )}
     </div>
   );
 }
-
-/* ── 페이지 머리 ── 이동 경로 → 제목 28(+ 상태 칩) → 한 줄 설명. 스테퍼는 가입 흐름에만 */
 export function PageHeader({ crumb, title, chip, description, right }: {
   crumb?: { label: string; to?: string }[]; title: string; chip?: ReactNode; description?: ReactNode; right?: ReactNode;
 }) {

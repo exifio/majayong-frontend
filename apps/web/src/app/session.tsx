@@ -27,16 +27,25 @@ function load(): Session {
   return DEV_SESSIONS.guest!;
 }
 
-type Ctx = { session: Session; setDevSession: (key: keyof typeof DEV_SESSIONS) => void };
+type Ctx = {
+  session: Session;
+  setDevSession: (key: keyof typeof DEV_SESSIONS) => void;
+  apiAccessToken: string;
+  setApiAccessToken: (token: string) => void;
+};
 const SessionContext = createContext<Ctx | null>(null);
 
 export function SessionProvider({ initial, children }: { initial?: Session; children: ReactNode }) {
   const [session, setSession] = useState<Session>(() => initial ?? load());
+  const [apiAccessToken, setApiAccessToken] = useState('');
   const setDevSession = useCallback((key: keyof typeof DEV_SESSIONS) => {
     try { window.localStorage.setItem(KEY, key); } catch { /* 무시 */ }
     setSession(DEV_SESSIONS[key]!);
   }, []);
-  const value = useMemo(() => ({ session, setDevSession }), [session, setDevSession]);
+  const value = useMemo(
+    () => ({ session, setDevSession, apiAccessToken, setApiAccessToken }),
+    [session, setDevSession, apiAccessToken],
+  );
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }
 

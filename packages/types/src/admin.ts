@@ -1,4 +1,4 @@
-/* 운영자 공간 응답 타입(/api/admin) — 개인정보는 끝자리만(디자인 시스템 3절) */
+/* 운영자 화면 모델. API 전송 DTO는 ./api.ts에 둔다. */
 import type { IsoDate, Won } from './common';
 
 export interface AdminBlockRow {
