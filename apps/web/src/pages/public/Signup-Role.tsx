@@ -4,8 +4,11 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button, ConfirmCheck, Note, SelectCards } from '@/components/ui';
+import { ROLE_HOME, useSession } from '@/app/session';
 import { DEMO, resolveRoleMock, roleDemoOf, type RoleMock } from './Signup-Role.data';
 import s from './Signup-Role.module.css';
+
+const TERMS_VERSION = 'v0.7';
 
 function RoleStepper({ current }: { current: 1 | 2 | 3 }) {
   return (
@@ -36,14 +39,18 @@ function RoleStepper({ current }: { current: 1 | 2 | 3 }) {
 export default function SignupRole() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
+  const { googleOnboardingToken, completeGoogleSignup } = useSession();
   const mock: RoleMock = resolveRoleMock(params.get('mock'));
   const demo = roleDemoOf(mock);
+  const googleFlow = demo.google || Boolean(googleOnboardingToken);
 
   const [role, setRole] = useState<'client' | 'supplier'>(demo.role);
-  const [termsOk, setTermsOk] = useState(true);
-  const [privacyOk, setPrivacyOk] = useState(true);
-  const [brokerOk, setBrokerOk] = useState(true);
-  const [ndaOk, setNdaOk] = useState(true);
+  const [termsOk, setTermsOk] = useState(!googleOnboardingToken);
+  const [privacyOk, setPrivacyOk] = useState(!googleOnboardingToken);
+  const [brokerOk, setBrokerOk] = useState(!googleOnboardingToken);
+  const [ndaOk, setNdaOk] = useState(!googleOnboardingToken);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setRole(roleDemoOf(resolveRoleMock(params.get('mock'))).role);
@@ -51,14 +58,31 @@ export default function SignupRole() {
 
   const nextHref = role === 'supplier' ? '/signup/supplier' : '/signup/client';
   const googleReady =
-    !demo.google || (termsOk && privacyOk && brokerOk && (role !== 'supplier' || ndaOk));
+    !googleFlow || (termsOk && privacyOk && brokerOk && (role !== 'supplier' || ndaOk));
+
+  const continueSignup = async () => {
+    if (!googleOnboardingToken) {
+      navigate(nextHref);
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      const user = await completeGoogleSignup(role === 'supplier' ? 'SUPPLIER' : 'CLIENT', TERMS_VERSION);
+      navigate(ROLE_HOME[user.role], { replace: true });
+    } catch {
+      setError('가입을 완료하지 못했습니다. 구글 계정으로 다시 시작해 주세요.');
+    } finally {
+      setBusy(false);
+    }
+  };
 
   return (
     <div className={s.page} data-screen="Signup-Role">
       <RoleStepper current={2} />
 
       <div className={s.acct} role="status">
-        {demo.acctMsg}
+        {googleOnboardingToken ? '구글 계정으로 시작합니다' : demo.acctMsg}
       </div>
 
       <h1 className={s.title}>{DEMO.title}</h1>
@@ -90,7 +114,7 @@ export default function SignupRole() {
         ]}
       />
 
-      {demo.google ? (
+      {googleFlow ? (
         <section className={s.terms} aria-labelledby="agr-h">
           <h2 id="agr-h">{DEMO.termsTitle}</h2>
           <p className={s.termsHint}>{DEMO.googleTermsHint}</p>
@@ -124,6 +148,7 @@ export default function SignupRole() {
           </div>
         </section>
       ) : null}
+      {error ? <p className={s.error} role="alert">{error}</p> : null}
 
       <div className={s.noteWrap}>
         <Note title={DEMO.noteTitle}>{DEMO.noteBody}</Note>
@@ -135,9 +160,9 @@ export default function SignupRole() {
         </Button>
         <Button
           variant="primary"
-          disabled={!googleReady}
-          disabledReason={!googleReady ? '약관에 동의해 주세요' : undefined}
-          onClick={() => navigate(nextHref)}
+          disabled={!googleReady || busy}
+          disabledReason={!googleReady ? '약관에 동의해 주세요' : busy ? '가입 처리 중입니다' : undefined}
+          onClick={() => void continueSignup()}
         >
           {DEMO.next}
         </Button>

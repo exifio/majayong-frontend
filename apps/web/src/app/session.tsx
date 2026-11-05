@@ -12,6 +12,9 @@ import {
 import type { Role } from '@majayong/types';
 import { registerRefreshHandler } from '@/lib/auth-refresh-bridge';
 import {
+  AuthError,
+  completeGoogleOnboarding as completeGoogleOnboardingRequest,
+  exchangeGoogleCode as exchangeGoogleCodeRequest,
   loginWithPassword,
   logoutAuthSession,
   refreshAuthSession,
@@ -27,6 +30,7 @@ export type Session =
   | { status: 'user'; role: Role; name: string; suspended: boolean };
 
 const KEY = 'mj.dev.session';
+const GOOGLE_ONBOARDING_KEY = 'mj.auth.google-onboarding';
 const DEV = import.meta.env.DEV;
 
 export const DEV_SESSIONS: Record<string, Session> = {
@@ -46,9 +50,18 @@ function loadDevSession(): Session {
   return DEV_SESSIONS.guest!;
 }
 
+function storedGoogleOnboardingToken(): string | null {
+  try {
+    return window.sessionStorage.getItem(GOOGLE_ONBOARDING_KEY);
+  } catch {
+    return null;
+  }
+}
+
 type AuthState =
   | { status: 'loading' }
   | { status: 'guest' }
+  | { status: 'signup'; onboardingToken: string }
   | { status: 'authenticated'; user: AuthUser; accessToken: string; expiresAt: number };
 
 type Ctx = {
@@ -59,6 +72,11 @@ type Ctx = {
   authReady: boolean;
   authUser: AuthUser | null;
   login: (email: string, password: string) => Promise<AuthUser>;
+  exchangeGoogleAuthorizationCode: (code: string) => Promise<
+    { onboardingRequired: true } | { onboardingRequired: false; role: Role }
+  >;
+  googleOnboardingToken: string | null;
+  completeGoogleSignup: (role: 'CLIENT' | 'SUPPLIER', termsVersion: string) => Promise<AuthUser>;
   logout: () => Promise<void>;
 };
 
@@ -71,6 +89,13 @@ export function SessionProvider({ initial, children }: { initial?: Session; chil
   const [auth, setAuth] = useState<AuthState>(() => (initial ? { status: 'guest' } : { status: 'loading' }));
   const [authReady, setAuthReady] = useState(Boolean(initial));
   const refreshing = useRef<Promise<string | null> | null>(null);
+
+  const storeGoogleOnboardingToken = useCallback((token: string | null) => {
+    try {
+      if (token) window.sessionStorage.setItem(GOOGLE_ONBOARDING_KEY, token);
+      else window.sessionStorage.removeItem(GOOGLE_ONBOARDING_KEY);
+    } catch { /* storage unavailable */ }
+  }, []);
 
   const applySession = useCallback((session: AuthSession) => {
     setAuth({
@@ -85,7 +110,8 @@ export function SessionProvider({ initial, children }: { initial?: Session; chil
     if (refreshing.current) return refreshing.current;
     const token = storedRefreshToken();
     if (!token) {
-      setAuth({ status: 'guest' });
+      const onboardingToken = storedGoogleOnboardingToken();
+      setAuth(onboardingToken ? { status: 'signup', onboardingToken } : { status: 'guest' });
       return null;
     }
     const request = refreshAuthSession(token)
@@ -127,22 +153,50 @@ export function SessionProvider({ initial, children }: { initial?: Session; chil
 
   const login = useCallback(async (email: string, password: string) => {
     const session = await loginWithPassword(email, password);
+    storeGoogleOnboardingToken(null);
     applySession(session);
     // A real login always takes precedence over the development demo session.
     setDevSessionState(DEV_SESSIONS.guest!);
     setDevToken('');
     return session.user;
-  }, [applySession]);
+  }, [applySession, storeGoogleOnboardingToken]);
+
+  const exchangeGoogleAuthorizationCode = useCallback(async (code: string) => {
+    const result = await exchangeGoogleCodeRequest(code);
+    setDevSessionState(DEV_SESSIONS.guest!);
+    setDevToken('');
+    if ('onboardingToken' in result) {
+      storeGoogleOnboardingToken(result.onboardingToken);
+      setAuth({ status: 'signup', onboardingToken: result.onboardingToken });
+      return { onboardingRequired: true as const };
+    }
+    storeGoogleOnboardingToken(null);
+    applySession(result.session);
+    return { onboardingRequired: false as const, role: result.session.user.role };
+  }, [applySession, storeGoogleOnboardingToken]);
+
+  const completeGoogleSignup = useCallback(async (role: 'CLIENT' | 'SUPPLIER', termsVersion: string) => {
+    if (auth.status !== 'signup') {
+      throw new AuthError(401, 'GOOGLE_ONBOARDING_REQUIRED', '구글 가입을 다시 시작해 주세요.');
+    }
+    const session = await completeGoogleOnboardingRequest(auth.onboardingToken, role, termsVersion);
+    storeGoogleOnboardingToken(null);
+    setDevSessionState(DEV_SESSIONS.guest!);
+    setDevToken('');
+    applySession(session);
+    return session.user;
+  }, [auth, applySession, storeGoogleOnboardingToken]);
 
   const logout = useCallback(async () => {
     await logoutAuthSession(storedRefreshToken());
+    storeGoogleOnboardingToken(null);
     setAuth({ status: 'guest' });
     setDevToken('');
     if (DEV) {
       setDevSessionState(DEV_SESSIONS.guest!);
       try { window.localStorage.removeItem(KEY); } catch { /* storage unavailable */ }
     }
-  }, []);
+  }, [storeGoogleOnboardingToken]);
 
   const setDevSession = useCallback((key: keyof typeof DEV_SESSIONS) => {
     try { window.localStorage.setItem(KEY, key); } catch { /* storage unavailable */ }
@@ -151,7 +205,9 @@ export function SessionProvider({ initial, children }: { initial?: Session; chil
 
   const session: Session = auth.status === 'authenticated'
     ? { status: 'user', role: auth.user.role, name: auth.user.name?.trim() || auth.user.email, suspended: false }
-    : DEV
+    : auth.status === 'signup'
+      ? { status: 'signup' }
+      : DEV
       ? devSession
       : DEV_SESSIONS.guest!;
 
@@ -164,9 +220,12 @@ export function SessionProvider({ initial, children }: { initial?: Session; chil
     setApiAccessToken: setDevToken,
     authReady,
     authUser: auth.status === 'authenticated' ? auth.user : null,
+    googleOnboardingToken: auth.status === 'signup' ? auth.onboardingToken : null,
     login,
+    exchangeGoogleAuthorizationCode,
+    completeGoogleSignup,
     logout,
-  }), [session, setDevSession, apiAccessToken, authReady, auth, login, logout]);
+  }), [session, setDevSession, apiAccessToken, authReady, auth, login, exchangeGoogleAuthorizationCode, completeGoogleSignup, logout]);
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }

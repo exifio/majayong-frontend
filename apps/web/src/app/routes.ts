@@ -137,6 +137,7 @@ export const SCREENS: ScreenRoute[] = [
 
 /* ── 보조 경로 — 55개 화면에 세지 않음 ───────────────────────── */
 export const EXTRA_ROUTES = [
+  { path: '/auth/google/callback', to: 'Google OAuth 로그인 · 가입 콜백', guard: 'none' },
   { path: '/c/chat', to: '가장 최근 대화 /c/chat/:pid/:sid, 없으면 빈 상태', guard: 'client' },
   { path: '/s/chat', to: '가장 최근 대화 /s/chat/:pid, 없으면 빈 상태', guard: 'supplier' },
   { path: '/help/inquiry', to: 'Help 보드의 1:1 문의 작성 · 문의 보냄 상태', guard: 'auth' },

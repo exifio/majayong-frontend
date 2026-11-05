@@ -42,7 +42,7 @@ export function storeRefreshToken(token: string | null): void {
   } catch { /* storage unavailable */ }
 }
 
-async function authRequest(path: string, body: unknown): Promise<AuthSession> {
+async function authRequestData(path: string, body: unknown): Promise<unknown> {
   let response: Response;
   try {
     response = await fetch(`${API_BASE_PATH}${path}`, {
@@ -67,14 +67,58 @@ async function authRequest(path: string, body: unknown): Promise<AuthSession> {
   const data = typeof payload === 'object' && payload !== null && 'data' in payload
     ? (payload as { data?: unknown }).data
     : undefined;
-  if (typeof data !== 'object' || data === null || !('accessToken' in data) || !('refreshToken' in data)) {
+  if (typeof data !== 'object' || data === null) {
     throw new AuthError(response.status, 'INVALID_RESPONSE', '서버 응답 형식이 올바르지 않습니다.');
+  }
+  return data;
+}
+
+function authSession(data: unknown): AuthSession {
+  if (typeof data !== 'object' || data === null || !('accessToken' in data) || !('refreshToken' in data)) {
+    throw new AuthError(0, 'INVALID_RESPONSE', '서버 응답 형식이 올바르지 않습니다.');
   }
   return data as AuthSession;
 }
 
+async function authRequest(path: string, body: unknown): Promise<AuthSession> {
+  return authSession(await authRequestData(path, body));
+}
+
 export async function loginWithPassword(email: string, password: string): Promise<AuthSession> {
   const session = await authRequest('/auth/login', { email, password });
+  storeRefreshToken(session.refreshToken);
+  return session;
+}
+
+export type GoogleCodeExchange =
+  | { onboardingToken: string }
+  | { session: AuthSession };
+
+export async function exchangeGoogleCode(code: string): Promise<GoogleCodeExchange> {
+  const data = await authRequestData('/auth/google/exchange', { code });
+  if (
+    typeof data === 'object' && data !== null &&
+    'onboardingRequired' in data && data.onboardingRequired === true &&
+    'onboardingToken' in data && typeof data.onboardingToken === 'string' && data.onboardingToken
+  ) {
+    storeRefreshToken(null);
+    return { onboardingToken: data.onboardingToken };
+  }
+  const session = authSession(data);
+  storeRefreshToken(session.refreshToken);
+  return { session };
+}
+
+export async function completeGoogleOnboarding(
+  onboardingToken: string,
+  role: 'CLIENT' | 'SUPPLIER',
+  termsVersion: string,
+): Promise<AuthSession> {
+  const session = await authRequest('/auth/google/complete-onboarding', {
+    onboardingToken,
+    role,
+    termsVersion,
+  });
   storeRefreshToken(session.refreshToken);
   return session;
 }

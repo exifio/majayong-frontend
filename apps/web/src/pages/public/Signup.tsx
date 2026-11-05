@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button, ConfirmCheck, TextField } from '@/components/ui';
 import { useSession } from '@/app/session';
+import { startGoogleOAuth } from '@/app/google-oauth';
 import {
   DEMO,
   passwordError,
@@ -57,6 +58,7 @@ export default function Signup() {
     broker: false,
   });
   const [tried, setTried] = useState(false);
+  const [googleError, setGoogleError] = useState<string | null>(null);
 
   const dup = demo.dup;
   const pwErr = passwordError(password);
@@ -67,6 +69,15 @@ export default function Signup() {
   const goNext = () => {
     setDevSession('signup');
     navigate('/signup/role');
+  };
+
+  const onGoogleClick = () => {
+    setGoogleError(null);
+    try {
+      startGoogleOAuth();
+    } catch {
+      setGoogleError('구글 로그인을 사용할 수 없습니다. 잠시 후 다시 시도해 주세요.');
+    }
   };
 
   const onSubmit = () => {
@@ -88,9 +99,10 @@ export default function Signup() {
       <p className={s.sub}>{DEMO.sub}</p>
 
       <div className={s.card}>
-        <Button variant="ghost" full onClick={goNext}>
+        <Button variant="ghost" full onClick={onGoogleClick}>
           {DEMO.google}
         </Button>
+        {googleError ? <p className={s.termsError} role="alert">{googleError}</p> : null}
         <p className={s.googleHint}>{DEMO.googleHint}</p>
 
         <div className={s.div}>{DEMO.orEmail}</div>

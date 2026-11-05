@@ -15,6 +15,7 @@ import { Modal } from '@/components/ui';
 import NotFound from '@/pages/system/NotFound';
 import Suspended from '@/pages/system/Suspended';
 import UiCatalog from '@/pages/dev/UiCatalog';
+import GoogleCallback from '@/pages/public/GoogleCallback';
 
 const pageModules = import.meta.glob<{ default: ComponentType }>('../pages/*/*.tsx', { eager: true });
 export const PAGES: Record<string, ComponentType> = Object.fromEntries(
@@ -105,6 +106,10 @@ export function AppRoutes() {
         ))}
         <Route path="/c/chat" element={<ChatIndex space="client" />} />
         <Route path="/s/chat" element={<ChatIndex space="supplier" />} />
+        <Route
+          path="/auth/google/callback"
+          element={<ShellOnly shell="public" guard="none"><GoogleCallback /></ShellOnly>}
+        />
         <Route path="/help/inquiry" element={<ShellOnly shell="viewer" guard="auth"><Help /></ShellOnly>} />
         <Route path="/admin" element={<Guarded guard="admin"><Navigate to="/admin/blocks" replace /></Guarded>} />
         <Route path="/suspended" element={<SuspendedRoute />} />

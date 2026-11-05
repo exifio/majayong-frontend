@@ -1,11 +1,13 @@
 /* 회원가입 ① 계정 Signup — F-06 · 7.2 */
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, screen, within } from '@testing-library/react';
 import { findDesignViolations } from '@/app/devChecks';
 import { location, renderAt } from './render';
 import { DEMO, signupDemoOf } from '@/pages/public/Signup.data';
 
 describe('Signup — 회원가입 ① 계정', () => {
+  afterEach(() => vi.unstubAllEnvs());
+
   it('기본: 스텝 · 구글 · 필드 · 약관 4 · primary 다음', () => {
     const { container } = renderAt('/signup', 'guest');
     const root = container.querySelector('[data-screen="Signup"]') as HTMLElement;
@@ -38,6 +40,14 @@ describe('Signup — 회원가입 ① 계정', () => {
     }
     fireEvent.click(within(root).getByRole('button', { name: DEMO.next }));
     expect(location.current.startsWith('/signup/role')).toBe(true);
+  });
+
+  it('구글 OAuth 설정이 없으면 시연 가입으로 넘기지 않고 오류를 알린다', () => {
+    vi.stubEnv('VITE_GOOGLE_CLIENT_ID', '');
+    renderAt('/signup', 'guest');
+    fireEvent.click(screen.getByRole('button', { name: DEMO.google }));
+    expect(location.current).toBe('/signup');
+    expect(screen.getByRole('alert').textContent).toContain('구글 로그인을 사용할 수 없습니다');
   });
 
   it('이미 가입된 이메일: 오류 · 로그인하기', () => {
