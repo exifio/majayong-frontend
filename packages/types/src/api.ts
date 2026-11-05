@@ -343,6 +343,50 @@ export interface ContractRecordDto {
   items: ContractItemDto[];
 }
 
+export type ApiInstallmentStatus = 'PENDING' | 'DELIVERED' | 'REWORK_REQUESTED' | 'APPROVED' | 'RELEASED' | 'REFUNDED';
+
+export interface PaymentInstallmentDto {
+  stage: ApiInstallmentStage;
+  status: ApiInstallmentStatus;
+  amount: number;
+  releaseAmount?: number;
+  supplierFee?: number;
+  withholdingTax?: number;
+  taxInvoiceIssuedAt?: IsoDate | null;
+  releasedAt: IsoDate | null;
+}
+
+export interface ClientPaymentStatementDto {
+  simulated: true;
+  transferNote: string;
+  contractId: string;
+  totalDeposited: number;
+  paidToSupplier: number;
+  remainingDeposit: number;
+  clientFeePaid: number;
+  installments: PaymentInstallmentDto[];
+}
+
+export interface SupplierPaymentStatementDto {
+  simulated: true;
+  transferNote: string;
+  contractId: string;
+  totalAgreed: number;
+  totalReceived: number;
+  expectedToReceive: number;
+  supplierFeePaid: number;
+  withholdingTaxTotal: number;
+  installments: PaymentInstallmentDto[];
+}
+
+export type PaymentStatementDto = ClientPaymentStatementDto | SupplierPaymentStatementDto;
+
+export interface PaymentStatementsDto {
+  simulated: true;
+  transferNote: string;
+  statements: PaymentStatementDto[];
+}
+
 export interface ProvisionalContractPlanDto {
   applicationId: string;
   projectId: string;
@@ -636,6 +680,7 @@ export interface BApiResponses {
   previewAgreement: DataEnvelope<AgreementPreviewDto>;
   confirmAgreement: DataEnvelope<ConfirmAgreementResultDto>;
   listMyContracts: DataEnvelope<ContractRecordDto[]>;
+  listPaymentStatements: DataEnvelope<PaymentStatementsDto>;
   getContract: DataEnvelope<ContractRecordDto>;
   getContractDocument: DataEnvelope<ContractDocumentDto>;
   signContract: DataEnvelope<SignContractResultDto>;

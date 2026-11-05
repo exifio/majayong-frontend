@@ -1,4 +1,4 @@
-/* M0 통과 조건 1 — 55개 화면이 모두 맞는 셸로 열린다 */
+/* M0 통과 조건 1 — 모든 화면이 맞는 셸로 열린다 */
 import { describe, expect, it } from 'vitest';
 import { fireEvent, screen, within } from '@testing-library/react';
 import { SCREENS, type ScreenRoute } from '@/app/routes';
@@ -12,10 +12,10 @@ const whoFor = (x: ScreenRoute) =>
 const expectedShell = (x: ScreenRoute) => (x.shell === 'viewer' || x.shell === 'public' ? 'public' : x.shell);
 
 describe('화면 목록', () => {
-  it('55개 = 비로그인 · 공통 10 + 의뢰인 22 + 공급자 17 + 운영자 6', () => {
+  it('56개 = 비로그인 · 공통 11 + 의뢰인 22 + 공급자 17 + 운영자 6', () => {
     const by = (sp: string) => SCREENS.filter((x) => x.space === sp).length;
-    expect(SCREENS).toHaveLength(55);
-    expect([by('public'), by('client'), by('supplier'), by('admin')]).toEqual([10, 22, 17, 6]);
+    expect(SCREENS).toHaveLength(56);
+    expect([by('public'), by('client'), by('supplier'), by('admin')]).toEqual([11, 22, 17, 6]);
   });
 
   it('드롭다운을 뺀 모든 화면에 페이지 파일이 있다', () => {

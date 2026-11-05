@@ -55,7 +55,8 @@ function screenUrl(notification: NotificationDto, role: Exclude<Role, 'ADMIN'>):
       // shortcut: no report-result screen exists, use the role home until that route is added.
       return role === 'CLIENT' ? '/c' : '/s';
     case 'INQUIRY_ANSWERED':
-      return '/help';
+      // 서버가 내 문의 상세 링크를 준다. 없을 때만 안전한 기본 경로로 보낸다.
+      return notification.targetUrl || `/help/inquiry?tab=my&id=${targetId}`;
   }
 }
 

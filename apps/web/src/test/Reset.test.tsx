@@ -80,7 +80,7 @@ describe('Reset — 비밀번호 재설정', () => {
     fireEvent.click(within(root).getByRole('button', { name: DEMO.change }));
 
     expect(await screen.findByRole('heading', { level: 1, name: DEMO.expiredTitle })).toBeTruthy();
-    expect(location.current).toBe('/reset');
+    await waitFor(() => expect(location.current).toBe('/reset'));
   });
 
   it('새 비밀번호 형식 오류', () => {

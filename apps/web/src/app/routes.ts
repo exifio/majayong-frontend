@@ -53,7 +53,9 @@ export const SCREENS: ScreenRoute[] = [
   { board: 'Terms', name: '약관 · 정책', space: 'public', kind: 'page', path: '/terms/:doc', shell: 'viewer', guard: 'none', milestone: 'M1',
     states: ['terms 이용약관', 'privacy 개인정보 처리방침', 'nda 명세 비밀유지', 'broker 중개자 고지'] },
   { board: 'Help', name: '고객센터', space: 'public', kind: 'page', path: '/help', shell: 'viewer', guard: 'none', milestone: 'M6',
-    states: ['자주 묻는 질문', '검색 결과(?q=)', '1:1 문의 작성(/help/inquiry, 로그인)', '문의 보냄'] },
+    states: ['자주 묻는 질문', '검색 결과(?q=)', '공지(?tab=notice)'] },
+  { board: 'Help-Inquiry', name: '1:1 문의', space: 'public', kind: 'page', path: '/help/inquiry', shell: 'viewer', guard: 'none', milestone: 'M6',
+    states: ['로그인 안내', '문의 작성', '내 문의', '문의 상세'] },
 
   // ── 의뢰인 (22) ─────────────────────────────────────────────
   { board: 'Home-Client', name: '홈', space: 'client', kind: 'page', path: '/c', shell: 'client', guard: 'client', milestone: 'M2', states: ['기본', '첫 방문'] },
@@ -140,7 +142,6 @@ export const EXTRA_ROUTES = [
   { path: '/auth/google/callback', to: 'Google OAuth 로그인 · 가입 콜백', guard: 'none' },
   { path: '/c/chat', to: '가장 최근 대화 /c/chat/:pid/:sid, 없으면 빈 상태', guard: 'client' },
   { path: '/s/chat', to: '가장 최근 대화 /s/chat/:pid, 없으면 빈 상태', guard: 'supplier' },
-  { path: '/help/inquiry', to: 'Help 보드의 1:1 문의 작성 · 문의 보냄 상태', guard: 'auth' },
   { path: '/admin', to: '/admin/blocks', guard: 'admin' },
   { path: '/suspended', to: '정지 계정 안내(미설계 — EmptyState 패턴)', guard: 'auth' },
   { path: '*', to: '404(미설계 — EmptyState 패턴)', guard: 'none' },

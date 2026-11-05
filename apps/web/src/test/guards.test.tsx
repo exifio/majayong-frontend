@@ -25,7 +25,6 @@ const cases: [string, Parameters<typeof renderAt>[1], string][] = [
   ['/help', 'suspended', '/suspended'],
   // 보조 경로 — /c/chat · /s/chat은 최근 대화 API 결과에 따르므로 App.test.tsx에서 검증한다.
   ['/admin', 'admin', '/admin/blocks'],
-  ['/help/inquiry', 'guest', '/?modal=login&next=%2Fhelp%2Finquiry'],
 ];
 
 describe('가드', () => {

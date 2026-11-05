@@ -140,7 +140,6 @@ function ShellOnly({ shell, guard, children }: { shell: Shell; guard: Guard; chi
 export function AppRoutes() {
   useDevDesignChecks();
   const { authReady } = useSession();
-  const Help = PAGES.Help!;
   if (!authReady) {
     return <p role="status" style={{ padding: 24 }}>세션을 확인하는 중입니다.</p>;
   }
@@ -156,7 +155,6 @@ export function AppRoutes() {
           path="/auth/google/callback"
           element={<ShellOnly shell="public" guard="none"><GoogleCallback /></ShellOnly>}
         />
-        <Route path="/help/inquiry" element={<ShellOnly shell="viewer" guard="auth"><Help /></ShellOnly>} />
         <Route path="/admin" element={<Guarded guard="admin"><Navigate to="/admin/blocks" replace /></Guarded>} />
         <Route path="/suspended" element={<SuspendedRoute />} />
         {import.meta.env.DEV && <Route path="/dev/ui" element={<AppShell shell="public"><UiCatalog /></AppShell>} />}
