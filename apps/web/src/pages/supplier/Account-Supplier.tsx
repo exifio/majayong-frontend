@@ -10,6 +10,7 @@ import {
   Modal,
   TextField,
 } from '@/components/ui';
+import { LiveSettlementInfo } from '@/components/account/LiveSettlementInfo';
 import { DEMO, resolveAccountMock, type AccountMock } from './Account-Supplier.data';
 import s from './Account-Supplier.module.css';
 
@@ -19,16 +20,12 @@ export default function AccountSupplier() {
   const mock = resolveAccountMock(params.get('mock'));
 
   const [emailOpen, setEmailOpen] = useState(mock === '이메일 바꾸기');
-  const [bankOpen, setBankOpen] = useState(mock === '계좌 바꾸기');
   const [leaveOpen, setLeaveOpen] = useState(mock === '탈퇴 확인');
   const [newEmail, setNewEmail] = useState<string>(DEMO.emailNewValue);
   const [emailPw, setEmailPw] = useState<string>('password1234');
-  const [bank, setBank] = useState<string>(DEMO.bankBankValue);
-  const [accountNo, setAccountNo] = useState<string>(DEMO.bankNumberValue);
 
   useEffect(() => {
     setEmailOpen(mock === '이메일 바꾸기');
-    setBankOpen(mock === '계좌 바꾸기');
     setLeaveOpen(mock === '탈퇴 확인');
   }, [mock]);
 
@@ -38,7 +35,6 @@ export default function AccountSupplier() {
 
   const closeModals = () => {
     setEmailOpen(false);
-    setBankOpen(false);
     setLeaveOpen(false);
     go('기본');
   };
@@ -103,25 +99,6 @@ export default function AccountSupplier() {
 
         <li className={s.row}>
           <div>
-            <p className={s.k}>{DEMO.bankLabel}</p>
-            <p className={s.v}>{DEMO.bankValue}</p>
-            <p className={s.prv}>{DEMO.bankHint}</p>
-          </div>
-          <Button
-            variant="tint"
-            size="sm"
-            type="button"
-            onClick={() => {
-              setBankOpen(true);
-              go('계좌 바꾸기');
-            }}
-          >
-            {DEMO.bankChange}
-          </Button>
-        </li>
-
-        <li className={s.row}>
-          <div>
             <p className={s.k}>{DEMO.notifyLabel}</p>
             <p className={s.v}>{DEMO.notifyValue}</p>
           </div>
@@ -148,6 +125,8 @@ export default function AccountSupplier() {
           </Button>
         </li>
       </ul>
+
+      <LiveSettlementInfo role="SUPPLIER" />
 
       {emailOpen ? (
         <Modal
@@ -188,52 +167,6 @@ export default function AccountSupplier() {
         </Modal>
       ) : null}
 
-      {bankOpen ? (
-        <Modal
-          title={DEMO.bankModalTitle}
-          onClose={closeModals}
-          actions={
-            <>
-              <Button variant="ghost" onClick={closeModals}>
-                {DEMO.bankCancel}
-              </Button>
-              <Button variant="primary" onClick={closeModals}>
-                {DEMO.bankSave}
-              </Button>
-            </>
-          }
-        >
-          <p className={s.modalSub}>{DEMO.bankModalSub}</p>
-          <div className={s.selectField}>
-            <label className={s.selectLabel} htmlFor="bank-name">
-              {DEMO.bankBank}
-            </label>
-            <select
-              id="bank-name"
-              className={s.select}
-              value={bank}
-              onChange={(e) => setBank(e.target.value)}
-            >
-              {DEMO.bankBanks.map((b) => (
-                <option key={b} value={b}>
-                  {b}
-                </option>
-              ))}
-            </select>
-          </div>
-          <TextField
-            label={DEMO.bankNumber}
-            value={accountNo}
-            onChange={(e) => setAccountNo(e.target.value)}
-          />
-          <TextField
-            label={DEMO.bankHolder}
-            value={DEMO.bankHolderValue}
-            readOnly
-            hint={DEMO.bankHolderHint}
-          />
-        </Modal>
-      ) : null}
 
       {leaveOpen ? (
         <ConfirmDialog

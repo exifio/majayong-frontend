@@ -19,9 +19,15 @@ import Suspended from '@/pages/system/Suspended';
 import UiCatalog from '@/pages/dev/UiCatalog';
 import GoogleCallback from '@/pages/public/GoogleCallback';
 
-const pageModules = import.meta.glob<{ default: ComponentType }>('../pages/*/*.tsx', { eager: true });
+const pageModules = import.meta.glob<{ default: ComponentType }>(
+  ['../pages/*/*.tsx', '!../pages/*/*.test.tsx'],
+  { eager: true },
+);
 export const PAGES: Record<string, ComponentType> = Object.fromEntries(
-  Object.entries(pageModules).map(([path, mod]) => [path.split('/').pop()!.replace(/\.tsx$/, ''), mod.default]),
+  Object.entries(pageModules)
+    // 인접 테스트 파일은 화면 모듈이 아니므로 번들·테스트 탐색에서 제외한다.
+    .filter(([path]) => !path.endsWith('.test.tsx'))
+    .map(([path, mod]) => [path.split('/').pop()!.replace(/\.tsx$/, ''), mod.default]),
 );
 
 const MODAL_SCREENS = SCREENS.filter((x) => x.kind === 'modal');

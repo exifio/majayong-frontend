@@ -1,0 +1,65 @@
+.section {
+  margin-top: 24px;
+  padding: 20px;
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-card);
+  background: #fff;
+}
+
+.title {
+  margin: 0 0 6px;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--slate-900);
+}
+
+.sub {
+  margin: 0 0 14px;
+  color: var(--slate-600);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.label {
+  display: block;
+  margin: 0 0 6px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.selectField {
+  margin-bottom: 12px;
+}
+
+.select {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--slate-300);
+  border-radius: 8px;
+  background: #fff;
+  font-size: 15px;
+}
+
+.divider {
+  height: 1px;
+  background: var(--slate-200);
+  margin: 20px 0;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  margin: 10px 0 14px;
+}
+
+.notice {
+  margin: 8px 0 0;
+  color: var(--slate-700);
+  font-size: 14px;
+}
+
+.error {
+  margin: 8px 0 0;
+  color: var(--red-600);
+  font-size: 14px;
+}

@@ -10,6 +10,7 @@ import {
   Modal,
   TextField,
 } from '@/components/ui';
+import { LiveSettlementInfo } from '@/components/account/LiveSettlementInfo';
 import { DEMO, resolveAccountMock, type AccountMock } from './Account-Client.data';
 import s from './Account-Client.module.css';
 
@@ -140,6 +141,8 @@ export default function AccountClient() {
           </Button>
         </li>
       </ul>
+
+      <LiveSettlementInfo role="CLIENT" />
 
       {emailOpen ? (
         <Modal

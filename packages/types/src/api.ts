@@ -387,6 +387,31 @@ export interface PaymentStatementsDto {
   statements: PaymentStatementDto[];
 }
 
+export type ApiBusinessType = 'BUSINESS' | 'INDIVIDUAL';
+
+export interface MySupplierProfileDto {
+  displayName: string;
+  businessType: ApiBusinessType | null;
+  bizRegNoMasked: string | null;
+  payoutBank: string | null;
+  payoutAccountMasked: string | null;
+  payoutHolder: string | null;
+  payoutVerifiedAt: IsoDate | null;
+}
+
+export interface TaxInfoResultDto {
+  businessType?: ApiBusinessType | null;
+  bizRegNoMasked: string | null;
+  taxInvoiceEmail: string | null;
+}
+
+export interface PayoutAccountResultDto {
+  bank: string;
+  accountMasked: string | null;
+  holder: string;
+  verifiedAt: IsoDate | null;
+}
+
 export interface ProvisionalContractPlanDto {
   applicationId: string;
   projectId: string;
@@ -588,6 +613,14 @@ export interface BApiRequestBodies {
     storeAddress?: string | null;
     websiteUrl?: string | null;
   };
+  updateClientTaxInfo: { bizRegNo?: string | null; taxInvoiceEmail?: string | null };
+  updateSupplierTaxInfo: {
+    businessType?: ApiBusinessType | null;
+    bizRegNo?: string | null;
+    taxInvoiceEmail?: string | null;
+  };
+  updatePayoutAccount: { bank: string; accountNo: string; holder: string };
+  verifyPayoutAccount: { code: string };
   withdrawApplication: EmptyJsonObjectDto;
   rejectApplication: EmptyJsonObjectDto;
   submitApplication: SubmitApplicationRequestDto;
@@ -672,6 +705,11 @@ export interface BApiResponses {
   getSupplierProjectDetail: DataEnvelope<SupplierProjectDetailDto>;
   updateSupplierProfile: DataEnvelope<unknown>;
   updateClientProfile: DataEnvelope<unknown>;
+  getMySupplierProfile: DataEnvelope<MySupplierProfileDto>;
+  updateClientTaxInfo: DataEnvelope<TaxInfoResultDto>;
+  updateSupplierTaxInfo: DataEnvelope<TaxInfoResultDto>;
+  updatePayoutAccount: DataEnvelope<PayoutAccountResultDto>;
+  verifyPayoutAccount: DataEnvelope<{ verified: true; verifiedAt: IsoDate }>;
   listChatRooms: DataEnvelope<ChatRoomSummaryDto[]>;
   openChat: DataEnvelope<OpenChatResultDto>;
   listMessages: DataEnvelope<ConversationViewDto>;

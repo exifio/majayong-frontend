@@ -41,7 +41,7 @@ export const DEMO = {
   operator: { company: '로켓단', phone: '1600-0000', email: 'help@majayong.example' },
 } as const;
 
-export const DEMO_ADMIN_QUEUES: AdminQueueCounts = { blocks: 3, payments: 1, refunds: 1, disputes: 1, reports: 2 };
+export const DEMO_ADMIN_QUEUES: AdminQueueCounts = { blocks: 3, payments: 1, refunds: 1, disputes: 1, reports: 2, inquiries: 0 };
 
 export const DEMO_NOTIFICATIONS: Record<'CLIENT' | 'SUPPLIER', NotificationItem[]> = {
   CLIENT: [

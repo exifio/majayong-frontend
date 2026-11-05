@@ -26,6 +26,7 @@ export const ADMIN_MENU = [
   { label: '환불 처리', to: '/admin/refunds', queue: 'refunds' },
   { label: '이견 개입', to: '/admin/disputes', queue: 'disputes' },
   { label: '신고 처리', to: '/admin/reports', queue: 'reports' },
+  { label: '1:1 문의', to: '/admin/inquiries', queue: 'inquiries' },
 ] as const;
 
 export const ADMIN_MENU_BOTTOM = { label: '이벤트 기록', to: '/admin/events' } as const;

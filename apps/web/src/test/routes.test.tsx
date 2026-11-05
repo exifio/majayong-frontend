@@ -12,10 +12,10 @@ const whoFor = (x: ScreenRoute) =>
 const expectedShell = (x: ScreenRoute) => (x.shell === 'viewer' || x.shell === 'public' ? 'public' : x.shell);
 
 describe('화면 목록', () => {
-  it('56개 = 비로그인 · 공통 11 + 의뢰인 22 + 공급자 17 + 운영자 6', () => {
+  it('57개 = 비로그인 · 공통 11 + 의뢰인 22 + 공급자 17 + 운영자 7', () => {
     const by = (sp: string) => SCREENS.filter((x) => x.space === sp).length;
-    expect(SCREENS).toHaveLength(56);
-    expect([by('public'), by('client'), by('supplier'), by('admin')]).toEqual([11, 22, 17, 6]);
+    expect(SCREENS).toHaveLength(57);
+    expect([by('public'), by('client'), by('supplier'), by('admin')]).toEqual([11, 22, 17, 7]);
   });
 
   it('드롭다운을 뺀 모든 화면에 페이지 파일이 있다', () => {

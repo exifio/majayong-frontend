@@ -134,6 +134,7 @@ export const SCREENS: ScreenRoute[] = [
   { board: 'Admin-Refunds', name: '환불 처리', space: 'admin', kind: 'page', path: '/admin/refunds', shell: 'admin', guard: 'admin', milestone: 'M6', states: ['처리 대기', '사유 다툼 판정', '처리 완료'] },
   { board: 'Admin-Disputes', name: '이견 개입', space: 'admin', kind: 'page', path: '/admin/disputes', shell: 'admin', guard: 'admin', milestone: 'M6', states: ['검토 중', '판정 작성', '판정 완료'] },
   { board: 'Admin-Reports', name: '신고 처리', space: 'admin', kind: 'page', path: '/admin/reports', shell: 'admin', guard: 'admin', milestone: 'M6', states: ['처리 대기', '조치 작성', '처리 완료', '계정 정지 선택'] },
+  { board: 'Admin-Inquiries', name: '1:1 문의', space: 'admin', kind: 'page', path: '/admin/inquiries', shell: 'admin', guard: 'admin', milestone: 'M6', states: ['답변 대기', '답변 작성', '답변 완료'] },
   { board: 'Admin-Events', name: '이벤트 기록', space: 'admin', kind: 'page', path: '/admin/events', shell: 'admin', guard: 'admin', milestone: 'M6', states: ['목록', '상세'] },
 ];
 

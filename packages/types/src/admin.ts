@@ -20,6 +20,7 @@ export interface AdminQueueCounts {
   refunds: number;
   disputes: number;
   reports: number;
+  inquiries: number;
 }
 
 /** 운영자 행위는 사유 필수, 이벤트 기록에 남는다 */
