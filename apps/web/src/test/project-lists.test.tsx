@@ -168,6 +168,77 @@ describe('LiveApplications', () => {
       String(url) === '/api/v1/applications/application-1/chat/open' && init?.method === 'POST')).toBe(true));
   });
 
+  function detailFetch(status = 'SUBMITTED', rejectResponse?: () => Response) {
+    return async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      if (url === '/api/v1/projects/project-1/applications') return jsonResponse({ data: [application] });
+      if (url === '/api/v1/profiles/suppliers/supplier-user-1') {
+        return jsonResponse({ data: { supplierId: 'supplier-user-1', displayName: '최준우', profileImageUrl: null } });
+      }
+      if (url === '/api/v1/applications/application-1' && init?.method !== 'POST') {
+        return jsonResponse({ data: {
+          ...application,
+          status,
+          specVersionNo: 1,
+          firstViewedAt: '2026-11-05T04:07:29.689Z',
+          message: null,
+          questions: [],
+          isMessageMasked: false,
+          revisionReason: null,
+          items: [{ specItemId: 'spec-item-1', isAvailable: true }],
+        } });
+      }
+      if (url === '/api/v1/applications/application-1/agreement-preview') {
+        return jsonResponse({ data: { draft: {
+          items: [{ specItemId: 'spec-item-1', title: '예약 달력', conditions: [] }],
+          interimRatio: 50, ratioState: 'PROPOSED', cachedAt: '2026-11-05T04:00:00.000Z', lastMessageAt: null,
+        }, stale: false, readOnly: true } });
+      }
+      if (url === '/api/v1/applications/application-1/reject' && init?.method === 'POST') {
+        return rejectResponse ? rejectResponse() : jsonResponse({ data: { status: 'REJECTED' } });
+      }
+      return jsonResponse({ error: { code: 'NOT_FOUND', message: 'not found', requestId: 'r' } }, 404);
+    };
+  }
+
+  it('rejects an applicant after confirmation and shows the new status', async () => {
+    fetchMock.mockImplementation(detailFetch());
+    renderWithToken(<LiveApplications pid="project-1" styles={{}} />, DEV_SESSIONS.client);
+
+    fireEvent.click(await screen.findByRole('button', { name: '지원서 보기' }));
+    await screen.findByText('검토 중');
+    fireEvent.click(screen.getByRole('button', { name: '지원 거절' }));
+    expect(await screen.findByText(/되돌릴 수 없습니다/)).toBeTruthy();
+    expect(screen.getByText(/채팅은 읽기 전용/)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: '거절하기' }));
+
+    await waitFor(() => expect(screen.getAllByText('직접 거절').length).toBeGreaterThan(0));
+    expect(fetchMock.mock.calls.filter(([url, init]) =>
+      String(url) === '/api/v1/applications/application-1/reject' && init?.method === 'POST')).toHaveLength(1);
+  });
+
+  it('shows the server message when the reject conflicts with the current state', async () => {
+    fetchMock.mockImplementation(detailFetch('SUBMITTED', () => jsonResponse({
+      error: { code: 'APPLICATION_STATE_CHANGED', message: '다른 요청으로 지원 상태가 바뀌었습니다.', requestId: 'r3' },
+    }, 409)));
+    renderWithToken(<LiveApplications pid="project-1" styles={{}} />, DEV_SESSIONS.client);
+
+    fireEvent.click(await screen.findByRole('button', { name: '지원서 보기' }));
+    fireEvent.click(await screen.findByRole('button', { name: '지원 거절' }));
+    fireEvent.click(await screen.findByRole('button', { name: '거절하기' }));
+
+    await waitFor(() => expect(screen.getByRole('alert').textContent).toContain('다른 요청으로 지원 상태가 바뀌었습니다.'));
+  });
+
+  it('does not offer reject for a non-rejectable status', async () => {
+    fetchMock.mockImplementation(detailFetch('ACCEPTED'));
+    renderWithToken(<LiveApplications pid="project-1" styles={{}} />, DEV_SESSIONS.client);
+
+    fireEvent.click(await screen.findByRole('button', { name: '지원서 보기' }));
+    expect(await screen.findByText('서명 대기')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: '지원 거절' })).toBeNull();
+  });
+
   it('keeps the list when the profile request fails', async () => {
     fetchMock.mockImplementation(async (input) => {
       const url = String(input);

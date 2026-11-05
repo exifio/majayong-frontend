@@ -2,10 +2,11 @@
  * 선정·거절은 계약 확정 전이라 연결하지 않는다. */
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import type { SupplierApplicationCardDto } from '@majayong/types/api';
-import { Button, Money } from '@/components/ui';
+import type { ApiApplicationStatus, SupplierApplicationCardDto } from '@majayong/types/api';
+import { Button, Money, StatusChip } from '@/components/ui';
 import { useSession } from '@/app/session';
 import { ApiRequestError, apiRequest } from '@/lib/api';
+import { applicationStatusLabel } from '@/lib/application-status';
 import { formatDateTime } from '@/lib/format';
 import { supplierProfile, type SupplierProfileSummary } from '@/lib/supplier-profile';
 import { LiveApplicationDetail } from './LiveApplicationDetail';
@@ -23,6 +24,7 @@ export function LiveApplications({ pid, styles }: { pid?: string; styles: Record
   const [cards, setCards] = useState<SupplierApplicationCardDto[]>([]);
   const [profiles, setProfiles] = useState<Record<string, SupplierProfileSummary | null>>({});
   const [openId, setOpenId] = useState<string | null>(null);
+  const [statuses, setStatuses] = useState<Record<string, ApiApplicationStatus>>({});
   const [retry, setRetry] = useState(0);
 
   useEffect(() => {
@@ -93,6 +95,9 @@ export function LiveApplications({ pid, styles }: { pid?: string; styles: Record
                             <img src={profile.profileImageUrl} alt="" width={24} height={24} style={{ borderRadius: 12, marginRight: 6 }} />
                           )}
                           {profile?.displayName ?? `공급자 ${card.supplierId.slice(0, 8)}`}
+                          {statuses[card.applicationId] && (
+                            <StatusChip status={applicationStatusLabel(statuses[card.applicationId]!)} />
+                          )}
                         </p>
                       </div>
                       <p className={s.mt}>
@@ -133,6 +138,7 @@ export function LiveApplications({ pid, styles }: { pid?: string; styles: Record
                           supplierId={card.supplierId}
                           styles={s}
                           onClose={() => setOpenId(null)}
+                          onStatusChange={(id, status) => setStatuses((current) => ({ ...current, [id]: status }))}
                         />
                       )}
                     </div>

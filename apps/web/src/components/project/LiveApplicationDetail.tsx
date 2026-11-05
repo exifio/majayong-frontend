@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { ApplicationRevisionDto } from '@majayong/types/api';
-import { Button, MaskedText, Money, StatusChip } from '@/components/ui';
+import { Button, ConfirmDialog, MaskedText, Money, StatusChip } from '@/components/ui';
 import { useSession } from '@/app/session';
 import { ApiRequestError, apiRequest } from '@/lib/api';
 import { applicationStatusLabel } from '@/lib/application-status';
@@ -16,12 +16,14 @@ export function LiveApplicationDetail({
   supplierId,
   styles,
   onClose,
+  onStatusChange,
 }: {
   applicationId: string;
   projectId: string;
   supplierId: string;
   styles: Record<string, string>;
   onClose: () => void;
+  onStatusChange?: (applicationId: string, status: ApplicationRevisionDto['status']) => void;
 }) {
   const s = styles;
   const navigate = useNavigate();
@@ -31,6 +33,9 @@ export function LiveApplicationDetail({
   const [titles, setTitles] = useState<Record<string, string>>({});
   const [chatBusy, setChatBusy] = useState(false);
   const [chatError, setChatError] = useState<string | null>(null);
+  const [confirming, setConfirming] = useState(false);
+  const [rejecting, setRejecting] = useState(false);
+  const [rejectError, setRejectError] = useState<string | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -73,7 +78,33 @@ export function LiveApplicationDetail({
     }
   }
 
+  async function reject() {
+    if (rejecting) return;
+    setConfirming(false);
+    setRejecting(true);
+    setRejectError(null);
+    try {
+      const response = await apiRequest('rejectApplication', `/applications/${encodeURIComponent(applicationId)}/reject`, {
+        method: 'POST',
+        accessToken: apiAccessToken,
+      });
+      setApplication((current) => current ? { ...current, status: response.data.status } : current);
+      onStatusChange?.(applicationId, response.data.status);
+    } catch (error) {
+      if (error instanceof ApiRequestError && error.status === 401) {
+        setState('auth-error');
+      } else if (error instanceof ApiRequestError && error.message) {
+        setRejectError(error.message);
+      } else {
+        setRejectError('지원을 거절하지 못했습니다. 다시 시도해 주세요.');
+      }
+    } finally {
+      setRejecting(false);
+    }
+  }
+
   const label = (specItemId: string) => titles[specItemId] ?? `항목 ${specItemId.slice(0, 8)}`;
+  const canReject = application !== null && ['SUBMITTED', 'STALE'].includes(application.status);
 
   return (
     <section className={s.card} aria-label="지원서 상세" data-application-detail={applicationId}>
@@ -134,12 +165,30 @@ export function LiveApplicationDetail({
           </div>
 
           {chatError && <p role="alert">{chatError}</p>}
+          {rejectError && <p role="alert">{rejectError}</p>}
           <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
             <Button variant="tint" onClick={() => void openChat()} disabled={chatBusy}>
               {chatBusy ? '여는 중' : '문의 채팅'}
             </Button>
+            {canReject && (
+              <Button variant="warn" onClick={() => setConfirming(true)} disabled={rejecting}>
+                {rejecting ? '거절 중' : '지원 거절'}
+              </Button>
+            )}
             <Button variant="ghost" onClick={onClose}>닫기</Button>
           </div>
+
+          {confirming && (
+            <ConfirmDialog
+              title="이 지원을 거절할까요?"
+              confirmLabel="거절하기"
+              danger
+              onConfirm={() => void reject()}
+              onCancel={() => setConfirming(false)}
+            >
+              <p>거절하면 되돌릴 수 없습니다. 지원자에게 직접 거절 알림이 가고, 이 지원의 채팅은 읽기 전용으로 바뀝니다.</p>
+            </ConfirmDialog>
+          )}
         </div>
       )}
     </section>
