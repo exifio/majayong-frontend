@@ -9,6 +9,11 @@ function ApiTokenState() {
   return <output aria-label="API token state">{apiAccessToken ? 'set' : 'empty'}</output>;
 }
 
+function SessionRole() {
+  const { session } = useSession();
+  return <output aria-label="session role">{session.status === 'user' ? session.role : session.status}</output>;
+}
+
 const jsonResponse = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
 
@@ -82,5 +87,32 @@ describe('DevSessionPanel', () => {
     let storedToken: string | null = null;
     try { storedToken = window.localStorage.getItem('apiAccessToken'); } catch { /* localStorage unavailable */ }
     expect(storedToken).toBeNull();
+  });
+
+  it('switches the dev session to the role returned by the login API', async () => {
+    vi.stubEnv('DEV', true);
+    vi.stubEnv('MODE', 'development');
+    vi.stubEnv('VITE_USE_MOCK', 'true');
+    vi.stubGlobal('fetch', vi.fn<typeof fetch>().mockResolvedValue(jsonResponse({
+      data: {
+        user: { id: 'supplier-1', role: 'SUPPLIER' },
+        accessToken: 'temporary-access-token',
+        refreshToken: 'temporary-refresh-token',
+      },
+    })));
+
+    render(
+      <MemoryRouter>
+        <SessionProvider initial={DEV_SESSIONS.client}>
+          <DevSessionPanel />
+          <SessionRole />
+        </SessionProvider>
+      </MemoryRouter>,
+    );
+    fireEvent.change(screen.getByLabelText('개발 계정 이메일'), { target: { value: 'supplier@example.invalid' } });
+    fireEvent.change(screen.getByLabelText('개발 계정 비밀번호'), { target: { value: 'Localtest9' } });
+    fireEvent.click(screen.getByRole('button', { name: '로그인' }));
+
+    await waitFor(() => expect(screen.getByLabelText('session role').textContent).toBe('SUPPLIER'));
   });
 });

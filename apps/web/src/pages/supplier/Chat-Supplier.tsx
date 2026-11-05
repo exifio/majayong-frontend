@@ -26,9 +26,12 @@ import {
   resolveChatMock,
   type Msg,
 } from './Chat-Supplier.data';
+import { useSession } from '@/app/session';
+import { LiveChat } from '@/components/chat/LiveChat';
 import s from './Chat-Supplier.module.css';
 
 export default function ChatSupplier() {
+  const { apiAccessToken } = useSession();
   const { pid = DEFAULT_PID } = useParams();
   const [params] = useSearchParams();
   const mock = resolveChatMock(params.get('mock'));
@@ -61,6 +64,8 @@ export default function ChatSupplier() {
     setRevAmount(String(DEMO.amount));
     setRevReason('');
   }, [params]);
+
+  if (apiAccessToken.trim()) return <LiveChat pid={pid} styles={s} />;
 
   const messages = [...demo.messages, ...extra];
 

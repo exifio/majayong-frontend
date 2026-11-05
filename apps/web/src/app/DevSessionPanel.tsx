@@ -15,6 +15,16 @@ function tokenFromResponse(payload: unknown): string | null {
   return typeof data.accessToken === 'string' && data.accessToken.trim() ? data.accessToken : null;
 }
 
+/** Keep the dev session role aligned with the account that issued the token. */
+function sessionKeyFromResponse(payload: unknown): 'client' | 'supplier' | null {
+  if (typeof payload !== 'object' || payload === null || !('data' in payload)) return null;
+  const data = payload.data;
+  if (typeof data !== 'object' || data === null || !('user' in data)) return null;
+  const user = data.user;
+  if (typeof user !== 'object' || user === null || !('role' in user)) return null;
+  return user.role === 'SUPPLIER' ? 'supplier' : user.role === 'CLIENT' ? 'client' : null;
+}
+
 export function DevSessionPanel() {
   const { session, setDevSession, apiAccessToken, setApiAccessToken } = useSession();
   const [draftApiAccessToken, setDraftApiAccessToken] = useState(apiAccessToken);
@@ -45,6 +55,8 @@ export function DevSessionPanel() {
       }
       setApiAccessToken(accessToken);
       setDraftApiAccessToken(accessToken);
+      const sessionKey = sessionKeyFromResponse(payload);
+      if (sessionKey) setDevSession(sessionKey);
       setPassword('');
       setLoginMessage('인증 완료. 액세스 토큰은 이 탭의 메모리에만 보관됩니다.');
     } catch {

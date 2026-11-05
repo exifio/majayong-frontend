@@ -1,18 +1,21 @@
-/* 실제 B 채팅 API로 방 목록과 메시지를 보여 준다. 화면 모델 변환은 lib/chat-adapter에 둔다. */
+/* 실제 B 채팅 API 화면 — CLIENT/SUPPLIER가 같은 목록·메시지·전송 로직을 쓴다.
+ * 화면 모델 변환은 lib/chat-adapter에 두고, 스타일 모듈만 화면별로 받는다. */
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { Role } from '@majayong/types';
+import type { ChatMessageDto } from '@majayong/types/api';
 import { Button, MaskedText, StatusChip } from '@/components/ui';
 import { useSession } from '@/app/session';
 import { ApiRequestError, apiRequest } from '@/lib/api';
+import { formatTime } from '@/lib/format';
 import {
+  chatMessageText,
   chatMessagesToItems,
   chatRoomHref,
   chatRoomToItem,
   type ChatMessageItem,
   type ChatRoomItem,
 } from '@/lib/chat-adapter';
-import s from './Chat-Client.module.css';
 
 type LoadState = 'loading' | 'success' | 'auth-error' | 'error';
 
@@ -26,14 +29,12 @@ function StateLine({ state, onRetry }: { state: Exclude<LoadState, 'success'>; o
   return (
     <p role={state === 'loading' ? 'status' : 'alert'} style={{ padding: 24 }}>
       {STATE_MESSAGE[state]}
-      {state !== 'loading' && (
-        <Button variant="text" onClick={onRetry}>다시 시도</Button>
-      )}
+      {state !== 'loading' && <Button variant="text" onClick={onRetry}>다시 시도</Button>}
     </p>
   );
 }
 
-function Message({ item, counterpart }: { item: ChatMessageItem; counterpart: string }) {
+function Message({ item, counterpart, s }: { item: ChatMessageItem; counterpart: string; s: Record<string, string> }) {
   if (item.kind === 'day') return <div className={s.day}>{item.text}</div>;
   if (item.kind === 'sys') return <p className={s.sys}>{item.text}</p>;
   return (
@@ -46,14 +47,18 @@ function Message({ item, counterpart }: { item: ChatMessageItem; counterpart: st
   );
 }
 
-export function LiveChat({ pid, sid }: { pid?: string; sid?: string }) {
+export function LiveChat({ pid, sid, styles }: { pid?: string; sid?: string; styles: Record<string, string> }) {
+  const s = styles;
   const { apiAccessToken, session } = useSession();
   const role: Role = session.status === 'user' ? session.role : 'CLIENT';
   const [rooms, setRooms] = useState<ChatRoomItem[]>([]);
   const [listState, setListState] = useState<LoadState>('loading');
-  const [messages, setMessages] = useState<ChatMessageItem[]>([]);
+  const [rawMessages, setRawMessages] = useState<ChatMessageDto[]>([]);
   const [messageState, setMessageState] = useState<LoadState>('loading');
   const [retry, setRetry] = useState(0);
+  const [draft, setDraft] = useState('');
+  const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -73,16 +78,22 @@ export function LiveChat({ pid, sid }: { pid?: string; sid?: string }) {
   const selected = rooms.find((room) => room.projectId === pid && (!sid || room.supplierId === sid)) ?? rooms[0];
   const applicationId = selected?.applicationId;
   const viewerId = selected === undefined ? '' : role === 'SUPPLIER' ? selected.supplierId : selected.clientUserId;
+  const items = chatMessagesToItems(rawMessages, viewerId);
+  // Server policy: a supplier may answer only after the client has sent a message.
+  const canReply = selected !== undefined && (role !== 'SUPPLIER' ||
+    rawMessages.some((message) => message.senderId === selected.clientUserId));
 
   useEffect(() => {
     if (applicationId === undefined || !viewerId) return;
     const controller = new AbortController();
     setMessageState('loading');
+    setSendError(null);
+    setDraft('');
     apiRequest('listMessages', `/applications/${encodeURIComponent(applicationId)}/messages`, {
       accessToken: apiAccessToken,
       signal: controller.signal,
     }).then(async (response) => {
-      setMessages(chatMessagesToItems(response.data.messages, viewerId));
+      setRawMessages(response.data.messages);
       setMessageState('success');
       if (response.data.unreadCount > 0) {
         await apiRequest('readMessages', `/applications/${encodeURIComponent(applicationId)}/messages/read`, {
@@ -101,6 +112,40 @@ export function LiveChat({ pid, sid }: { pid?: string; sid?: string }) {
 
   const retryAll = () => setRetry((count) => count + 1);
 
+  async function send() {
+    const body = draft.trim();
+    if (!body || sending || applicationId === undefined) return;
+    setSending(true);
+    setSendError(null);
+    try {
+      const response = await apiRequest('sendMessage', `/applications/${encodeURIComponent(applicationId)}/messages`, {
+        method: 'POST',
+        accessToken: apiAccessToken,
+        jsonBody: { body },
+      });
+      // The server returns the stored, possibly masked message; use it as-is.
+      setRawMessages((current) => [...current, response.data]);
+      setRooms((current) => current.map((room) => room.applicationId === applicationId
+        ? {
+          ...room,
+          preview: chatMessageText(response.data),
+          timeLabel: formatTime(response.data.createdAt),
+        }
+        : room));
+      setDraft('');
+    } catch (error) {
+      if (error instanceof ApiRequestError && error.status === 401) {
+        setMessageState('auth-error');
+      } else {
+        setSendError(error instanceof ApiRequestError && error.message
+          ? error.message
+          : '메시지를 보내지 못했습니다. 다시 시도해 주세요.');
+      }
+    } finally {
+      setSending(false);
+    }
+  }
+
   if (listState !== 'success') {
     return <div className={s.page}><StateLine state={listState} onRetry={retryAll} /></div>;
   }
@@ -109,7 +154,7 @@ export function LiveChat({ pid, sid }: { pid?: string; sid?: string }) {
   }
 
   return (
-    <div className={s.page} data-screen="Chat-Client-Live">
+    <div className={s.page} data-screen="Chat-Live" data-role={role}>
       <div className={s.ch}>
         <aside className={s.ls} aria-label="대화 목록">
           <div className={s.lh}>채팅</div>
@@ -150,12 +195,42 @@ export function LiveChat({ pid, sid }: { pid?: string; sid?: string }) {
 
           <div className={s.msgs}>
             {messageState !== 'success' && <StateLine state={messageState} onRetry={retryAll} />}
-            {messageState === 'success' && messages.length === 0 && (
+            {messageState === 'success' && items.length === 0 && (
               <p role="status" style={{ padding: 24 }}>아직 메시지가 없습니다.</p>
             )}
-            {messageState === 'success' && messages.map((item) => (
-              <Message key={item.id} item={item} counterpart={selected.counterpart} />
+            {messageState === 'success' && items.map((item) => (
+              <Message key={item.id} item={item} counterpart={selected.counterpart} s={s} />
             ))}
+          </div>
+
+          <div className={s.in}>
+            <div className={s.inRow}>
+              <input
+                className={s.inp}
+                type="text"
+                value={draft}
+                onChange={(event) => setDraft(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    event.preventDefault();
+                    void send();
+                  }
+                }}
+                placeholder={canReply ? '메시지 입력' : '의뢰인의 첫 메시지 이후 답장할 수 있습니다'}
+                aria-label="메시지 입력"
+                disabled={sending || !canReply}
+              />
+              <Button
+                variant="tint"
+                onClick={() => void send()}
+                disabled={sending || !canReply || !draft.trim()}
+                disabledReason={!canReply ? '의뢰인의 첫 메시지 이후 답장할 수 있습니다.' : '메시지를 입력해 주세요.'}
+              >
+                {sending ? '보내는 중' : '보내기'}
+              </Button>
+            </div>
+            {!canReply && <p className={s.hint} role="status">의뢰인의 첫 메시지 이후에 답장할 수 있습니다.</p>}
+            {sendError && <p className={s.hint} role="alert">{sendError}</p>}
           </div>
         </section>
       </div>

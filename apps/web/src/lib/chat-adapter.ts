@@ -1,6 +1,16 @@
 import type { ApiApplicationStatus, ChatMessageDto, ChatRoomSummaryDto } from '@majayong/types/api';
 import type { ApplicationDisplayStatus, ContractDisplayStatus, Role } from '@majayong/types/common';
+import { CONTACT_MASK_TOKEN } from '@majayong/types';
 import { formatDate, formatTime } from './format';
+
+/** Server stores this placeholder in masked message bodies. */
+const SERVER_MASK_PLACEHOLDER = '[연락처 비공개]';
+
+export function chatMessageText(message: Pick<ChatMessageDto, 'body' | 'isMasked'>): string {
+  return message.isMasked
+    ? message.body.split(SERVER_MASK_PLACEHOLDER).join(CONTACT_MASK_TOKEN)
+    : message.body;
+}
 
 const APPLICATION_LABEL: Record<ApiApplicationStatus, ApplicationDisplayStatus> = {
   SUBMITTED: '검토 중',
@@ -53,7 +63,7 @@ export function chatRoomToItem(room: ChatRoomSummaryDto, role: Role): ChatRoomIt
     clientUserId: room.clientUserId,
     supplierId: room.supplierId,
     counterpart,
-    preview: room.lastMessage?.body ?? '아직 메시지가 없습니다.',
+    preview: room.lastMessage ? chatMessageText(room.lastMessage) : '아직 메시지가 없습니다.',
     timeLabel: room.lastMessage ? formatTime(room.lastMessage.createdAt) : '',
     statusLabel: room.contractStatus ? CONTRACT_LABEL[room.contractStatus] : APPLICATION_LABEL[room.status],
     unreadCount: room.unreadCount,
@@ -76,9 +86,9 @@ export function chatMessagesToItems(
     if (message.kind === 'SYSTEM') {
       items.push({ kind: 'sys', id: message.id, text: message.body });
     } else if (message.senderId === viewerId) {
-      items.push({ kind: 'me', id: message.id, at: formatTime(message.createdAt), text: message.body });
+      items.push({ kind: 'me', id: message.id, at: formatTime(message.createdAt), text: chatMessageText(message) });
     } else {
-      items.push({ kind: 'them', id: message.id, at: formatTime(message.createdAt), text: message.body });
+      items.push({ kind: 'them', id: message.id, at: formatTime(message.createdAt), text: chatMessageText(message) });
     }
   }
   return items;

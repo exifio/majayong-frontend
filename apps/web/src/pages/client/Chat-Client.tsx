@@ -14,7 +14,7 @@ import {
 } from '@/components/ui';
 import { formatWon } from '@/lib/format';
 import { useSession } from '@/app/session';
-import { LiveChat } from './Chat-Client.live';
+import { LiveChat } from '@/components/chat/LiveChat';
 import {
   CONTRACT_HREF,
   DEMO,
@@ -60,7 +60,7 @@ export default function ChatClient() {
     setReportDesc('');
   }, [mock, sid]);
 
-  if (apiAccessToken.trim()) return <LiveChat pid={pid} sid={sid} />;
+  if (apiAccessToken.trim()) return <LiveChat pid={pid} sid={sid} styles={s} />;
 
   const messages = [...demo.messages, ...extra];
   const activeSid = demo.person.sid;

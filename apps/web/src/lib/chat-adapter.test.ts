@@ -59,6 +59,13 @@ describe('chatRoomToItem', () => {
 });
 
 describe('chatMessagesToItems', () => {
+  it('normalizes the server mask placeholder for the screen', () => {
+    const items = chatMessagesToItems([
+      message({ body: '연락처 [연락처 비공개]', isMasked: true }),
+    ], 'viewer');
+    expect(items[1]).toMatchObject({ kind: 'them', text: '연락처 ⟦연락처 가림⟧' });
+  });
+
   it('splits me, them, system and adds one day separator per date', () => {
     const items = chatMessagesToItems([
       message({}),
