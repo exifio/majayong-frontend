@@ -7,6 +7,8 @@ const room: ChatRoomSummaryDto = {
   projectId: 'project-1',
   clientUserId: 'client-user-1',
   supplierId: 'supplier-user-1',
+  projectTitle: '예약 기능 개발',
+  counterpartDisplayName: '공급자 테스트',
   status: 'SUBMITTED',
   contractStatus: null,
   lastMessage: {
@@ -36,9 +38,10 @@ const message = (overrides: Partial<ChatMessageDto>): ChatMessageDto => ({
 
 describe('chatRoomToItem', () => {
   it('maps only fields the chat API provides', () => {
-    const item = chatRoomToItem(room, 'CLIENT');
+    const item = chatRoomToItem(room);
     expect(item.applicationId).toBe('application-1');
-    expect(item.counterpart).toBe('공급자 supplier');
+    expect(item.counterpart).toBe('공급자 테스트');
+    expect(item.projectTitle).toBe('예약 기능 개발');
     expect(item.preview).toBe('일정 조율 가능합니다.');
     expect(item.statusLabel).toBe('검토 중');
     expect(item.unreadCount).toBe(1);
@@ -46,7 +49,7 @@ describe('chatRoomToItem', () => {
   });
 
   it('prefers the contract status and falls back to an empty preview', () => {
-    const item = chatRoomToItem({ ...room, contractStatus: 'ACTIVE', lastMessage: null, unreadCount: 0 }, 'CLIENT');
+    const item = chatRoomToItem({ ...room, contractStatus: 'ACTIVE', lastMessage: null, unreadCount: 0 });
     expect(item.statusLabel).toBe('진행 중');
     expect(item.preview).toBe('아직 메시지가 없습니다.');
     expect(item.timeLabel).toBe('');

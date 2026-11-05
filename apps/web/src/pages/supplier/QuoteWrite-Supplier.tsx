@@ -2,7 +2,7 @@
  * 상태: 작성 중 / 모두 불가 / 연락처 가림 / 재견적
  * F-05 · 11.2 · ㉜. 항목별 금액 · AI 단가 없음. */
 import { useEffect, useId, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { Button, MaskedText, Note } from '@/components/ui';
 import { formatWon } from '@/lib/format';
 import {
@@ -19,9 +19,13 @@ import {
   quoteWriteSeedOf,
   resolveQuoteWriteMock,
 } from './QuoteWrite-Supplier.data';
+import { useSession } from '@/app/session';
+import { LiveQuoteWrite } from '@/components/project/LiveQuoteWrite';
 import s from './QuoteWrite-Supplier.module.css';
 
 export default function QuoteWriteSupplier() {
+  const { apiAccessToken } = useSession();
+  const { pid } = useParams();
   const [params] = useSearchParams();
   const mock = resolveQuoteWriteMock(params.get('mock'));
   const seed = quoteWriteSeedOf(mock);
@@ -48,6 +52,8 @@ export default function QuoteWriteSupplier() {
     setMessage(next.message);
     setAsks(next.asks);
   }, [params]);
+
+  if (apiAccessToken.trim()) return <LiveQuoteWrite pid={pid} styles={s} />;
 
   const okCnt = seed.items.filter((it) => okById[it.id]).length;
   const allNo = okCnt === 0;

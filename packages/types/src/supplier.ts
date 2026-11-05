@@ -1,9 +1,10 @@
 /* 공급자 화면 모델. API 전송 DTO는 ./api.ts에 두며, 공개 범위는 아래 검사로 제한한다. */
-import type { ApplicationDisplayStatus, ConditionLine, ContractDisplayStatus, IsoDate, Won } from './common';
+import type { ApplicationDisplayStatus, ConditionLine, ContractDisplayStatus, IsoDate, ProjectDisplayStatus, Won } from './common';
 
 /** 전체 공개 — 프로젝트 찾기 카드 */
 export interface SupplierProjectCard {
   id: string;
+  /** A API returns the industry code; a display label is not part of the contract. */
   industry: string;
   title: string;
   itemNames: string[];
@@ -17,10 +18,11 @@ export interface SupplierProjectCard {
 
 /** 상세 공개 — 열람 기록이 남는다 */
 export interface SupplierProjectDetail extends SupplierProjectCard {
+  status: ProjectDisplayStatus;
   items: { specItemId: string; title: string; description: string; conditions: { key: string; text: string; note?: string }[] }[];
   hopeBudget: Won | null;
   interimRatioGuide: string;
-  client: { userId: string; name: string; businessName: string; industry: string; storeAddress: string | null; websiteUrl: string | null; bio: string | null };
+  client: { name: string | null; businessName: string; industryField: string | null; storeAddress: string | null; websiteUrl: string | null; bio: string | null };
   myApplication: { status: ApplicationDisplayStatus; totalAmount: Won; durationDays: number } | null;
 }
 

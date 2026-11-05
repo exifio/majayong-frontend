@@ -33,6 +33,8 @@ const supplierMessage = {
 const room = {
   id: 'application-1',
   projectId: 'project-1',
+  projectTitle: '예약 기능 개발',
+  counterpartDisplayName: '공급자 테스트',
   clientUserId: 'client-user-1',
   supplierId: 'supplier-user-1',
   status: 'SUBMITTED',
@@ -105,7 +107,7 @@ describe('LiveChat', () => {
 
     expect(await screen.findByText('안녕하세요. 문의드립니다.')).toBeTruthy();
     expect(screen.getAllByText('일정 조율 가능합니다.')).toHaveLength(2);
-    expect(screen.getAllByText('공급자 supplier').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('공급자 테스트').length).toBeGreaterThan(0);
     await waitFor(() => expect(fetchMock.mock.calls.some(([url, init]) =>
       String(url).endsWith('/messages/read') && init?.method === 'POST')).toBe(true));
   });

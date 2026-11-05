@@ -65,7 +65,7 @@ export function LiveChat({ pid, sid, styles }: { pid?: string; sid?: string; sty
     setListState('loading');
     apiRequest('listChatRooms', '/me/chats', { accessToken: apiAccessToken, signal: controller.signal })
       .then((response) => {
-        setRooms(response.data.map((room) => chatRoomToItem(room, role)));
+        setRooms(response.data.map((room) => chatRoomToItem(room)));
         setListState('success');
       })
       .catch((error: unknown) => {
@@ -188,7 +188,7 @@ export function LiveChat({ pid, sid, styles }: { pid?: string; sid?: string; sty
                 <div className={s.whoNm}>
                   {selected.counterpart} <StatusChip status={selected.statusLabel} />
                 </div>
-                <div className={s.whoMt}>프로젝트 {selected.projectId.slice(0, 8)}</div>
+                <div className={s.whoMt}>{selected.projectTitle}</div>
               </div>
             </div>
           </div>

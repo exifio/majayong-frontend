@@ -36,6 +36,7 @@ export interface ChatRoomItem {
   projectId: string;
   clientUserId: string;
   supplierId: string;
+  projectTitle: string;
   counterpart: string;
   preview: string;
   timeLabel: string;
@@ -49,20 +50,14 @@ export type ChatMessageItem =
   | { kind: 'them'; id: string; at: string; text: string }
   | { kind: 'sys'; id: string; text: string };
 
-function shortId(id: string): string {
-  return id.slice(0, 8);
-}
-
-export function chatRoomToItem(room: ChatRoomSummaryDto, role: Role): ChatRoomItem {
-  const counterpart = role === 'SUPPLIER'
-    ? `의뢰인 ${shortId(room.clientUserId)}`
-    : `공급자 ${shortId(room.supplierId)}`;
+export function chatRoomToItem(room: ChatRoomSummaryDto): ChatRoomItem {
   return {
     applicationId: room.id,
     projectId: room.projectId,
     clientUserId: room.clientUserId,
     supplierId: room.supplierId,
-    counterpart,
+    projectTitle: room.projectTitle,
+    counterpart: room.counterpartDisplayName,
     preview: room.lastMessage ? chatMessageText(room.lastMessage) : '아직 메시지가 없습니다.',
     timeLabel: room.lastMessage ? formatTime(room.lastMessage.createdAt) : '',
     statusLabel: room.contractStatus ? CONTRACT_LABEL[room.contractStatus] : APPLICATION_LABEL[room.status],

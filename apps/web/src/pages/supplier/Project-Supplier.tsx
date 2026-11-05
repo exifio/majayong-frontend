@@ -2,7 +2,7 @@
  * 상태: 지원 전 / 지원함 / 재견적 요청 / 모집 마감
  * AI 금액 · 추천 없음. 7.1 · F-05 · ㉜. */
 import { useEffect, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import {
   Attr,
   Band,
@@ -25,9 +25,13 @@ import {
   resolveProjectMock,
   type WireKind,
 } from './Project-Supplier.data';
+import { useSession } from '@/app/session';
+import { LiveProjectDetail } from '@/components/project/LiveProjectDetail';
 import s from './Project-Supplier.module.css';
 
 export default function ProjectSupplier() {
+  const { apiAccessToken } = useSession();
+  const { pid } = useParams();
   const [params] = useSearchParams();
   const mock = resolveProjectMock(params.get('mock'));
   const demo = projectDemoOf(mock);
@@ -36,6 +40,8 @@ export default function ProjectSupplier() {
   useEffect(() => {
     setBookmarked(projectDemoOf(resolveProjectMock(params.get('mock'))).bookmarkDefault);
   }, [params]);
+
+  if (apiAccessToken.trim()) return <LiveProjectDetail pid={pid} styles={s} />;
 
   const nFn = demo.features.length;
 

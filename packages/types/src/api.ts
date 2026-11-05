@@ -97,6 +97,48 @@ export interface PublicProjectSummaryDto {
   specItemTitles: string[];
 }
 
+/** A API: supplier project detail after NDA consent. Includes current INCLUDED spec ids. */
+export interface SupplierProjectItemDto {
+  specItemId: string;
+  title: string;
+  description: string;
+  conditions: unknown;
+  wireframe: unknown;
+}
+
+export interface SupplierProjectClientDto {
+  name: string | null;
+  businessName: string;
+  industryField: string | null;
+  storeAddress: string | null;
+  bio: string | null;
+  websiteUrl: string | null;
+  ratingAvg: number | null;
+  reviewCount: number;
+}
+
+export interface SupplierProjectDetailDto {
+  projectId: string;
+  title: string;
+  industryCode: string;
+  requiredSkills: string[];
+  status: ApiProjectStatus;
+  deadline: IsoDate | null;
+  itemCount: number;
+  hopeBudgetBand: string | null;
+  summary: string;
+  hopeBudget: number | null;
+  items: SupplierProjectItemDto[];
+  client: SupplierProjectClientDto;
+}
+
+/** A API: the fields this client reads from the supplier profile. */
+export interface SupplierProfileDto {
+  displayName: string;
+  ndaAgreedAt: IsoDate | null;
+  ndaVersion: string | null;
+}
+
 export interface RecommendedProjectDto {
   project: PublicProjectSummaryDto;
   matchedSkills: string[];
@@ -135,6 +177,9 @@ export interface ChatMessageDto {
 }
 
 export interface ChatRoomSummaryDto extends ChatApplicationDto {
+  projectTitle: string;
+  /** Display name of the other party, resolved by the server for the viewer. */
+  counterpartDisplayName: string;
   lastMessage: ChatMessageDto | null;
   unreadCount: number;
 }
@@ -395,6 +440,8 @@ export type BApiEmptyJsonBodyOperation =
 
 /** Request bodies keyed by matching OpenAPI operationId. */
 export interface BApiRequestBodies {
+  /** A API: only the fields this client sends today. */
+  updateSupplierProfile: { ndaConsent?: boolean; displayName?: string };
   withdrawApplication: EmptyJsonObjectDto;
   rejectApplication: EmptyJsonObjectDto;
   submitApplication: SubmitApplicationRequestDto;
@@ -437,6 +484,10 @@ export interface BApiResponses {
   saveBookmark: DataEnvelope<BookmarkDto>;
   removeBookmark: DataEnvelope<RemoveBookmarkResultDto>;
   listRecommendedProjects: DataEnvelope<RecommendedProjectDto[]>;
+  /** A API operations, kept in this registry so the shared request module can call them. */
+  getSupplierProjectDetail: DataEnvelope<SupplierProjectDetailDto>;
+  getSupplierProfile: DataEnvelope<SupplierProfileDto | null>;
+  updateSupplierProfile: DataEnvelope<unknown>;
   listChatRooms: DataEnvelope<ChatRoomSummaryDto[]>;
   openChat: DataEnvelope<OpenChatResultDto>;
   listMessages: DataEnvelope<ConversationViewDto>;
