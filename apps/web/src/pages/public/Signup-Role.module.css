@@ -1,0 +1,165 @@
+/* 회원가입 ② 역할 — 보드 Signup-Role. 토큰만. */
+
+.page {
+  max-width: 720px;
+  margin: 0 auto;
+  word-break: keep-all;
+}
+
+.steps {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 0 0 30px;
+  list-style: none;
+  padding: 0;
+}
+
+.step {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-sub);
+  color: var(--slate-500);
+}
+
+.stepOn {
+  color: var(--blue-600);
+  font-weight: 600;
+}
+
+.stepDone {
+  color: var(--navy-900);
+  font-weight: 500;
+}
+
+.stepNum {
+  display: inline-flex;
+  width: 20px;
+  height: 20px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--slate-200);
+  color: var(--slate-600);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 600;
+}
+
+.stepOn .stepNum {
+  background: var(--blue-600);
+  color: #fff;
+}
+
+.stepDone .stepNum {
+  background: var(--navy-900);
+  color: #fff;
+}
+
+.sep {
+  color: var(--slate-300);
+  font-size: var(--fs-sub);
+}
+
+.acct {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--teal-50);
+  border: 1px solid var(--teal-line);
+  border-radius: var(--radius-control);
+  padding: 13px 16px;
+  margin: 0 0 22px;
+  font-size: var(--fs-sub);
+  color: var(--teal-700);
+  line-height: var(--lh-body);
+}
+
+.title {
+  margin: 0 0 8px;
+  font-size: var(--fs-page);
+  font-weight: 600;
+  letter-spacing: -0.3px;
+  color: var(--slate-900);
+}
+
+.sub {
+  margin: 0 0 22px;
+  font-size: var(--fs-body);
+  color: var(--slate-600);
+  line-height: var(--lh-body);
+}
+
+.cardLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+}
+
+.cardTitle {
+  font-size: var(--fs-row-title);
+  font-weight: 600;
+  color: var(--slate-900);
+}
+
+.cardDesc {
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+  line-height: var(--lh-body);
+  font-weight: 400;
+}
+
+.noteWrap {
+  margin-top: 20px;
+}
+
+.terms {
+  margin-top: 20px;
+  background: #fff;
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-card);
+  padding: 18px 20px;
+}
+
+.terms h2 {
+  font-size: var(--fs-body);
+  font-weight: 600;
+  margin: 0 0 4px;
+}
+
+.termsHint {
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+  margin: 0 0 12px;
+  line-height: var(--lh-body);
+}
+
+.termList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.termLabel {
+  font-size: var(--fs-sub);
+  color: var(--slate-800);
+  line-height: var(--lh-body);
+}
+
+.termLabel a {
+  margin-left: 8px;
+  color: var(--blue-600);
+  font-weight: 500;
+}
+
+.actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}

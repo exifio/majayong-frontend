@@ -1,0 +1,54 @@
+/* 마자용 기본 스타일 — 디자인 시스템 4 · 5 · 11절 */
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body { margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: var(--slate-900);
+  background: var(--slate-50);
+  font-variant-numeric: tabular-nums;
+  word-break: keep-all;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root { min-height: 100vh; }
+
+a { color: var(--navy-900); }
+
+button, input, textarea, select { font: inherit; color: inherit; }
+
+/* 포커스 링 — 항상 보이게(11절) */
+:focus-visible { outline: 2px solid var(--blue-600); outline-offset: 2px; }
+
+/* 페이지 틀 — 푸터를 바닥에 붙인다(9절 공통 푸터) */
+.mj-page { min-height: 100vh; display: flex; flex-direction: column; }
+.mj-page > main { flex: 1 0 auto; }
+
+/* 컨테이너 — 1440 기준 화면에서 1280 가운데 정렬(결정메모 #4) */
+.mj-container {
+  width: 100%;
+  max-width: calc(var(--container) + var(--gutter) * 2);
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
+.mj-container--narrow { max-width: calc(var(--container-narrow) + var(--gutter) * 2); }
+.mj-main { padding-top: 34px; padding-bottom: 52px; }
+
+/* 카드 — 9절 */
+.mj-card {
+  background: #fff;
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-card);
+  padding: 22px 24px;
+}
+
+.mj-sub { font-size: var(--fs-sub); color: var(--slate-600); }
+.mj-num { font-variant-numeric: tabular-nums; }
+
+.mj-visually-hidden {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}

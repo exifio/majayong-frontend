@@ -1,0 +1,21 @@
+{
+  "name": "@majayong/types",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./common": "./src/common.ts",
+    "./client": "./src/client.ts",
+    "./supplier": "./src/supplier.ts",
+    "./admin": "./src/admin.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p ."
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0"
+  }
+}

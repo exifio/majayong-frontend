@@ -1,0 +1,427 @@
+/* 의뢰인 랜딩 — 보드 Main.dc.html. 색·크기는 tokens.css만 */
+
+.root {
+  /* 셸 mj-main 패딩을 상쇄해 밴드가 컨테이너 가장자리까지 닿게 한다 */
+  margin: -34px calc(-1 * var(--gutter)) -52px;
+  width: calc(100% + 2 * var(--gutter));
+}
+
+.inner {
+  max-width: calc(var(--container) + var(--gutter) * 2);
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
+
+.hero {
+  background: var(--slate-50);
+  border-bottom: 1px solid var(--slate-200);
+  padding: 60px 0 64px;
+}
+
+.half {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-10);
+}
+
+.half > * {
+  flex: 1 1 440px;
+  min-width: 0;
+}
+
+.pill {
+  display: inline-block;
+  background: var(--blue-50);
+  color: var(--navy-900);
+  font-size: var(--fs-sub);
+  font-weight: 500;
+  padding: 6px 14px;
+  border-radius: 999px;
+  margin-bottom: var(--sp-5);
+}
+
+.hl {
+  font-size: var(--fs-hero);
+  font-weight: 600;
+  letter-spacing: -1.2px;
+  line-height: 1.3;
+  margin: 0 0 18px;
+  white-space: pre-line;
+}
+
+.sh {
+  font-size: var(--fs-page);
+  font-weight: 600;
+  letter-spacing: -0.6px;
+  margin: 0 0 var(--sp-3);
+  line-height: 1.35;
+  white-space: pre-line;
+}
+
+.st {
+  font-size: var(--fs-body);
+  font-weight: 600;
+  margin: 0 0 var(--sp-2);
+}
+
+.lead {
+  font-size: var(--fs-body);
+  color: var(--slate-600);
+  margin: 0 0 28px;
+  line-height: 1.7;
+}
+
+.sec {
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+  line-height: 1.6;
+}
+
+.ctaRow {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.feeNote {
+  margin: var(--sp-5) 0 0;
+}
+
+.demo {
+  background: #fff;
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-card-lg);
+  padding: 18px;
+}
+
+.demoHead {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--fs-label);
+  color: var(--slate-600);
+  padding-bottom: var(--sp-3);
+  border-bottom: 1px solid var(--slate-200);
+  margin-bottom: 14px;
+}
+
+.two {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.two > * {
+  flex: 1 1 180px;
+  min-width: 0;
+}
+
+.capt {
+  font-size: var(--fs-label);
+  font-weight: 600;
+  color: var(--slate-600);
+  margin-bottom: 9px;
+}
+
+.canvas {
+  background: var(--slate-50);
+  border: 1px solid var(--slate-200);
+  border-radius: 10px;
+  padding: var(--sp-3);
+}
+
+.block {
+  border: 1px dashed var(--slate-400);
+  border-radius: var(--radius-btn-sm);
+  padding: 9px 11px;
+  margin-bottom: 7px;
+  background: #fff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--slate-600);
+}
+
+.block:last-child {
+  margin-bottom: 0;
+}
+
+.blockName {
+  font-size: var(--fs-sub);
+  font-weight: 600;
+}
+
+.blockX {
+  color: var(--slate-400);
+  font-size: 15px;
+}
+
+.si {
+  border-left: 3px solid var(--slate-200);
+  background: #fff;
+  border-radius: 0 9px 9px 0;
+  padding: 10px 12px;
+  margin-bottom: var(--sp-2);
+}
+
+.siName {
+  font-size: var(--fs-sub);
+  font-weight: 600;
+}
+
+.siDetail {
+  font-size: var(--fs-label);
+  color: var(--slate-600);
+  margin-top: 3px;
+}
+
+.siPick {
+  border-left-color: var(--blue-600);
+  background: var(--blue-50);
+}
+
+.siDerived {
+  border-left-color: var(--navy-900);
+}
+
+.siOut .siName {
+  color: var(--slate-400);
+  text-decoration: line-through;
+}
+
+.sum {
+  background: var(--navy-900);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-top: var(--sp-3);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.sumLabel {
+  color: var(--on-navy-sub);
+  font-size: var(--fs-sub);
+}
+
+.sumValue {
+  color: var(--on-navy);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.4px;
+  font-variant-numeric: tabular-nums;
+}
+
+.budgetHint {
+  font-size: var(--fs-sub);
+  margin: 9px 0 0;
+  color: var(--slate-600);
+}
+
+.band {
+  padding: 56px 0;
+}
+
+.bandAlt {
+  background: #fff;
+  border-top: 1px solid var(--slate-200);
+  border-bottom: 1px solid var(--slate-200);
+}
+
+.bandNavy {
+  background: var(--navy-900);
+  color: var(--on-navy);
+  text-align: center;
+  padding: 56px 0;
+}
+
+.bandNavy .sh {
+  color: var(--on-navy);
+}
+
+.bandNavy .lead {
+  color: var(--on-navy-sub);
+  margin-bottom: 26px;
+}
+
+.ctaSub {
+  color: var(--on-navy-sub);
+  font-size: var(--fs-sub);
+  margin: 18px 0 0;
+}
+
+.cols {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-4);
+}
+
+.cols > * {
+  flex: 1 1 280px;
+  min-width: 0;
+}
+
+.card {
+  background: #fff;
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-card);
+  padding: 22px 24px;
+  height: 100%;
+}
+
+.stepNum {
+  display: inline-flex;
+  width: 26px;
+  height: 26px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--blue-50);
+  color: var(--navy-900);
+  font-size: var(--fs-label);
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.chkl {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.chkl li {
+  font-size: var(--fs-body);
+  color: var(--slate-600);
+  margin: 0 0 10px;
+  padding-left: 26px;
+  position: relative;
+}
+
+.chkl li::before {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: 7px;
+  width: 5px;
+  height: 10px;
+  border: solid var(--teal-700);
+  border-width: 0 2px 2px 0;
+  transform: rotate(43deg);
+}
+
+.proposalCard {
+  background: #fff;
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-card);
+  padding: 0;
+  overflow: hidden;
+}
+
+.proposalHead {
+  padding: 16px 20px;
+  font-size: var(--fs-sub);
+  font-weight: 600;
+  color: var(--slate-600);
+}
+
+.proposalRow {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  padding: 14px 20px;
+  border-top: 1px solid var(--slate-200);
+}
+
+.avatar {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--slate-100);
+  border: 1px solid var(--slate-200);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--fs-sub);
+  font-weight: 600;
+  color: var(--navy-900);
+}
+
+.proposalBody {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.proposalName {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.proposalSummary {
+  font-size: var(--fs-sub);
+  margin-top: 2px;
+  color: var(--slate-900);
+}
+
+.proposalQuote {
+  flex: none;
+  text-align: right;
+}
+
+.quoteLabel {
+  font-size: var(--fs-label);
+  color: var(--slate-600);
+}
+
+.quoteValue {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--navy-900);
+  font-variant-numeric: tabular-nums;
+}
+
+.proposalFoot {
+  padding: 14px 20px;
+  margin: 0;
+  border-top: 1px solid var(--slate-200);
+}
+
+.safetyCols > * {
+  flex: 1 1 240px;
+}
+
+.priceRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--slate-200);
+}
+
+.priceRow:last-of-type {
+  border-bottom: 0;
+}
+
+.priceValue {
+  font-size: var(--fs-amount-row);
+  font-weight: 600;
+}
+
+.costNote {
+  margin: 14px 0 0;
+}
+
+@media (max-width: 767.98px) {
+  .hero {
+    padding: 40px 0 48px;
+  }
+
+  .band,
+  .bandNavy {
+    padding: 40px 0;
+  }
+
+  .hl {
+    font-size: 28px;
+  }
+}

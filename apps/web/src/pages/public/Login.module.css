@@ -1,0 +1,117 @@
+/* 로그인 모달 본문 — 보드 Login. 토큰만. */
+
+.body {
+  word-break: keep-all;
+}
+
+.heading {
+  margin: 0 0 6px;
+  font-size: var(--fs-section);
+  font-weight: 600;
+  color: var(--slate-900);
+  letter-spacing: -0.2px;
+}
+
+.sub {
+  margin: 0 0 18px;
+  font-size: var(--fs-body);
+  color: var(--slate-600);
+  line-height: var(--lh-body);
+}
+
+.fail {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border-radius: var(--radius-control);
+  background: var(--amber-50);
+  border: 1px solid var(--amber-line);
+}
+
+.fail b {
+  display: block;
+  color: var(--amber-700);
+  font-size: var(--fs-body);
+  margin: 0 0 2px;
+}
+
+.fail p {
+  margin: 0;
+  font-size: var(--fs-sub);
+  color: var(--amber-text);
+  line-height: var(--lh-body);
+}
+
+.role {
+  margin: 0 0 16px;
+  padding: 13px 15px;
+  border-radius: var(--radius-control);
+  background: var(--blue-50);
+  border: 1px solid var(--blue-line);
+  font-size: var(--fs-sub);
+  color: var(--navy-900);
+  line-height: var(--lh-body);
+}
+
+.role b {
+  display: block;
+  font-size: var(--fs-body);
+  margin: 0 0 3px;
+}
+
+.google {
+  margin: 0 0 4px;
+}
+
+.googleHint {
+  margin: 0 0 0;
+}
+
+.div {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 18px 0;
+  color: var(--slate-600);
+  font-size: var(--fs-sub);
+}
+
+.div::before,
+.div::after {
+  content: '';
+  height: 1px;
+  background: var(--slate-200);
+  flex: 1 1 auto;
+}
+
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0 0 16px;
+}
+
+.subrow {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-top: 16px;
+  font-size: var(--fs-sub);
+}
+
+.subrow a {
+  color: var(--slate-700);
+}
+
+.bar {
+  color: var(--slate-300);
+}
+
+.foot {
+  margin: 18px 0 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--slate-200);
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+  line-height: var(--lh-body);
+}

@@ -1,0 +1,209 @@
+/* 공급자 공개 프로필 — 보드 PublicSupplier. 토큰만. */
+
+.page {
+  max-width: 720px;
+  margin: 0 auto;
+  word-break: keep-all;
+}
+
+.back {
+  margin: 0 0 16px;
+}
+
+.hero {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  margin: 0 0 22px;
+}
+
+.ava {
+  display: inline-flex;
+  width: 56px;
+  height: 56px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--slate-100);
+  color: var(--slate-800);
+  font-weight: 700;
+  font-size: var(--fs-section);
+}
+
+.name {
+  margin: 0 0 4px;
+  font-size: var(--fs-page);
+  font-weight: 600;
+  color: var(--slate-900);
+}
+
+.meta {
+  margin: 0;
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+  line-height: var(--lh-body);
+}
+
+.rows {
+  margin: 0 0 24px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.rows > div {
+  display: grid;
+  grid-template-columns: 100px 1fr;
+  gap: 12px;
+  align-items: start;
+}
+
+.rows dt {
+  font-size: var(--fs-sub);
+  font-weight: 600;
+  color: var(--slate-600);
+}
+
+.rows dd {
+  margin: 0;
+  font-size: var(--fs-body);
+  color: var(--slate-800);
+  line-height: var(--lh-body);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: var(--radius-control);
+  border: 1px solid var(--slate-200);
+  background: var(--slate-50);
+  font-size: var(--fs-sub);
+  color: var(--slate-800);
+}
+
+.block {
+  margin: 0 0 28px;
+}
+
+.block h2 {
+  margin: 0 0 12px;
+  font-size: var(--fs-section);
+  font-weight: 600;
+  color: var(--slate-900);
+}
+
+.aiBox {
+  padding: 14px 16px;
+  border-radius: var(--radius-control);
+  border: 1px solid var(--slate-200);
+  background: var(--slate-50);
+  margin-bottom: 12px;
+}
+
+.aiLabel {
+  margin: 0 0 6px;
+  font-size: var(--fs-sub);
+  font-weight: 600;
+  color: var(--slate-900);
+}
+
+.aiLabel span {
+  margin-left: 8px;
+  font-weight: 400;
+  color: var(--slate-600);
+}
+
+.aiBox > p:last-child {
+  margin: 0;
+  font-size: var(--fs-body);
+  color: var(--slate-800);
+  line-height: var(--lh-body);
+}
+
+.links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.links li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-control);
+  background: #fff;
+}
+
+.linkTitle {
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: var(--blue-600);
+}
+
+.linkSub {
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+}
+
+.reviews {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.review {
+  padding: 16px 18px;
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-card);
+  background: #fff;
+}
+
+.reviewHead {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+}
+
+.stars {
+  color: var(--amber-700);
+  font-size: var(--fs-body);
+}
+
+.who {
+  margin: 6px 0 0;
+  font-size: var(--fs-body);
+  color: var(--slate-800);
+}
+
+.reviewText {
+  margin: 10px 0 0;
+  font-size: var(--fs-body);
+  color: var(--slate-800);
+  line-height: var(--lh-body);
+}
+
+.note {
+  margin: 0;
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+  line-height: var(--lh-body);
+}

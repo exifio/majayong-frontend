@@ -1,0 +1,260 @@
+/* 내 견적 보기 — 보드 QuoteView-Supplier. 토큰만. */
+
+.page {
+  word-break: keep-all;
+}
+
+.crumb {
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+  margin: 0 0 10px;
+}
+
+.crumb a {
+  color: var(--slate-600);
+}
+
+.head {
+  margin: 0 0 16px;
+}
+
+.title {
+  margin: 0 0 6px;
+  font-size: var(--fs-page);
+  font-weight: 600;
+  color: var(--slate-900);
+}
+
+.sub {
+  margin: 0;
+  max-width: 720px;
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+  line-height: var(--lh-body);
+}
+
+.bandRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin: 0 0 16px;
+}
+
+.bandRow > :first-child {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+}
+
+.change {
+  margin: 0 0 16px;
+  padding: 10px 14px;
+  border-radius: var(--radius-card);
+  background: var(--amber-50);
+  border: 1px solid var(--amber-line);
+  font-size: var(--fs-sub);
+  color: var(--amber-700);
+  font-weight: 600;
+}
+
+.lay {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  .lay {
+    grid-template-columns: 1fr;
+  }
+}
+
+.card {
+  background: #fff;
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-card);
+  padding: 18px 20px;
+  margin: 0 0 14px;
+}
+
+.card h2,
+.card h3 {
+  margin: 0 0 12px;
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: var(--slate-900);
+}
+
+.cur {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  margin: 0 0 12px;
+}
+
+.k {
+  font-size: var(--fs-label);
+  color: var(--slate-600);
+  margin: 0 0 4px;
+}
+
+.amt {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--navy-900);
+  font-variant-numeric: tabular-nums;
+}
+
+.s {
+  margin-top: 4px;
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+}
+
+.kv {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0 0 12px;
+}
+
+.v {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--slate-900);
+}
+
+.why {
+  margin: 0;
+  font-size: var(--fs-sub);
+  color: var(--slate-700);
+  line-height: var(--lh-body);
+}
+
+.why span {
+  font-weight: 600;
+  color: var(--slate-600);
+  margin-right: 8px;
+}
+
+.it {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px 0;
+  border-top: 1px solid var(--slate-200);
+}
+
+.it:first-of-type {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.nm {
+  font-weight: 600;
+  color: var(--slate-900);
+}
+
+.ds {
+  margin-top: 2px;
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+}
+
+.msg {
+  margin: 0;
+  font-size: var(--fs-sub);
+  color: var(--slate-800);
+  line-height: var(--lh-body);
+}
+
+.msgNote {
+  margin: 10px 0 0;
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+}
+
+.hist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.hist li {
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--slate-100);
+}
+
+.hist li:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.histOld {
+  opacity: 0.85;
+}
+
+.histWhen {
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+  margin-bottom: 4px;
+}
+
+.histTitle {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: var(--slate-900);
+  font-size: var(--fs-sub);
+}
+
+.histNote {
+  margin-top: 4px;
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+}
+
+.rail {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: sticky;
+  top: 16px;
+}
+
+.note {
+  margin: 0 0 12px;
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+  line-height: var(--lh-body);
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.off {
+  margin: 8px 0 0;
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+  line-height: var(--lh-body);
+}
+
+.r2 {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: var(--fs-sub);
+  color: var(--slate-700);
+  padding: 6px 0;
+}

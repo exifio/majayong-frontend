@@ -1,0 +1,395 @@
+/* 결제(예치) — 보드 Escrow-Client. 토큰만. */
+
+.page {
+  word-break: keep-all;
+}
+
+.crumb {
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+  margin: 0 0 10px;
+}
+
+.crumb a {
+  color: var(--slate-600);
+}
+
+.head {
+  margin: 0 0 20px;
+}
+
+.title {
+  margin: 0 0 6px;
+  font-size: var(--fs-page);
+  font-weight: 600;
+  letter-spacing: -0.3px;
+  color: var(--slate-900);
+}
+
+.sub {
+  margin: 0;
+  max-width: 760px;
+  font-size: var(--fs-body);
+  color: var(--slate-600);
+  line-height: var(--lh-body);
+}
+
+.band {
+  margin: 0 0 16px;
+}
+
+.lay {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: var(--sp-5);
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  .lay {
+    grid-template-columns: 1fr;
+  }
+}
+
+.card {
+  background: #fff;
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-card);
+  padding: 20px 22px;
+  margin: 0 0 16px;
+}
+
+.ct {
+  margin: 0 0 14px;
+  font-size: var(--fs-row-title);
+  font-weight: 600;
+  color: var(--slate-900);
+}
+
+.hint {
+  margin: -8px 0 14px;
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+}
+
+/* 계약 요약 */
+.who {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+  padding: 0 0 14px;
+  border-bottom: 1px solid var(--slate-200);
+  margin: 0 0 14px;
+}
+
+.pf {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.av {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--slate-100);
+  border: 1px solid var(--slate-200);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: var(--navy-900);
+  flex: none;
+}
+
+.nm {
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: var(--slate-900);
+}
+
+.mt {
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+  margin-top: 2px;
+}
+
+.kv {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--sp-3);
+  margin: 0 0 14px;
+}
+
+@media (max-width: 640px) {
+  .kv {
+    grid-template-columns: 1fr;
+  }
+}
+
+.k {
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+}
+
+.v {
+  font-size: var(--fs-row-title);
+  font-weight: 600;
+  margin-top: 2px;
+  color: var(--slate-900);
+  font-variant-numeric: tabular-nums;
+}
+
+.kSub {
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+  margin-top: 2px;
+}
+
+.stg {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-3);
+}
+
+@media (max-width: 640px) {
+  .stg {
+    grid-template-columns: 1fr;
+  }
+}
+
+.stg > div {
+  border: 1px solid var(--slate-200);
+  border-radius: 10px;
+  padding: 12px 14px;
+  background: var(--slate-50);
+}
+
+.n {
+  font-size: var(--fs-sub);
+  color: var(--slate-900);
+  margin: 4px 0 6px;
+}
+
+.contractLine {
+  margin: 12px 0 0;
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+}
+
+/* 결제 수단 */
+.pmLocked {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.pmText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pmText b {
+  font-size: var(--fs-body);
+  color: var(--slate-900);
+}
+
+.pmDesc {
+  font-size: var(--fs-sub);
+  font-weight: 400;
+  color: var(--slate-600);
+  line-height: 1.5;
+}
+
+/* 흐름 */
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--sp-3);
+}
+
+@media (max-width: 640px) {
+  .steps {
+    grid-template-columns: 1fr;
+  }
+}
+
+.steps > div {
+  border: 1px solid var(--slate-200);
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+
+.no {
+  display: inline-flex;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--navy-900);
+  color: var(--on-navy);
+  font-size: var(--fs-meta);
+  font-weight: 600;
+  align-items: center;
+  justify-content: center;
+  margin: 0 0 8px;
+}
+
+.steps b {
+  display: block;
+  font-size: var(--fs-body);
+  margin: 0 0 4px;
+  color: var(--slate-900);
+}
+
+.steps p {
+  margin: 0;
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+  line-height: var(--lh-body);
+}
+
+.rules {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.rules li {
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+  line-height: 1.75;
+}
+
+.rules b {
+  color: var(--slate-900);
+  font-weight: 600;
+}
+
+/* 오른쪽 결제 상자 */
+.rail {
+  position: sticky;
+  top: var(--sp-5);
+}
+
+@media (max-width: 960px) {
+  .rail {
+    position: static;
+  }
+}
+
+.pay {
+  background: #fff;
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-card);
+  padding: 20px 22px;
+}
+
+.payH {
+  margin: 0 0 12px;
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: var(--slate-900);
+}
+
+.r {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--sp-3);
+  font-size: var(--fs-body);
+  padding: 7px 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.r span {
+  color: var(--slate-600);
+}
+
+.tot {
+  border-top: 2px solid var(--slate-900);
+  margin-top: 6px;
+  padding-top: 12px;
+}
+
+.tot span {
+  color: var(--slate-900);
+  font-weight: 600;
+}
+
+.tot b {
+  color: var(--navy-900);
+}
+
+.dl {
+  margin: 10px 0 0;
+  padding: 8px 12px;
+  border-radius: var(--radius-btn-sm);
+  background: var(--amber-50);
+  font-size: var(--fs-sub);
+  line-height: 1.5;
+}
+
+.dlHint {
+  color: var(--amber-text);
+}
+
+.note {
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+  margin: 8px 0 16px;
+  line-height: var(--lh-body);
+}
+
+.cbx {
+  margin: 0 0 14px;
+}
+
+.tiny {
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+  margin: 10px 0 0;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.btns {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.rc {
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--slate-50);
+  border: 1px solid var(--slate-200);
+}
+
+.r2 {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: var(--fs-sub);
+  padding: 3px 0;
+}
+
+.r2 span {
+  color: var(--slate-600);
+}
+
+.r2 b {
+  font-weight: 500;
+  color: var(--slate-900);
+  font-variant-numeric: tabular-nums;
+}
+
+.broker {
+  margin: 24px 0 0;
+  padding: 16px 0 0;
+  border-top: 1px solid var(--slate-200);
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+  line-height: var(--lh-body);
+}

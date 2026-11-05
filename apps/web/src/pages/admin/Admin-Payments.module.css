@@ -1,0 +1,376 @@
+/* 보류된 결제 — 보드 Admin-Payments. 토큰만. */
+
+.page {
+  word-break: keep-all;
+}
+
+.head {
+  margin: 0 0 20px;
+}
+
+.title {
+  margin: 0 0 6px;
+  font-size: var(--fs-page);
+  font-weight: 600;
+  color: var(--slate-900);
+}
+
+.sub {
+  margin: 0;
+  font-size: var(--fs-body);
+  color: var(--slate-600);
+  line-height: var(--lh-body);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(260px, 330px) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.list {
+  min-width: 0;
+}
+
+.rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-card);
+  background: #fff;
+  overflow: hidden;
+}
+
+.row {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  border: 0;
+  border-bottom: 1px solid var(--slate-200);
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.rows li:last-child .row {
+  border-bottom: 0;
+}
+
+.rowOn {
+  background: var(--blue-50);
+  box-shadow: inset 3px 0 0 var(--blue-600);
+}
+
+.rowTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.rowElapsed {
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+}
+
+.rowName {
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: var(--slate-900);
+}
+
+.rowDone .rowName {
+  color: var(--slate-600);
+}
+
+.rowMeta {
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+  line-height: var(--lh-body);
+}
+
+.detail {
+  padding: 20px 22px;
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-card);
+  background: #fff;
+}
+
+.detailHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 0 0 14px;
+}
+
+.detailTitle {
+  margin: 0 0 4px;
+  font-size: var(--fs-section);
+  font-weight: 600;
+  color: var(--slate-900);
+}
+
+.detailMeta {
+  margin: 0;
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+}
+
+.bandWrap {
+  margin: 0 0 16px;
+}
+
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 24px;
+}
+
+.k {
+  margin: 0 0 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--slate-600);
+}
+
+.moneyRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 0 0 12px;
+}
+
+.moneyCard {
+  padding: 12px 14px;
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-control);
+  background: var(--slate-50);
+}
+
+.moneyCardDiff {
+  border-color: var(--amber-line);
+  background: var(--amber-50);
+}
+
+.moneyCardDiff .moneyVal {
+  color: var(--amber-700);
+  font-weight: 600;
+}
+
+.moneyLabel {
+  display: block;
+  margin: 0 0 4px;
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+}
+
+.moneyVal {
+  font-size: var(--fs-body);
+  color: var(--slate-900);
+}
+
+.cmp {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-body);
+}
+
+.cmp th {
+  text-align: left;
+  font-size: var(--fs-sub);
+  font-weight: 600;
+  color: var(--slate-600);
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--slate-200);
+}
+
+.cmpNum {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.cmp td {
+  padding: 9px 8px;
+  border-top: 1px solid var(--slate-100);
+}
+
+.cmpKey {
+  color: var(--slate-600);
+}
+
+.cmpDiff td {
+  background: var(--amber-50);
+}
+
+.cmpDiff .cmpNum {
+  color: var(--amber-700);
+  font-weight: 600;
+}
+
+.who {
+  margin: 14px 0 0;
+  padding: 12px 0 0;
+  border-top: 1px solid var(--slate-200);
+  font-size: var(--fs-body);
+  line-height: 1.8;
+}
+
+.who div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.who span {
+  color: var(--slate-600);
+}
+
+.key {
+  margin: 6px 0 0;
+  padding: 8px 10px;
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-control);
+  background: var(--slate-50);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: var(--fs-sub);
+  color: var(--slate-900);
+  word-break: break-all;
+}
+
+.keyn {
+  margin: 6px 0 0;
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+  line-height: var(--lh-body);
+}
+
+.flow {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.flow li {
+  position: relative;
+  padding: 0 0 13px 22px;
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+  line-height: var(--lh-body);
+}
+
+.flow li::before {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: 5px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--teal-700);
+}
+
+.flow li::after {
+  content: '';
+  position: absolute;
+  left: 7px;
+  top: 16px;
+  bottom: -1px;
+  width: 1px;
+  background: var(--slate-200);
+}
+
+.flow li:last-child::after {
+  display: none;
+}
+
+.flowNow::before {
+  background: #fff;
+  border: 2px solid var(--amber-700);
+  left: 1px;
+  top: 3px;
+}
+
+.flow li b {
+  display: block;
+  color: var(--slate-900);
+  font-weight: 600;
+  font-size: var(--fs-body);
+}
+
+.flowNow b {
+  color: var(--amber-700);
+}
+
+.act {
+  border-top: 1px solid var(--slate-200);
+  margin: 18px 0 0;
+  padding: 16px 0 0;
+}
+
+.actRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 12px 0 0;
+}
+
+.btns {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.blockWhy {
+  margin: 8px 0 0;
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+  text-align: right;
+}
+
+.eventBox {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-control);
+  background: var(--slate-50);
+  font-size: var(--fs-sub);
+  line-height: var(--lh-body);
+  white-space: pre-line;
+}
+
+.eventBox b {
+  font-weight: 600;
+}
+
+.note {
+  margin: 14px 0 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-control);
+  background: var(--slate-50);
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+  line-height: var(--lh-body);
+}
+
+.eventNote {
+  margin: 12px 0 0;
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+  line-height: var(--lh-body);
+}
+
+@media (max-width: 900px) {
+  .grid,
+  .split,
+  .moneyRow {
+    grid-template-columns: 1fr;
+  }
+}

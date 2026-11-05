@@ -1,0 +1,145 @@
+/* 공통 UI — 디자인 시스템 v0.2.1 최종본 6 · 7 · 9절 */
+
+/* ── 버튼(6절) ── 화면당 primary 하나 */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  font-size: 16px; font-weight: 600; line-height: 1.2;
+  padding: 12px 22px; border-radius: var(--radius-btn);
+  border: 1px solid transparent; cursor: pointer; text-decoration: none;
+  white-space: nowrap;
+}
+.btn:disabled, .btn[aria-disabled='true'] {
+  background: var(--slate-200); color: var(--slate-400); border-color: var(--slate-200); cursor: not-allowed;
+}
+.primary { background: var(--blue-600); color: #fff; }
+.tint { background: var(--blue-50); border-color: var(--blue-line); color: var(--navy-900); }
+.tint:focus-visible { outline-color: var(--navy-900); }
+.ghost { background: #fff; border-color: var(--slate-200); color: var(--slate-900); font-weight: 500; }
+.text {
+  background: none; border: 0; padding: 0; color: var(--slate-600); font-size: 14px; font-weight: 400;
+  text-decoration: underline; text-underline-offset: 3px;
+}
+.warn { background: #fff; color: var(--amber-700); border-color: var(--warn-line); }
+.onnavy { background: #fff; color: var(--navy-900); }
+.sm { font-size: 14px; padding: 9px 16px; border-radius: var(--radius-btn-sm); }
+.lg { font-size: 17px; padding: 15px 26px; }
+.full { width: 100%; }
+.btnWrap { display: inline-flex; flex-direction: column; gap: 6px; }
+.btnWrap.full { display: flex; }
+.disabledReason { font-size: 14px; color: var(--slate-600); }
+
+/* ── 칩(7절) ── 상태에만 */
+.chip {
+  display: inline-flex; align-items: center; font-size: 13px; font-weight: 500; line-height: 1.4;
+  padding: 4px 10px; border-radius: var(--radius-chip); border: 1px solid; white-space: nowrap;
+}
+.chip-neutral { background: var(--slate-100); color: var(--slate-600); border-color: var(--slate-100); }
+.chip-blue { background: var(--blue-50); color: var(--navy-900); border-color: var(--blue-line); }
+.chip-amber { background: var(--amber-50); color: var(--amber-700); border-color: var(--amber-line); }
+.chip-teal { background: var(--teal-50); color: var(--teal-700); border-color: var(--teal-line); }
+.chip-outline { background: #fff; color: var(--slate-600); border-color: var(--slate-300); }
+
+/* ── 띠(7절) ── */
+.band { border-radius: var(--radius-band); padding: 16px 20px; border: 1px solid; }
+.bandTitle { font-size: 16px; font-weight: 600; margin: 0; }
+.bandBody { font-size: 14px; margin: 4px 0 0; }
+.band-done { background: var(--teal-50); border-color: var(--teal-line); }
+.band-done .bandTitle { color: var(--teal-700); }
+.band-done .bandBody { color: var(--slate-600); }
+.band-warn { background: var(--amber-50); border-color: var(--amber-line); }
+.band-warn .bandTitle { color: var(--amber-700); }
+.band-warn .bandBody { color: var(--amber-text); }
+.band-wait { background: var(--slate-50); border-color: var(--slate-300); }
+.band-wait .bandTitle { color: var(--navy-900); }
+.band-wait .bandBody { color: var(--slate-600); }
+.band-viewlog { background: var(--slate-50); border-color: var(--slate-200); color: var(--navy-900); font-size: 14px; padding: 12px 20px; }
+
+/* ── 속성 표기(7절) ── 상자 · 테두리 없음 */
+.attr { display: inline-flex; align-items: center; font-size: 13px; }
+.attrLabel { color: var(--slate-600); font-weight: 400; }
+.attrBar { width: 1px; height: 12px; background: var(--slate-300); margin: 0 6px; }
+.attrValue { color: var(--slate-900); font-weight: 500; }
+
+/* ── 기한 ── */
+.deadline { font-size: 14px; color: var(--slate-600); }
+.deadlineAction { color: var(--amber-700); font-weight: 600; }
+
+/* ── 금액(8절) ── */
+.money { font-variant-numeric: tabular-nums; }
+.money-row { font-size: 20px; font-weight: 600; }
+.money-big { font-size: 28px; font-weight: 600; }
+.money-item { font-size: 16px; font-weight: 500; }
+
+/* ── 안내 상자(7절) ── */
+.note { background: var(--amber-50); border-left: 3px solid var(--amber-700); border-radius: 8px; padding: 14px 18px; }
+.noteTitle { font-size: 16px; font-weight: 600; color: var(--amber-700); margin: 0; }
+.noteBody { font-size: 14px; color: var(--amber-text); margin: 4px 0 0; }
+.info { background: #fff; border: 1px solid var(--slate-200); border-radius: 8px; padding: 14px 18px; font-size: 14px; color: var(--slate-600); }
+.confirmCheck { display: flex; gap: 10px; align-items: center; font-size: 15px; font-weight: 500; cursor: pointer; }
+.confirmCheck input { width: 18px; height: 18px; accent-color: var(--blue-600); }
+
+/* ── 탭(9절) ── */
+.segment { display: inline-flex; gap: 8px; flex-wrap: wrap; }
+.segmentItem {
+  border: 1px solid var(--slate-200); background: #fff; color: var(--slate-600);
+  border-radius: 999px; padding: 7px 14px; font-size: 14px; cursor: pointer;
+}
+.segmentItem[aria-selected='true'] { background: var(--navy-900); border-color: var(--navy-900); color: #fff; font-weight: 600; }
+.underline { display: flex; gap: 24px; border-bottom: 1px solid var(--slate-200); }
+.underlineItem {
+  background: none; border: 0; border-bottom: 2px solid transparent; padding: 10px 0; margin-bottom: -1px;
+  font-size: 16px; font-weight: 500; color: var(--slate-600); cursor: pointer;
+}
+.underlineItem[aria-selected='true'] { color: var(--slate-900); font-weight: 600; border-bottom-color: var(--blue-600); }
+.tabCount { margin-left: 4px; }
+
+/* ── 폼(9절) ── */
+.field { display: flex; flex-direction: column; gap: 6px; }
+.fieldLabel { font-size: 14px; font-weight: 600; color: var(--slate-900); }
+.fieldOptional { font-weight: 400; color: var(--slate-600); }
+.fieldRequired { color: var(--blue-600); margin-left: 2px; }
+.input {
+  font-size: 16px; padding: 11px 13px; border: 1px solid var(--slate-300); border-radius: var(--radius-input);
+  background: #fff; width: 100%;
+}
+.input::placeholder { color: var(--slate-500); }
+.input:focus { outline: 2px solid var(--blue-600); outline-offset: -1px; border-color: var(--blue-600); }
+.inputError { border-color: var(--red-600); }
+.fieldHint { font-size: 14px; color: var(--slate-600); margin: 0; }
+.fieldError { font-size: 14px; color: var(--red-600); margin: 0; }
+
+/* ── 선택 카드(7절) ── */
+.selectGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+.selectCard {
+  display: flex; align-items: center; gap: 10px; padding: 12px 14px; border: 1px solid var(--slate-200);
+  border-radius: 10px; background: #fff; cursor: pointer; font-size: 15px; text-align: left;
+}
+.selectCard[aria-checked='true'] { background: var(--blue-50); border-color: var(--blue-600); font-weight: 600; }
+.selectCard.danger[aria-checked='true'] { background: #fff; border-color: var(--navy-900); }
+.radio { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid var(--slate-300); flex: none; }
+.selectCard[aria-checked='true'] .radio { border: 5px solid var(--blue-600); }
+.selectCard.danger[aria-checked='true'] .radio { border-color: var(--navy-900); }
+
+/* ── 빈 상태 · 로딩(9절) ── */
+.empty { text-align: center; padding: 48px 24px; }
+.emptyTitle { font-size: 20px; font-weight: 600; margin: 0; }
+.emptyBody { font-size: 14px; color: var(--slate-600); margin: 8px 0 20px; }
+.skeleton { background: var(--slate-100); border-radius: 6px; animation: mjPulse 1.4s ease-in-out infinite; }
+@keyframes mjPulse { 50% { opacity: .55; } }
+@media (prefers-reduced-motion: reduce) { .skeleton { animation: none; } }
+
+/* ── 연락처 가림 토큰(9절 대화) ── */
+.maskToken { background: var(--slate-200); color: var(--slate-600); font-size: 14px; border-radius: 4px; padding: 0 6px; }
+
+/* ── 모달(9절) ── */
+.scrim { position: fixed; inset: 0; background: var(--scrim); z-index: 100; display: flex; justify-content: center; align-items: flex-start; padding: 96px 16px 40px; overflow-y: auto; }
+.modal { background: #fff; border-radius: var(--radius-modal); box-shadow: var(--shadow-modal); width: 100%; }
+.modal-confirm { max-width: 480px; }
+.modal-content { max-width: 640px; }
+.modal-large { max-width: 880px; }
+.modalHead { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding: 24px 28px 0; }
+.modalTitle { margin: 0; font-size: 20px; font-weight: 600; }
+.modal-confirm .modalTitle { font-size: 24px; }
+.modalClose { background: none; border: 0; padding: 4px; cursor: pointer; color: var(--slate-600); line-height: 0; }
+.modalBody { padding: 16px 28px; font-size: 16px; color: var(--slate-600); }
+.modalActions { display: flex; justify-content: flex-end; gap: 10px; padding: 8px 28px 24px; }

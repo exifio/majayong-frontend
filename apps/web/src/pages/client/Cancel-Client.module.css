@@ -1,0 +1,247 @@
+/* 계약 취소 요청 — 보드 Cancel-Client. 토큰만. */
+
+.page {
+  word-break: keep-all;
+  max-width: var(--container);
+  margin: 0 auto;
+}
+
+.crumb {
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+  margin: 0 0 10px;
+}
+
+.crumb a {
+  color: var(--slate-600);
+}
+
+.head {
+  margin: 0 0 18px;
+}
+
+.title {
+  margin: 0 0 6px;
+  font-size: var(--fs-page);
+  font-weight: 600;
+}
+
+.sub {
+  margin: 0;
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+  line-height: var(--lh-body);
+  max-width: 760px;
+}
+
+.lay {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  .lay {
+    grid-template-columns: 1fr;
+  }
+}
+
+.blk {
+  background: #fff;
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-card);
+  padding: 20px 22px;
+  margin: 0 0 16px;
+}
+
+.blk h2 {
+  margin: 0 0 8px;
+  font-size: var(--fs-section);
+  font-weight: 600;
+}
+
+.hint {
+  margin: 0 0 14px;
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+  line-height: var(--lh-body);
+}
+
+.who {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 14px;
+}
+
+.nm {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.meta {
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+}
+
+.kv {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 20px;
+}
+
+.k {
+  font-size: var(--fs-label);
+  color: var(--slate-600);
+  margin: 0 0 2px;
+}
+
+.v {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--navy-900);
+}
+
+.s {
+  font-size: var(--fs-meta);
+  color: var(--slate-600);
+}
+
+.two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+@media (max-width: 700px) {
+  .two,
+  .kv {
+    grid-template-columns: 1fr;
+  }
+}
+
+.claim {
+  background: var(--slate-50);
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-control);
+  padding: 14px 16px;
+}
+
+.claim .k {
+  margin-bottom: 6px;
+}
+
+.rsn {
+  margin: 0 0 6px;
+  font-weight: 600;
+  color: var(--navy-900);
+}
+
+.claim p:last-child {
+  margin: 0;
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+  line-height: var(--lh-body);
+}
+
+.cardLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+}
+
+.cardTitle {
+  font-weight: 600;
+  color: var(--slate-900);
+}
+
+.cardDesc {
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+  font-weight: 400;
+  line-height: var(--lh-body);
+}
+
+.fields {
+  margin-top: 4px;
+}
+
+.rail {
+  position: sticky;
+  top: 16px;
+}
+
+.pv {
+  background: #fff;
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-card);
+  padding: 18px 20px;
+}
+
+.pv h3 {
+  margin: 0 0 6px;
+  font-size: var(--fs-body);
+  font-weight: 600;
+}
+
+.tag {
+  margin: 0 0 14px;
+  font-size: var(--fs-label);
+  color: var(--slate-600);
+}
+
+.r {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 8px 0;
+  border-top: 1px solid var(--slate-200);
+  font-size: var(--fs-sub);
+}
+
+.r:first-of-type {
+  border-top: 0;
+}
+
+.r span i {
+  display: block;
+  font-style: normal;
+  font-size: var(--fs-meta);
+  color: var(--slate-600);
+  margin-top: 2px;
+}
+
+.r b {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.tot {
+  font-weight: 600;
+  color: var(--navy-900);
+}
+
+.notes {
+  margin: 14px 0 16px;
+  padding-left: 18px;
+}
+
+.notes li {
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+  line-height: 1.7;
+}
+
+.tiny {
+  margin: 8px 0 0;
+  font-size: var(--fs-label);
+  color: var(--slate-600);
+}
+
+.dlWrap {
+  margin: 8px 0 0;
+}

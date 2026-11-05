@@ -1,0 +1,255 @@
+/* 의뢰인 리뷰 작성 — 보드 Review-Client. 토큰만. */
+
+.page {
+  max-width: 640px;
+  margin: 0 auto;
+  word-break: keep-all;
+}
+
+.head {
+  margin: 0 0 20px;
+}
+
+.title {
+  margin: 0 0 6px;
+  font-size: var(--fs-page);
+  font-weight: 600;
+  color: var(--slate-900);
+}
+
+.sub {
+  margin: 0;
+  font-size: var(--fs-body);
+  color: var(--slate-600);
+  line-height: var(--lh-body);
+}
+
+.ctx {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 16px 18px;
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-card);
+  background: #fff;
+  margin-bottom: 20px;
+}
+
+.who {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.ava {
+  display: inline-flex;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--slate-100);
+  color: var(--slate-800);
+  font-weight: 700;
+}
+
+.whoName {
+  margin: 0 0 2px;
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: var(--slate-900);
+}
+
+.whoMeta {
+  margin: 0;
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+}
+
+.proj {
+  text-align: right;
+}
+
+.projTitle {
+  margin: 6px 0 2px;
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: var(--slate-900);
+}
+
+.projMeta {
+  margin: 0;
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.blk h2 {
+  margin: 0 0 6px;
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: var(--slate-900);
+}
+
+.hint {
+  margin: 0 0 10px;
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+  line-height: var(--lh-body);
+}
+
+.stars {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.starBtn {
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--slate-300);
+  border-radius: var(--radius-control);
+  background: #fff;
+  color: var(--slate-500);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.starOn {
+  border-color: var(--amber-line);
+  background: var(--amber-50);
+  color: var(--amber-700);
+}
+
+.scoreLbl {
+  margin-left: 8px;
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: var(--slate-900);
+}
+
+.scoreLbl span {
+  margin-left: 6px;
+  font-weight: 400;
+  color: var(--slate-600);
+  font-size: var(--fs-sub);
+}
+
+.tagRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tag {
+  height: 32px;
+  padding: 0 12px;
+  border-radius: var(--radius-control);
+  border: 1px solid var(--slate-300);
+  background: #fff;
+  color: var(--slate-800);
+  font-size: var(--fs-sub);
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.tagOn {
+  border-color: var(--blue-600);
+  background: var(--blue-50);
+  color: var(--blue-700);
+  font-weight: 600;
+}
+
+.counter {
+  margin: 6px 0 0;
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+  text-align: right;
+}
+
+.warn {
+  margin: 20px 0;
+  padding: 14px 16px;
+  border-radius: var(--radius-control);
+  background: var(--amber-50);
+  border: 1px solid var(--amber-line);
+}
+
+.warn b {
+  display: block;
+  margin: 0 0 4px;
+  font-size: var(--fs-body);
+  color: var(--amber-700);
+}
+
+.warn p {
+  margin: 0;
+  font-size: var(--fs-sub);
+  color: var(--amber-text);
+  line-height: var(--lh-body);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.blockTitle {
+  margin: 20px 0 10px;
+  font-size: var(--fs-section);
+  font-weight: 600;
+  color: var(--slate-900);
+}
+
+.card {
+  padding: 16px 18px;
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-card);
+  background: #fff;
+  margin-bottom: 16px;
+}
+
+.cardHead {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: var(--fs-body);
+  color: var(--slate-900);
+}
+
+.cardHead span {
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+}
+
+.starsLine {
+  margin: 6px 0 0;
+  color: var(--amber-700);
+  font-size: var(--fs-body);
+}
+
+.starsLine em {
+  margin-left: 8px;
+  font-style: normal;
+  color: var(--slate-600);
+  font-size: var(--fs-sub);
+}
+
+.cardText {
+  margin: 10px 0 0;
+  font-size: var(--fs-body);
+  color: var(--slate-800);
+  line-height: var(--lh-body);
+}

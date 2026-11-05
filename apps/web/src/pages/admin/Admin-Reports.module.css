@@ -1,0 +1,249 @@
+/* 신고 처리 — 보드 Admin-Reports. 토큰만. */
+
+.page {
+  word-break: keep-all;
+}
+
+.head {
+  margin: 0 0 20px;
+}
+
+.title {
+  margin: 0 0 6px;
+  font-size: var(--fs-page);
+  font-weight: 600;
+  color: var(--slate-900);
+}
+
+.sub {
+  margin: 0;
+  font-size: var(--fs-body);
+  color: var(--slate-600);
+  line-height: var(--lh-body);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-card);
+  background: #fff;
+  overflow: hidden;
+}
+
+.row {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+  border: 0;
+  border-bottom: 1px solid var(--slate-200);
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.rows li:last-child .row {
+  border-bottom: 0;
+}
+
+.rowOn {
+  background: var(--blue-50);
+  box-shadow: inset 3px 0 0 var(--blue-600);
+}
+
+.rowChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.rowName {
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: var(--slate-900);
+}
+
+.rowMeta {
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+  line-height: var(--lh-body);
+}
+
+.detail {
+  padding: 20px 22px;
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-card);
+  background: #fff;
+}
+
+.bandWrap {
+  margin: 0 0 16px;
+}
+
+.detailChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 8px;
+}
+
+.detailTitle {
+  margin: 0 0 6px;
+  font-size: var(--fs-section);
+  font-weight: 600;
+  color: var(--slate-900);
+}
+
+.detailMeta {
+  margin: 0 0 16px;
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+  line-height: var(--lh-body);
+}
+
+.sec {
+  margin: 0 0 18px;
+}
+
+.k {
+  margin: 0 0 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--slate-900);
+}
+
+.say {
+  margin: 0 0 10px;
+  font-size: var(--fs-body);
+  color: var(--slate-800);
+  line-height: var(--lh-body);
+}
+
+.auto {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: var(--radius-control);
+  background: var(--slate-50);
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+  line-height: var(--lh-body);
+}
+
+.msgs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.msg {
+  padding: 12px 14px;
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-control);
+  background: #fff;
+}
+
+.msgHit {
+  border-color: var(--amber-line);
+  background: var(--amber-50);
+}
+
+.msgSys {
+  background: var(--slate-50);
+}
+
+.msgWho {
+  display: block;
+  margin: 0 0 4px;
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+}
+
+.msgWho b {
+  color: var(--slate-900);
+  margin-right: 6px;
+}
+
+.msgText {
+  font-size: var(--fs-body);
+  color: var(--slate-800);
+  line-height: var(--lh-body);
+}
+
+.kv {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 16px;
+}
+
+.kv div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: var(--fs-body);
+}
+
+.kv span {
+  color: var(--slate-600);
+}
+
+.kv b {
+  font-weight: 600;
+  color: var(--slate-900);
+}
+
+.preview {
+  margin: 12px 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-control);
+  background: var(--slate-50);
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+  line-height: var(--lh-body);
+}
+
+.actions {
+  margin: 0 0 12px;
+}
+
+.foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+.eventNote {
+  margin: 0;
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+  line-height: var(--lh-body);
+}
+
+.banNote {
+  margin: 10px 0 0;
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+  line-height: var(--lh-body);
+}
+
+@media (max-width: 900px) {
+  .grid,
+  .kv {
+    grid-template-columns: 1fr;
+  }
+}

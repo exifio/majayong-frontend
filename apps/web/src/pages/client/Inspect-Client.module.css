@@ -1,0 +1,391 @@
+/* 검수 — 보드 Inspect-Client. 토큰만. */
+
+.page {
+  word-break: keep-all;
+  max-width: var(--container);
+  margin: 0 auto;
+}
+
+.crumb {
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+  margin: 0 0 10px;
+}
+
+.crumb a {
+  color: var(--slate-600);
+}
+
+.head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin: 0 0 20px;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 0 0 6px;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--fs-page);
+  font-weight: 600;
+  letter-spacing: -0.3px;
+  color: var(--slate-900);
+}
+
+.sub {
+  margin: 0;
+  max-width: 760px;
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+  line-height: var(--lh-body);
+}
+
+.who {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+}
+
+.av {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--slate-100);
+  border: 1px solid var(--slate-200);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--fs-sub);
+  font-weight: 600;
+  color: var(--navy-900);
+}
+
+.who b {
+  color: var(--slate-900);
+  font-size: 15px;
+}
+
+.stageCard {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  background: #fff;
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-card);
+  padding: 16px 20px;
+  margin: 0 0 16px;
+}
+
+.stageAmt {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--navy-900);
+  font-variant-numeric: tabular-nums;
+}
+
+.stageMeta {
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+  margin-top: 4px;
+}
+
+.lay {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  .lay {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ic {
+  background: #fff;
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-card);
+  margin: 0 0 14px;
+  overflow: hidden;
+}
+
+.ih {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px 20px;
+}
+
+.nm {
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.ds {
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+  margin-top: 2px;
+}
+
+.crit {
+  margin: 0 20px;
+  padding: 12px 0 14px;
+  border-top: 1px solid var(--slate-200);
+}
+
+.k {
+  font-size: var(--fs-label);
+  font-weight: 600;
+  color: var(--slate-600);
+  margin: 0 0 6px;
+}
+
+.crit ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.crit li {
+  display: grid;
+  grid-template-columns: 140px minmax(0, 1fr);
+  gap: 12px;
+  font-size: var(--fs-sub);
+  line-height: 1.6;
+  padding: 3px 0;
+}
+
+.q {
+  color: var(--slate-600);
+}
+
+.a {
+  color: var(--navy-900);
+  font-weight: 500;
+}
+
+.unset {
+  display: inline-block;
+  font-size: var(--fs-meta);
+  border: 1px dashed var(--slate-400);
+  border-radius: 5px;
+  padding: 0 6px;
+  margin-right: 6px;
+  color: var(--slate-600);
+  font-weight: 400;
+}
+
+.checkRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  font-size: var(--fs-sub);
+  color: var(--slate-800);
+}
+
+.dl {
+  background: var(--slate-50);
+  border-top: 1px solid var(--slate-200);
+  padding: 14px 20px 16px;
+}
+
+.dlHead {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: var(--fs-label);
+  font-weight: 600;
+  color: var(--slate-600);
+  margin: 0 0 8px;
+}
+
+.dlHead span {
+  font-weight: 400;
+}
+
+.rw {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr);
+  gap: 12px;
+  font-size: var(--fs-sub);
+  line-height: 1.6;
+  padding: 3px 0;
+}
+
+.rw a {
+  color: var(--navy-900);
+  word-break: break-all;
+}
+
+.fchip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff;
+  border: 1px solid var(--slate-200);
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: var(--fs-label);
+  color: var(--slate-900);
+  margin-right: 6px;
+}
+
+.none {
+  color: var(--slate-500);
+}
+
+.doneRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  border-top: 1px solid var(--slate-200);
+  padding: 12px 20px;
+  font-size: var(--fs-sub);
+  background: var(--teal-50);
+  color: var(--teal-700);
+}
+
+.acts {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  border-top: 1px solid var(--slate-200);
+  flex-wrap: wrap;
+}
+
+.actsHint {
+  margin-right: auto;
+  font-size: var(--fs-label);
+  color: var(--slate-600);
+}
+
+.fixf {
+  border-top: 1px solid var(--amber-line);
+  background: var(--amber-50);
+  padding: 16px 20px 18px;
+}
+
+.fixTitle {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--amber-700);
+  margin: 0 0 12px;
+}
+
+.fixHint {
+  margin: 0 0 12px;
+  font-size: var(--fs-sub);
+  color: var(--amber-text);
+  line-height: var(--lh-body);
+}
+
+.fixActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.rail .card {
+  background: #fff;
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-card);
+  padding: 18px 20px;
+  margin: 0 0 16px;
+}
+
+.rail h3 {
+  font-size: var(--fs-body);
+  font-weight: 600;
+  margin: 0 0 10px;
+}
+
+.payTot {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.payTot span {
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+}
+
+.payNote {
+  font-size: var(--fs-label);
+  color: var(--slate-600);
+  margin: 8px 0 0;
+  line-height: 1.6;
+}
+
+.after {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.after li {
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+  line-height: 1.7;
+}
+
+.after b {
+  color: var(--slate-900);
+  font-weight: 600;
+}
+
+.helpWrap {
+  margin-top: 12px;
+}
+
+.dialogAmt {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  background: var(--slate-50);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin: 12px 0 0;
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+}
+
+.dialogAmt b {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--navy-900);
+  font-variant-numeric: tabular-nums;
+}
+
+.helpBox {
+  margin: 0 0 16px;
+  padding: 14px 16px;
+  border-radius: var(--radius-control);
+  background: var(--blue-50);
+  border: 1px solid var(--blue-line);
+  font-size: var(--fs-sub);
+  color: var(--navy-900);
+  line-height: var(--lh-body);
+}

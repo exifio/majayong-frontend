@@ -1,0 +1,44 @@
+/* 공급자 랜딩 Supplier-Landing — F-01 · 13.2 */
+import { describe, expect, it } from 'vitest';
+import { screen, within } from '@testing-library/react';
+import { findDesignViolations } from '@/app/devChecks';
+import { formatWon } from '@/lib/format';
+import { slDemoOf } from '@/pages/public/Supplier-Landing.data';
+import { renderAt } from './render';
+
+describe('Supplier-Landing — 공급자 랜딩', () => {
+  it('히어로 · 앵커(quote · criteria · cost) · primary 하나', () => {
+    const data = slDemoOf('기본');
+    const { container } = renderAt('/supplier', 'guest');
+    expect(screen.getByRole('heading', { level: 1, name: /글을 읽고 기능을 뽑는/ })).toBeTruthy();
+    expect(container.querySelector('#quote')).not.toBeNull();
+    expect(container.querySelector('#criteria')).not.toBeNull();
+    expect(container.querySelector('#cost')).not.toBeNull();
+
+    const heroCta = screen
+      .getAllByRole('link', { name: data.cta })
+      .find((a) => a.getAttribute('data-btn') === 'primary');
+    expect(heroCta?.getAttribute('href')).toBe('/signup');
+
+    const primaries = Array.from(container.querySelectorAll('[data-btn="primary"]')).filter(
+      (el) => !el.closest('[role="dialog"]'),
+    );
+    expect(primaries).toHaveLength(1);
+    expect(findDesignViolations(container)).toEqual([]);
+  });
+
+  it('비용: 수수료 5% · 원천징수 3.3% · 예시 금액(데이터)', () => {
+    const data = slDemoOf('기본');
+    const { container } = renderAt('/supplier', 'guest');
+    const cost = container.querySelector('#cost') as HTMLElement;
+    expect(within(cost).getByText('5%')).toBeTruthy();
+    expect(within(cost).getByText('3.3%')).toBeTruthy();
+    expect(within(cost).getByText(formatWon(data.costExampleNet))).toBeTruthy();
+  });
+
+  it('의뢰인 희망 예산 · AI 총액 숫자는 없다', () => {
+    renderAt('/supplier', 'guest');
+    expect(screen.queryByText(/희망 예산/)).toBeNull();
+    expect(screen.queryByText(/수수료 포함 예상 총액/)).toBeNull();
+  });
+});

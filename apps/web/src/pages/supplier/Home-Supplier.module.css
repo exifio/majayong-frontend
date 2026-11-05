@@ -1,0 +1,245 @@
+/* 공급자 홈 — 보드 Home-Supplier. 토큰만. */
+
+.page {
+  word-break: keep-all;
+}
+
+.hello {
+  margin: 0 0 20px;
+}
+
+.hello h1 {
+  margin: 0 0 4px;
+  font-size: var(--fs-page);
+  font-weight: 600;
+  letter-spacing: -0.3px;
+  color: var(--slate-900);
+}
+
+.helloMeta {
+  font-size: var(--fs-body);
+  color: var(--slate-600);
+}
+
+.focus {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(240px, 1fr);
+  gap: 20px;
+  align-items: stretch;
+  background: var(--navy-900);
+  color: #fff;
+  border-radius: var(--radius-card);
+  padding: 22px 24px;
+  margin: 0 0 20px;
+}
+
+@media (max-width: 840px) {
+  .focus {
+    grid-template-columns: 1fr;
+  }
+}
+
+.kick {
+  margin: 0 0 6px;
+  font-size: var(--fs-sub);
+  font-weight: 600;
+  opacity: 0.85;
+}
+
+.focusTitle {
+  margin: 0 0 8px;
+  font-size: var(--fs-section);
+  font-weight: 600;
+  letter-spacing: -0.2px;
+}
+
+.focusBody {
+  margin: 0 0 16px;
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  max-width: 52ch;
+  opacity: 0.92;
+}
+
+.mini {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: var(--radius-control);
+  padding: 14px 16px;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.miniTitle {
+  font-size: var(--fs-body);
+  font-weight: 600;
+  margin: 0 0 10px;
+}
+
+.mrow {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: var(--fs-sub);
+  margin: 0 0 6px;
+  opacity: 0.92;
+}
+
+.checklist {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: var(--radius-control);
+  padding: 14px 16px;
+}
+
+.ckHead {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: var(--fs-sub);
+  font-weight: 600;
+  margin: 0 0 12px;
+}
+
+.ckList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ckItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 8px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.ckItem:first-of-type {
+  border-top: none;
+  padding-top: 0;
+}
+
+.ckLabel {
+  font-size: var(--fs-body);
+  font-weight: 600;
+}
+
+.ckHint {
+  font-size: var(--fs-sub);
+  opacity: 0.85;
+  margin-top: 2px;
+}
+
+.ckDone {
+  font-size: var(--fs-sub);
+  opacity: 0.85;
+}
+
+.rowsb {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  margin: 0 0 12px;
+}
+
+.ct {
+  margin: 0;
+  font-size: var(--fs-section);
+  font-weight: 600;
+  color: var(--slate-900);
+}
+
+.allLink {
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+}
+
+.list {
+  background: #fff;
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  margin: 0 0 12px;
+}
+
+.pr {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 16px 18px;
+  border-top: 1px solid var(--slate-100);
+  text-decoration: none;
+  color: inherit;
+}
+
+.pr:first-child {
+  border-top: none;
+}
+
+.pr:hover {
+  background: var(--slate-50);
+}
+
+.prTop {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 0 0 6px;
+}
+
+.prMeta {
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+}
+
+.prTitle {
+  margin: 0 0 4px;
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: var(--slate-900);
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.tag {
+  font-size: var(--fs-sub);
+  padding: 2px 8px;
+  border-radius: var(--radius-btn-sm);
+  border: 1px solid var(--slate-200);
+  color: var(--slate-600);
+  background: #fff;
+}
+
+.tagOn {
+  border-color: var(--blue-line);
+  background: var(--blue-50);
+  color: var(--blue-700);
+  font-weight: 500;
+}
+
+.note {
+  margin: 0;
+  padding: 14px 18px;
+  border-top: 1px solid var(--slate-200);
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+  line-height: var(--lh-body);
+  background: #fff;
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-card);
+}

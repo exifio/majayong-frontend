@@ -1,0 +1,108 @@
+/* 비밀번호 재설정 — 보드 Reset. 토큰만. */
+
+.page {
+  max-width: 440px;
+  margin: 0 auto;
+  word-break: keep-all;
+}
+
+.formcard {
+  text-align: left;
+}
+
+.title {
+  margin: 0 0 8px;
+  font-size: var(--fs-page);
+  font-weight: 600;
+  letter-spacing: -0.3px;
+  color: var(--slate-900);
+}
+
+.sub {
+  margin: 0 0 20px;
+  font-size: var(--fs-body);
+  color: var(--slate-600);
+  line-height: var(--lh-body);
+}
+
+.card {
+  background: #fff;
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-card);
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.mailbox {
+  padding: 14px 16px;
+  border-radius: var(--radius-control);
+  background: var(--slate-50);
+  border: 1px solid var(--slate-200);
+}
+
+.mailbox b {
+  display: block;
+  font-size: var(--fs-body);
+  color: var(--slate-900);
+  margin: 0 0 4px;
+}
+
+.mailbox p {
+  margin: 0;
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+  line-height: var(--lh-body);
+}
+
+.hintCenter {
+  margin: 0;
+  text-align: center;
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+  line-height: var(--lh-body);
+}
+
+.txb {
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--blue-600);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.links {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.links a {
+  font-size: var(--fs-sub);
+  color: var(--blue-600);
+  font-weight: 500;
+}
+
+.rules {
+  margin: -6px 0 0;
+  padding-left: 18px;
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+  line-height: var(--lh-body);
+}
+
+.bandGap {
+  margin-top: 4px;
+}
+
+@media (max-width: 480px) {
+  .card {
+    padding: 18px 16px;
+  }
+}

@@ -1,0 +1,150 @@
+/* 의뢰인 계정 설정 — 보드 Account-Client. 토큰만. */
+
+.page {
+  max-width: 720px;
+  margin: 0 auto;
+  word-break: keep-all;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.head {
+  margin: 0;
+}
+
+.title {
+  margin: 0 0 6px;
+  font-size: var(--fs-page);
+  font-weight: 600;
+  color: var(--slate-900);
+}
+
+.sub {
+  margin: 0 0 8px;
+  font-size: var(--fs-body);
+  color: var(--slate-600);
+  line-height: var(--lh-body);
+}
+
+.who {
+  margin: 0;
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+}
+
+.who b {
+  color: var(--slate-900);
+}
+
+.rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-card);
+  background: #fff;
+  overflow: hidden;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--slate-200);
+  flex-wrap: wrap;
+}
+
+.row:last-child {
+  border-bottom: 0;
+}
+
+.leave {
+  background: var(--slate-50);
+}
+
+.k {
+  margin: 0 0 4px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--slate-900);
+}
+
+.v {
+  margin: 0;
+  font-size: var(--fs-body);
+  color: var(--slate-800);
+  line-height: var(--lh-body);
+}
+
+.prv {
+  margin-left: 8px;
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+}
+
+.modalSub {
+  margin: 0 0 14px;
+  font-size: var(--fs-body);
+  color: var(--slate-600);
+  line-height: var(--lh-body);
+}
+
+.cur {
+  margin: 0 0 14px;
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+}
+
+.cur b {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--fs-body);
+  color: var(--slate-900);
+}
+
+.hints {
+  margin: 14px 0 0;
+  padding-left: 18px;
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+  line-height: var(--lh-body);
+}
+
+.hints li + li {
+  margin-top: 4px;
+}
+
+.googleOk {
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  border-radius: var(--radius-control);
+  background: var(--teal-50);
+  border: 1px solid var(--teal-line);
+}
+
+.okTitle {
+  margin: 0 0 2px;
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: var(--teal-700);
+}
+
+.okHint {
+  margin: 0;
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+}
+
+.leaveContract {
+  margin: 10px 0;
+  padding: 12px 14px;
+  border-radius: var(--radius-control);
+  background: var(--slate-50);
+  border: 1px solid var(--slate-200);
+  font-size: var(--fs-sub);
+  color: var(--slate-800);
+  line-height: var(--lh-body);
+}

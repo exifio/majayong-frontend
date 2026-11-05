@@ -1,0 +1,14 @@
+{
+  "name": "majayong-frontend",
+  "private": true,
+  "packageManager": "pnpm@10.28.0",
+  "scripts": {
+    "dev": "pnpm --filter @majayong/web dev",
+    "build": "pnpm --filter @majayong/web build",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm --filter @majayong/web test"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild", "msw"]
+  }
+}

@@ -1,0 +1,125 @@
+/* ─────────────────────────────────────────────────────────────
+ * 마자용 디자인 토큰 — apps/web/src/styles/tokens.css
+ * 기준: 디자인 시스템 v0.2.1 최종본 14절 (2026-11-03)
+ *       + 결정메모-프론트엔드 착수 기준 #4 · #5 (브레이크포인트 · 자동 거절 칩)
+ * 이름은 14절 그대로. mj.css의 줄임 이름(--s900, --on-sub)은 쓰지 않는다.
+ * 새 토큰이 필요하면 디자인 시스템 14절에 먼저 더한다.
+ * ───────────────────────────────────────────────────────────── */
+
+:root {
+  /* ── 브랜드 ── */
+  --navy-900: #0B2545;
+  --navy-700: #12325A;
+  --blue-600: #2563EB;
+  --blue-50: #EFF5FF;
+  --blue-line: #D7E5FF;
+
+  /* ── 상태 ── 경고는 amber, 빨강은 폼 오류 · 미확인 점만 */
+  --amber-700: #B45309;
+  --amber-50: #FFF8EB;
+  --amber-line: #F2E0BE;
+  --amber-text: #8A6A24;
+  --warn-line: #E6C68A;      /* 위험 행동 버튼 테두리 */
+  --teal-700: #0F766E;
+  --teal-50: #EAF7F4;
+  --teal-line: #C7E6E0;
+  --red-600: #DC2626;        /* 폼 오류 · 미확인 점만 */
+  --red-50: #FDECEC;
+
+  /* ── 중립 ── 글자는 slate-500보다 연하게 쓰지 않는다 */
+  --slate-900: #0F172A;
+  --slate-600: #475569;
+  --slate-500: #64748B;
+  --slate-400: #94A3B8;
+  --slate-300: #CBD5E1;
+  --slate-200: #E2E8F0;
+  --slate-100: #F1F5F9;
+  --slate-50: #F8FAFC;
+  --unread-row: #F5F9FF;     /* 알림 안 읽음 행 */
+
+  /* ── 온다크 (navy-900 위) ── blue-600 글자 금지 */
+  --on-navy: #FFFFFF;
+  --on-navy-sub: #A9BDD6;
+  --on-navy-toggle: #8FA6C2;
+  --on-navy-dis: #6B86A6;
+  --on-navy-line: #24405F;
+  --on-navy-ok: #6FD7C6;
+  --on-navy-active: #5B9BFF;
+
+  /* ── 층 ── 그림자는 떠 있는 층에만 */
+  --scrim: rgba(11, 37, 69, .55);
+  --shadow-modal: 0 24px 60px rgba(11, 37, 69, .35);
+  --shadow-dropdown: 0 16px 40px rgba(11, 37, 69, .20);
+  --shadow-menu: 0 12px 32px rgba(11, 37, 69, .18);
+
+  /* ── 형태 ── */
+  --radius-modal: 16px;
+  --radius-dropdown: 14px;
+  --radius-card-lg: 14px;
+  --radius-card: 12px;
+  --radius-band: 12px;
+  --radius-btn: 9px;
+  --radius-btn-sm: 8px;
+  --radius-input: 8px;
+  --radius-chip: 6px;
+  --radius-toggle: 10px;
+
+  /* ── 간격 (4의 배수만) ── */
+  --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px; --sp-4: 16px;  --sp-5: 20px;
+  --sp-6: 24px; --sp-7: 28px; --sp-8: 32px; --sp-10: 40px; --sp-13: 52px;
+
+  /* ── 레이아웃 ──
+   * 데스크톱 기준 화면 폭 1440(결정메모 #4). 콘텐츠 컨테이너는 1280 그대로, 가운데 정렬.
+   * --gutter는 아래 브레이크포인트에서 바뀐다. */
+  --viewport-desktop: 1440px;
+  --container: 1280px;
+  --container-narrow: 880px;
+  --gutter: 40px;
+  --gnb-height: 72px;
+  --admin-bar-height: 64px;
+  --admin-side-width: 232px;
+  --dropdown-width: 440px;
+  --footer-height-ref: 393px;  /* 1440 · 1280 기준 참고값. 높이는 내용에 맡긴다 */
+
+  /* ── 글꼴 ── */
+  --font: "Pretendard Variable", Pretendard, system-ui, sans-serif;
+  --fs-hero: 32px;
+  --fs-page: 28px;
+  --fs-home-card: 26px;
+  --fs-section: 20px;
+  --fs-row-title: 17px;
+  --fs-body: 16px;
+  --fs-sub: 14px;      /* 본문 · 보조의 하한 */
+  --fs-label: 13px;    /* 라벨 · 칩 · 속성 표기 · 자동 기록 · 푸터 사업자 정보 */
+  --fs-meta: 12px;     /* 대화의 보낸 사람 · 시각 · 신고 · 배지 숫자 */
+  --fs-amount-row: 20px;
+  --fs-amount-big: 28px;
+  --lh-body: 1.6;
+}
+
+/* ─────────────────────────────────────────────────────────────
+ * 브레이크포인트 (결정메모 #4)
+ * CSS 변수는 미디어 쿼리 조건에 쓸 수 없어서 값을 아래에 고정하고,
+ * 같은 값을 src/styles/breakpoints.ts 에 둔다.
+ *
+ *   desktop   ≥ 1440   기준 화면. 컨테이너 1280 · 거터 40
+ *   laptop    1024–1439 컨테이너 유동 · 거터 32. 2분할 · 2단 유지(오른쪽 칼럼 최소 320)
+ *   tablet    768–1023 2단 → 1단(오른쪽 칼럼은 아래로). 초안 · 명세 2분할은 탭 전환
+ *   mobile    < 768    조회 · 간단한 응답 · 채팅(PRD 7절). 거터 16
+ *   운영자 콘솔은 1024 미만에서 '데스크톱에서 이용해 주세요' 안내
+ * ───────────────────────────────────────────────────────────── */
+
+@media (max-width: 1439.98px) {
+  :root { --gutter: 32px; }
+}
+@media (max-width: 1023.98px) {
+  :root { --gutter: 24px; }
+}
+@media (max-width: 767.98px) {
+  :root { --gutter: 16px; }
+}
+
+/* ─────────────────────────────────────────────────────────────
+ * 칩 톤 매핑 메모 (디자인 시스템 10.1 + 결정메모 #5)
+ *   자동 거절은 모든 화면에서 아웃라인 톤. 중립 칩으로 그린 보드가 있어도 아웃라인으로 구현한다.
+ * ───────────────────────────────────────────────────────────── */

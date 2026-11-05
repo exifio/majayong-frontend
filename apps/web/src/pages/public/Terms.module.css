@@ -1,0 +1,157 @@
+/* 약관 · 정책 — 보드 Terms. 토큰만. */
+
+.page {
+  max-width: 720px;
+  margin: 0 auto;
+  word-break: keep-all;
+}
+
+.head {
+  margin: 0 0 20px;
+}
+
+.pageTitle {
+  margin: 0 0 8px;
+  font-size: var(--fs-page);
+  font-weight: 600;
+  letter-spacing: -0.3px;
+  color: var(--slate-900);
+}
+
+.pageSub {
+  margin: 0;
+  font-size: var(--fs-body);
+  color: var(--slate-600);
+  line-height: var(--lh-body);
+}
+
+.doc {
+  margin-top: 24px;
+  max-width: 640px;
+}
+
+.docHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 10px 16px;
+  margin: 0 0 10px;
+}
+
+.docTitle {
+  margin: 0;
+  font-size: var(--fs-section);
+  font-weight: 600;
+  color: var(--slate-900);
+}
+
+.who {
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+}
+
+.draft {
+  display: inline-block;
+  margin: 0 0 8px;
+  padding: 4px 10px;
+  border-radius: var(--radius-control);
+  background: var(--amber-50);
+  border: 1px solid var(--amber-line);
+  color: var(--amber-700);
+  font-size: var(--fs-sub);
+  font-weight: 600;
+}
+
+.effective {
+  margin: 0 0 16px;
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+}
+
+.toc {
+  margin: 0 0 20px;
+  padding: 14px 16px;
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-control);
+  background: var(--slate-50);
+}
+
+.toc ol {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.toc a {
+  font-size: var(--fs-body);
+  color: var(--blue-600);
+  line-height: 1.7;
+}
+
+.lead {
+  margin: 0 0 20px;
+  font-size: var(--fs-body);
+  color: var(--slate-800);
+  line-height: var(--lh-body);
+}
+
+.art {
+  margin: 0 0 22px;
+}
+
+.art h3 {
+  margin: 0 0 8px;
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: var(--slate-900);
+}
+
+.art p,
+.art li {
+  margin: 0;
+  font-size: var(--fs-body);
+  color: var(--slate-800);
+  line-height: var(--lh-body);
+}
+
+.art ul {
+  margin: 8px 0 0;
+  padding-left: 18px;
+}
+
+.art li + li {
+  margin-top: 4px;
+}
+
+.tableWrap {
+  overflow-x: auto;
+  margin-top: 8px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-body);
+}
+
+.table th,
+.table td {
+  border: 1px solid var(--slate-200);
+  padding: 10px 12px;
+  text-align: left;
+  vertical-align: top;
+  color: var(--slate-800);
+  line-height: var(--lh-body);
+}
+
+.table th {
+  background: var(--slate-50);
+  font-weight: 600;
+  color: var(--slate-900);
+}
+
+.footer {
+  margin: 28px 0 0;
+  font-size: var(--fs-sub);
+  color: var(--slate-600);
+  line-height: var(--lh-body);
+}

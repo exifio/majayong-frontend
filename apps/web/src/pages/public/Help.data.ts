@@ -1,0 +1,160 @@
+/* 고객센터 시연 — PRD F-25 · 결정메모 #6 · #11. 내 문의 목록 없음. */
+
+export const HELP_MOCKS = [
+  '자주 묻는 질문',
+  '검색 결과',
+  '1:1 문의 작성',
+  '문의 보냄',
+] as const;
+export type HelpMock = (typeof HELP_MOCKS)[number];
+
+export type FaqItem = {
+  id: string;
+  cat: string;
+  q: string;
+  a: string;
+  go?: string;
+  goHref?: string;
+};
+
+export const DEMO = {
+  title: '고객센터',
+  sub: '이용 중 궁금한 점을 찾아보세요. 답을 찾지 못하면 1:1 문의를 남겨 주세요.',
+  searchLabel: '고객센터 검색',
+  searchPlaceholder: '예: 환불, 검수 기한, 세금계산서',
+  searchBtn: '검색',
+  quickLabel: '자주 찾는 주제',
+  quick: ['환불 · 취소', '검수 기한', '수수료', '세금계산서', '계정 · 역할'] as const,
+  faqTitle: '자주 묻는 질문',
+  searchTitle: (q: string) => `'${q}' 검색 결과`,
+  cats: ['전체', '의뢰인', '공급자', '결제 · 정산', '계정'] as const,
+  emptySearchTitle: '검색 결과가 없습니다',
+  emptySearchBody: '다른 검색어를 쓰거나 1:1 문의를 남겨 주세요.',
+  askCta: '1:1 문의하기',
+  askHref: '/help/inquiry',
+  miss: '찾는 답이 없나요?',
+  missLink: '1:1 문의 남기기',
+
+  formTitle: '1:1 문의',
+  typeLabel: '문의 유형',
+  types: ['이용 방법', '결제 · 예치', '검수 · 지급', '계약 취소', '계정', '기타'] as const,
+  titleLabel: '제목',
+  bodyLabel: '내용',
+  titleValue: '예치했는데 내 계약에 확인 중으로 나와요',
+  bodyValue:
+    '11월 4일 14:20에 카드로 3,255,000원을 결제했습니다.\n내 계약에는 아직 \'확인 중\'으로 보여서 문의드립니다.',
+  formNote: '답변은 알림으로 보내 드립니다. 전화번호 등 연락처는 적지 않아도 됩니다.',
+  cancel: '취소',
+  cancelHref: '/help',
+  submit: '문의 보내기',
+
+  sentBandTitle: '문의를 보냈습니다',
+  sentBandBody: '평일 기준 하루 안에 답변 드립니다. 답변이 오면 알림으로 알려 드립니다.',
+  sentBack: '고객센터로',
+
+  asideAskTitle: '1:1 문의',
+  asideAskBody: '답을 찾지 못했다면 운영자에게 직접 물어보세요. 평일 기준 하루 안에 답변 드립니다.',
+  callTitle: '전화 · 이메일',
+  phone: '1600-0000',
+  hours: '평일 10:00–18:00 (점심 12:00–13:00)\n주말 · 공휴일 휴무',
+  email: 'help@majayong.example',
+  guideTitle: '문제가 생겼다면',
+  guides: [
+    {
+      t: '계약 · 납품 문제',
+      b: '내 계약에서 계약 취소를 요청하거나 이견을 남기면 운영자가 판정합니다.',
+    },
+    {
+      t: '부적절한 메시지',
+      b: '채팅의 메시지마다 있는 \'신고\'를 눌러 주세요. 상대에게는 알리지 않습니다.',
+    },
+    {
+      t: '결제 · 예치 오류',
+      b: '1:1 문의에서 \'결제 · 예치\'를 고르고 결제 시각을 적어 주세요.',
+    },
+  ] as const,
+  noticeTitle: '공지사항',
+  notices: [
+    { tag: '안내', title: '예치 · 검수 기한 하루 전에 알림으로 알려 드립니다', date: '11월 3일' },
+    { tag: '정책', title: '수수료 증빙과 세금계산서 발행 방식 안내', date: '11월 1일' },
+    { tag: '안내', title: '마자용 서비스를 시작합니다', date: '10월 27일' },
+  ] as const,
+} as const;
+
+export const FAQS: FaqItem[] = [
+  {
+    id: 'f1',
+    cat: '의뢰인',
+    q: '어떤 기능이 필요한지 몰라도 맡길 수 있나요?',
+    a: '네. 가게에서 불편한 점을 문장으로 적으면 AI가 필요한 기능과 화면 초안을 만들어 드립니다. 초안을 보며 고친 뒤 확정하면 그 명세로 공급자를 모집합니다.',
+    go: '프로젝트 시작하기',
+    goHref: '/c/drafts/new',
+  },
+  {
+    id: 'f2',
+    cat: '결제 · 정산',
+    q: '대금은 언제 공급자에게 지급되나요?',
+    a: '계약을 맺으면 3일 안에 대금을 마자용에 예치합니다. 공급자가 구간별로 납품하면 의뢰인이 7일 안에 검수하고, 승인한 구간만 지급됩니다. 7일 안에 승인이나 보완 요청이 없으면 자동 승인되어 지급됩니다.',
+    go: '내 계약 보기',
+    goHref: '/c/contracts',
+  },
+  {
+    id: 'f3',
+    cat: '결제 · 정산',
+    q: '수수료는 얼마인가요?',
+    a: '의뢰인과 공급자 모두 계약 금액의 5%입니다. 의뢰인은 예치할 때 함께 내고, 공급자는 지급받을 때 빠집니다. 지급이 확정된 금액에만 붙고, 화면의 금액은 모두 부가세 포함입니다.',
+  },
+  {
+    id: 'f4',
+    cat: '결제 · 정산',
+    q: '계약을 취소하면 환불받을 수 있나요?',
+    a: '예치 후 24시간 안이고 납품 전이면 전액 환불됩니다. 그 뒤 납품 전에 취소하면 진행 중 구간의 50%를 공급자에게 보상하고, 이미 납품한 구간은 전액 지급됩니다. 공급자 사정으로 취소하면 지급되지 않은 금액은 모두 돌려드립니다. 상대가 동의하지 않으면 운영자가 판정합니다.',
+  },
+  {
+    id: 'f5',
+    cat: '공급자',
+    q: '지원하기 전에 의뢰인에게 질문할 수 있나요?',
+    a: '지원 전에는 채팅할 수 없습니다. 견적을 낼 때 \'의뢰인에게 묻고 싶은 것\'을 최대 3개 남기면, 의뢰인이 문의 채팅을 열어 답합니다.',
+  },
+  {
+    id: 'f6',
+    cat: '공급자',
+    q: '세금계산서와 원천징수는 어떻게 되나요?',
+    a: '사업자 공급자는 받은 대금으로 의뢰인에게 세금계산서를 직접 발행하고, 원천징수는 없습니다. 개인 공급자는 지급할 때 사업소득 3.3%를 원천징수합니다. 플랫폼 수수료 증빙은 마자용이 발행합니다.',
+  },
+  {
+    id: 'f7',
+    cat: '계정',
+    q: '의뢰인과 공급자를 한 계정으로 함께 쓸 수 있나요?',
+    a: '역할은 가입할 때 정해지고 바꿀 수 없습니다. 두 역할이 모두 필요하면 다른 이메일로 계정을 하나 더 만들어 주세요.',
+  },
+  {
+    id: 'f8',
+    cat: '계정',
+    q: '계약 전에 연락처를 주고받을 수 있나요?',
+    a: '계약을 맺기 전에는 채팅의 전화번호 · 이메일 · 메신저 아이디가 자동으로 가려집니다. 양쪽이 서명해 계약이 체결되면 그때부터 주고받을 수 있습니다.',
+  },
+];
+
+export function resolveHelpMock(
+  raw: string | null,
+  pathname: string,
+  q: string | null,
+): HelpMock {
+  if (raw && (HELP_MOCKS as readonly string[]).includes(raw)) return raw as HelpMock;
+  if (pathname.startsWith('/help/inquiry')) return '1:1 문의 작성';
+  if (q && q.trim().length > 0) return '검색 결과';
+  return '자주 묻는 질문';
+}
+
+export function searchFaqs(query: string): FaqItem[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return [];
+  return FAQS.filter(
+    (f) =>
+      f.q.toLowerCase().includes(q) ||
+      f.a.toLowerCase().includes(q) ||
+      f.cat.toLowerCase().includes(q) ||
+      (q === '환불' && f.q.includes('환불')),
+  );
+}
