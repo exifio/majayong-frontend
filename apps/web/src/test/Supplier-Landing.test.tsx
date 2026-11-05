@@ -36,6 +36,13 @@ describe('Supplier-Landing — 공급자 랜딩', () => {
     expect(within(cost).getByText(formatWon(data.costExampleNet))).toBeTruthy();
   });
 
+  it('대금 예치를 이미 되는 기능처럼 쓰지 않는다', () => {
+    const data = slDemoOf('기본');
+    const howBody = data.flowSteps.map((step) => step.body).join(' ');
+    expect(howBody).not.toContain('전액 예치');
+    expect(howBody).toContain('결제 연동');
+  });
+
   it('의뢰인 희망 예산 · AI 총액 숫자는 없다', () => {
     renderAt('/supplier', 'guest');
     expect(screen.queryByText(/희망 예산/)).toBeNull();

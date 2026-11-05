@@ -41,6 +41,12 @@ describe('Main — 의뢰인 랜딩', () => {
     expect(screen.getByText(formatWon(data.proposals[0]!.quote))).toBeTruthy();
   });
 
+  it('가치 카드는 3장이고 결제 완료를 단정하지 않는다', () => {
+    const data = mainDemoOf('기본');
+    expect(data.safetyCards).toHaveLength(3);
+    expect(data.safetyCards.some((card) => /예치|에스크로/.test(card.title + card.body))).toBe(false);
+  });
+
   it('정의된 mock 목록이 비어 있지 않다', () => {
     expect(MAIN_MOCKS.length).toBeGreaterThan(0);
   });
