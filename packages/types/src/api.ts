@@ -536,6 +536,14 @@ export type BApiEmptyJsonBodyOperation =
 export interface BApiRequestBodies {
   /** A API: only the fields this client sends today. */
   updateSupplierProfile: { ndaConsent?: boolean; displayName?: string };
+  updateClientProfile: {
+    name?: string;
+    bio?: string | null;
+    businessName?: string;
+    industryField?: string;
+    storeAddress?: string | null;
+    websiteUrl?: string | null;
+  };
   withdrawApplication: EmptyJsonObjectDto;
   rejectApplication: EmptyJsonObjectDto;
   submitApplication: SubmitApplicationRequestDto;
@@ -619,6 +627,7 @@ export interface BApiResponses {
   listPublicProjects: DataEnvelope<PublicProjectListItemDto[]>;
   getSupplierProjectDetail: DataEnvelope<SupplierProjectDetailDto>;
   updateSupplierProfile: DataEnvelope<unknown>;
+  updateClientProfile: DataEnvelope<unknown>;
   listChatRooms: DataEnvelope<ChatRoomSummaryDto[]>;
   openChat: DataEnvelope<OpenChatResultDto>;
   listMessages: DataEnvelope<ConversationViewDto>;

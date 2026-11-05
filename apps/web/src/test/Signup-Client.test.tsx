@@ -1,13 +1,22 @@
 /* 회원가입 ③ 의뢰인 프로필 Signup-Client — F-07 */
-import { describe, expect, it } from 'vitest';
-import { fireEvent, screen, within } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { findDesignViolations } from '@/app/devChecks';
 import { DEMO } from '@/pages/public/Signup-Client.data';
 import { location, renderAt } from './render';
 
+const jsonResponse = (body: unknown, status = 200) =>
+  new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
 describe('Signup-Client — 회원가입 ③ 의뢰인 프로필', () => {
-  it('3단계 진행 · 상호 · 가입 완료 → /c', () => {
-    const { container } = renderAt('/signup/client', 'signup');
+  it('가입 완료: 상호·업종·소개를 PATCH하고 /c로 이동한다', async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(jsonResponse({ data: {} }));
+    vi.stubGlobal('fetch', fetchMock);
+    const { container } = renderAt('/signup/client', 'client', undefined, 'test-token');
     const root = container.querySelector('[data-screen="Signup-Client"]') as HTMLElement;
     expect(screen.getByRole('heading', { level: 1, name: DEMO.title })).toBeTruthy();
     expect(within(root).getByLabelText('가입 단계')).toBeTruthy();
@@ -16,9 +25,31 @@ describe('Signup-Client — 회원가입 ③ 의뢰인 프로필', () => {
     const submit = within(root).getByRole('button', { name: DEMO.submit });
     expect(submit.getAttribute('data-btn')).toBe('primary');
     expect(root.querySelectorAll('[data-btn="primary"]').length).toBe(1);
+
     fireEvent.click(submit);
-    expect(location.current.startsWith('/c')).toBe(true);
+
+    await waitFor(() => expect(location.current.startsWith('/c')).toBe(true));
+    const [path, init] = fetchMock.mock.calls[0]!;
+    expect(path).toBe('/api/v1/me/client-profile');
+    expect(init?.method).toBe('PATCH');
+    expect(JSON.parse(String(init?.body))).toEqual({
+      businessName: DEMO.bizValue,
+      industryField: DEMO.industries[0],
+      bio: DEMO.introValue,
+    });
     expect(findDesignViolations(container)).toEqual([]);
+  });
+
+  it('나중에 입력하기: 프로필을 저장하지 않고 /c로 이동한다', () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(jsonResponse({ data: {} }));
+    vi.stubGlobal('fetch', fetchMock);
+    const { container } = renderAt('/signup/client', 'client', undefined, 'test-token');
+    const root = container.querySelector('[data-screen="Signup-Client"]') as HTMLElement;
+
+    fireEvent.click(within(root).getByRole('button', { name: DEMO.skip }));
+
+    expect(location.current.startsWith('/c')).toBe(true);
+    expect(fetchMock.mock.calls.some(([path]) => String(path).endsWith('/me/client-profile'))).toBe(false);
   });
 
   it('상호 비우면 폼 오류', () => {

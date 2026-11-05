@@ -16,7 +16,7 @@ describe('Signup-Supplier — 회원가입 ③ 공급자 프로필', () => {
   it('가입 완료: 활동 이름·NDA 동의를 PATCH하고 /s로 이동한다', async () => {
     const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(jsonResponse({ data: {} }));
     vi.stubGlobal('fetch', fetchMock);
-    const { container } = renderAt('/signup/supplier', 'signup', undefined, 'test-token');
+    const { container } = renderAt('/signup/supplier', 'supplier', undefined, 'test-token');
     const root = container.querySelector('[data-screen="Signup-Supplier"]') as HTMLElement;
     expect(screen.getByRole('heading', { level: 1, name: DEMO.title })).toBeTruthy();
     expect(within(root).getByLabelText('가입 단계')).toBeTruthy();
@@ -34,28 +34,27 @@ describe('Signup-Supplier — 회원가입 ③ 공급자 프로필', () => {
     expect(init?.method).toBe('PATCH');
     expect(JSON.parse(String(init?.body))).toEqual({
       displayName: DEMO.nameValue,
-      ndaConsent: true,
     });
     expect(findDesignViolations(container)).toEqual([]);
   });
 
-  it('나중에 입력하기: 활동 이름 없이 NDA 동의만 저장하고 /s로 이동한다', async () => {
+  it('나중에 입력하기: 프로필을 저장하지 않고 /s로 이동한다', () => {
     const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(jsonResponse({ data: {} }));
     vi.stubGlobal('fetch', fetchMock);
-    const { container } = renderAt('/signup/supplier', 'signup', undefined, 'test-token');
+    const { container } = renderAt('/signup/supplier', 'supplier', undefined, 'test-token');
     const root = container.querySelector('[data-screen="Signup-Supplier"]') as HTMLElement;
 
     fireEvent.click(within(root).getByRole('button', { name: DEMO.skip }));
 
-    await waitFor(() => expect(location.current.startsWith('/s')).toBe(true));
-    expect(JSON.parse(String(fetchMock.mock.calls[0]![1]?.body))).toEqual({ ndaConsent: true });
+    expect(location.current.startsWith('/s')).toBe(true);
+    expect(fetchMock.mock.calls.some(([path]) => String(path).endsWith('/me/supplier-profile'))).toBe(false);
   });
 
   it('저장 실패: 서버 오류를 안내하고 프로필 단계에 머문다', async () => {
     vi.stubGlobal('fetch', vi.fn<typeof fetch>().mockResolvedValue(jsonResponse({
       error: { code: 'INTERNAL_ERROR', message: '저장 실패', requestId: 'r1' },
     }, 500)));
-    const { container } = renderAt('/signup/supplier', 'signup', undefined, 'test-token');
+    const { container } = renderAt('/signup/supplier', 'supplier', undefined, 'test-token');
     const root = container.querySelector('[data-screen="Signup-Supplier"]') as HTMLElement;
 
     fireEvent.click(within(root).getByRole('button', { name: DEMO.submit }));

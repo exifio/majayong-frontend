@@ -22,8 +22,13 @@ afterEach(() => {
 });
 
 describe('Email signup end-to-end & reload persistence', () => {
-  it('의뢰인 흐름: /signup → /signup/role → 등록 → /signup/client → /c', async () => {
-    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(registerResponse('CLIENT'));
+  it('의뢰인 흐름: /signup → /signup/role → 등록 → /signup/client → 프로필 저장 → /c', async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockImplementation(async (input) => {
+      const url = String(input);
+      return url.endsWith('/api/v1/auth/register')
+        ? registerResponse('CLIENT')
+        : jsonResponse({ data: [] });
+    });
     vi.stubGlobal('fetch', fetchMock);
 
     // 1단계: /signup
@@ -69,18 +74,25 @@ describe('Email signup end-to-end & reload persistence', () => {
       role: 'CLIENT',
       termsVersion: 'v0.7',
     });
+    const profileCall = fetchMock.mock.calls.find(([path]) => String(path).endsWith('/api/v1/me/client-profile'));
+    expect(profileCall![1]?.method).toBe('PATCH');
+    expect(JSON.parse(String(profileCall![1]?.body))).toEqual({
+      businessName: '온도 다이닝',
+      industryField: '예약 기반 음식점',
+      bio: '카운터 10석 코스 레스토랑을 3년째 운영하고 있습니다. 외주는 처음입니다.',
+    });
 
     // 역할 선택 완료 즉시 평문 비밀번호 및 가입 세션 정리 확인
     expect(window.sessionStorage.getItem('mj.signup.password')).toBeNull();
     expect(window.sessionStorage.getItem('mj.signup.session')).toBeNull();
   });
 
-  it('공급자 흐름: /signup/role → 등록 → /signup/supplier → NDA 저장 → /s', async () => {
+  it('공급자 흐름: /signup/role → 등록 → /signup/supplier → 프로필 저장 → /s', async () => {
     const fetchMock = vi.fn<typeof fetch>().mockImplementation(async (input) => {
       const url = String(input);
       return url.endsWith('/api/v1/auth/register')
         ? registerResponse('SUPPLIER')
-        : jsonResponse({ data: {} });
+        : jsonResponse({ data: [] });
     });
     vi.stubGlobal('fetch', fetchMock);
 
@@ -109,7 +121,6 @@ describe('Email signup end-to-end & reload persistence', () => {
     expect(profileCall![1]?.method).toBe('PATCH');
     expect(JSON.parse(String(profileCall![1]?.body))).toEqual({
       displayName: '최준호',
-      ndaConsent: true,
     });
     expect(window.sessionStorage.getItem('mj.signup.password')).toBeNull();
   });

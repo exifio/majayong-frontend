@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button, Note, TextAreaField, TextField } from '@/components/ui';
+import { apiRequest } from '@/lib/api';
 import { useSession } from '@/app/session';
 import { DEMO } from './Signup-Client.data';
 import s from './Signup-Client.module.css';
@@ -34,28 +35,49 @@ function SignupStepper({ current }: { current: 1 | 2 | 3 }) {
 
 export default function SignupClient() {
   const navigate = useNavigate();
-  const { setDevSession } = useSession();
+  const { apiAccessToken } = useSession();
 
   const [biz, setBiz] = useState<string>(DEMO.bizValue);
   const [industry, setIndustry] = useState<string>(DEMO.industries[0]);
   const [scale, setScale] = useState<string>(DEMO.scaleValue);
   const [intro, setIntro] = useState<string>(DEMO.introValue);
   const [tried, setTried] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const bizEmpty = biz.trim().length === 0;
   const bizError = tried && bizEmpty ? DEMO.bizError : undefined;
+
+  const saveProfile = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      await apiRequest('updateClientProfile', '/me/client-profile', {
+        method: 'PATCH',
+        accessToken: apiAccessToken,
+        jsonBody: {
+          businessName: biz.trim(),
+          industryField: industry,
+          ...(intro.trim() ? { bio: intro.trim() } : {}),
+        },
+      });
+      navigate('/c', { replace: true });
+    } catch {
+      setError('프로필을 저장하지 못했습니다. 다시 시도해 주세요.');
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const finish = () => {
     if (bizEmpty) {
       setTried(true);
       return;
     }
-    setDevSession('client');
-    navigate('/c', { replace: true });
+    void saveProfile();
   };
 
   const skip = () => {
-    setDevSession('client');
     navigate('/c', { replace: true });
   };
   return (
@@ -120,14 +142,27 @@ export default function SignupClient() {
           {DEMO.back}
         </Button>
         <div className={s.actionRight}>
-          <Button variant="ghost" type="button" onClick={skip}>
+          <Button
+            variant="ghost"
+            type="button"
+            disabled={busy}
+            disabledReason={busy ? '저장 중입니다' : undefined}
+            onClick={skip}
+          >
             {DEMO.skip}
           </Button>
-          <Button variant="primary" type="button" onClick={finish}>
+          <Button
+            variant="primary"
+            type="button"
+            disabled={busy}
+            disabledReason={busy ? '저장 중입니다' : undefined}
+            onClick={finish}
+          >
             {DEMO.submit}
           </Button>
         </div>
       </div>
+      {error ? <p className={s.error} role="alert">{error}</p> : null}
       <p className={s.skipHint}>{DEMO.skipHint}</p>
     </div>
   );
