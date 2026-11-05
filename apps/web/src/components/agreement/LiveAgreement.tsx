@@ -10,8 +10,8 @@ import { applicationStatusLabel } from '@/lib/application-status';
 import { formatWon } from '@/lib/format';
 import { supplierProfile, type SupplierProfileSummary } from '@/lib/supplier-profile';
 
-/* D-23 (기본 합의 초안 생성) 적용 후 true로 바꾸면 확정 버튼이 열린다. */
-const AGREEMENT_CONFIRM_ENABLED = false;
+/* D-23 적용 확인(3100, bdc4751). 개발 빌드에서만 켜고 배포 활성화는 별도 결정한다. */
+const AGREEMENT_CONFIRM_ENABLED = import.meta.env.DEV;
 
 type State = 'loading' | 'success' | 'auth-error' | 'error';
 
@@ -101,6 +101,11 @@ export function LiveAgreement({ styles }: { styles: Record<string, string> }) {
         method: 'POST',
         accessToken: apiAccessToken,
       });
+      if (response.data.contract.status !== 'PENDING_CONSENT') {
+        setConfirmError('계약 상태가 예상과 다릅니다. 최신 상태를 다시 확인해 주세요.');
+        setRetry((count) => count + 1);
+        return;
+      }
       navigate(`/c/contracts/${encodeURIComponent(response.data.contract.id)}`);
     } catch (error) {
       if (error instanceof ApiRequestError && error.status === 401) {
@@ -268,7 +273,14 @@ export function LiveAgreement({ styles }: { styles: Record<string, string> }) {
             <br />
             {formatWon(application.totalAmount)} · {application.durationDays}일
           </p>
-          <p>확정하면 임시 계약이 생성되고 서명 단계로 넘어갑니다. 다른 지원은 예치 완료 전까지 자동 거절되지 않습니다.</p>
+          <p>조건 {conditions.length}개 중 정해짐 {decided.length}개 · 안 정함 {undecided.length}개</p>
+          <ul>
+            {conditions.map((condition) => (
+              <li key={condition.key}>{condition.text} · {CONDITION_LABEL[condition.state]}</li>
+            ))}
+          </ul>
+          <p>안 정한 조건이 있어도 합의를 확정할 수 있습니다. 확정하면 임시 계약이 생성되고 서명 단계로 넘어갑니다.</p>
+          <p>다른 지원자는 예치 완료 전까지 자동 거절되지 않습니다.</p>
         </ConfirmDialog>
       )}
     </div>

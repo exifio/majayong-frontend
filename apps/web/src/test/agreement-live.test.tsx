@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SessionProvider, DEV_SESSIONS, useSession } from '@/app/session';
@@ -68,6 +68,7 @@ function renderAgreement() {
         <WithToken>
           <Routes>
             <Route path="/c/chat/:pid/:sid/agreement" element={<LiveAgreement styles={{}} />} />
+            <Route path="/c/contracts/:cid" element={<p>CONTRACT_PAGE</p>} />
           </Routes>
         </WithToken>
       </SessionProvider>
@@ -107,20 +108,57 @@ describe('LiveAgreement', () => {
     expect(screen.getByText(/휴무일 표시 방식을 정한다/)).toBeTruthy();
   });
 
-  it('keeps confirm disabled until D-23 is applied', async () => {
-    fetchMock.mockImplementation(async (input) => {
+  it('confirms once after explicit confirmation and moves to the contract', async () => {
+    fetchMock.mockImplementation(async (input, init) => {
       const url = String(input);
       if (url === '/api/v1/applications/application-1') return jsonResponse({ data: application });
       if (url === '/api/v1/applications/application-1/agreement-preview') return jsonResponse({ data: preview });
       if (url === '/api/v1/me/projects') return jsonResponse({ data: [] });
       if (url.startsWith('/api/v1/profiles/suppliers/')) return jsonResponse({ data: null }, 404);
+      if (url === '/api/v1/applications/application-1/agreement/confirm' && init?.method === 'POST') {
+        return jsonResponse({ data: {
+          contract: { id: 'contract-1', status: 'PENDING_CONSENT' },
+          plan: {},
+        } }, 201);
+      }
       return jsonResponse({ error: { code: 'NOT_FOUND', message: 'not found', requestId: 'r' } }, 404);
     });
     renderAgreement();
 
-    const button = await screen.findByRole('button', { name: '합의 확정' });
-    expect(button).toHaveProperty('disabled', true);
-    expect(screen.getAllByText(/D-23/).length).toBeGreaterThan(0);
+    fireEvent.click(await screen.findByRole('button', { name: '합의 확정' }));
+    expect(await screen.findByText(/안 정한 조건이 있어도 합의를 확정할 수 있습니다/)).toBeTruthy();
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: '합의 확정' }));
+
+    expect(await screen.findByText('CONTRACT_PAGE')).toBeTruthy();
+    const posts = fetchMock.mock.calls.filter(([url, init]) =>
+      String(url) === '/api/v1/applications/application-1/agreement/confirm' && init?.method === 'POST');
+    expect(posts).toHaveLength(1);
+    expect(JSON.parse(String(posts[0]![1]!.body))).toEqual({});
+  });
+
+  it('shows the conflict message and refetches on 409', async () => {
+    let previewCalls = 0;
+    fetchMock.mockImplementation(async (input, init) => {
+      const url = String(input);
+      if (url === '/api/v1/applications/application-1') return jsonResponse({ data: application });
+      if (url === '/api/v1/applications/application-1/agreement-preview') {
+        previewCalls += 1;
+        return jsonResponse({ data: preview });
+      }
+      if (url === '/api/v1/me/projects') return jsonResponse({ data: [] });
+      if (url.startsWith('/api/v1/profiles/suppliers/')) return jsonResponse({ data: null }, 404);
+      if (url === '/api/v1/applications/application-1/agreement/confirm' && init?.method === 'POST') {
+        return jsonResponse({ error: { code: 'APPLICATION_REVISION_SUPERSEDED', message: '이미 대체된 회차입니다.', requestId: 'r2' } }, 409);
+      }
+      return jsonResponse({ error: { code: 'NOT_FOUND', message: 'not found', requestId: 'r' } }, 404);
+    });
+    renderAgreement();
+
+    fireEvent.click(await screen.findByRole('button', { name: '합의 확정' }));
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: '합의 확정' }));
+
+    await waitFor(() => expect(screen.getByRole('alert').textContent).toContain('이미 대체된 회차입니다.'));
+    await waitFor(() => expect(previewCalls).toBeGreaterThan(1));
   });
 
   it('shows the authentication error state for a 401 response', async () => {
