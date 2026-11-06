@@ -80,3 +80,11 @@
   font-size: 12px;
   color: var(--slate-500);
 }
+
+.amount { min-width: 0; overflow-wrap: anywhere; }
+
+@media (max-width: 480px) {
+  .installment { grid-template-columns: 44px minmax(0, 1fr); }
+  .status { grid-column: 2; }
+  .date { grid-column: 2; text-align: left; }
+}
