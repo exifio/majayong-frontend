@@ -342,16 +342,16 @@
 
 ## FE-19 — 명세 확정 선행조건 차단 및 오류 안내
 
-- **상태/난이도:** 부분완료 / 2026-11-07 로컬 검증 / 하 · **우선순위:** P1 · **단계:** Now.
+- **상태/난이도:** 완료 / 2026-11-07 staging 게시 성공·대기 기능 409 확인 / 하 · **우선순위:** P1 · **단계:** Now.
 - **기준 SHA:** `dde8f6eb3e3af9a43b21e76a3dd7513ac3eef3dc`.
 - **대상:** `apps/web/src/pages/client/Confirm-Client.tsx; apps/web/src/pages/client/Confirm-Client.test.tsx; apps/web/src/components/project/LiveProjectDetail.tsx; packages/types/src/api.ts; packages/types/src/supplier.ts; apps/web/src/pages/public/Signup-Client.data.ts`.
 - **목표/범위:** 반영 대기 기능이 남아 있으면 게시를 막고, 상호 없이 게시된 프로젝트를 상세에서 열 수 있게 하며 주요 검증 오류를 한국어로 안내한다.
 - **보존/계약:** 기존 `GET /drafts/{id}`, `POST /drafts/{id}/publish` 경로·요청 본문·동의 저장 동작을 유지한다. D-33 승인에 따라 공급자 상세 응답의 `client.businessName`은 nullable이며 DB 스키마는 바꾸지 않는다.
-- **실행:** `pendingCount`가 0이 아닐 때 확정 버튼을 비활성화하고 초안에서 재시도하도록 안내한다. `CLIENT_PROFILE_INCOMPLETE`, `DRAFT_FEATURES_PENDING` 등 게시 검증 코드는 사용자 안내로 변환하고 매핑되지 않은 오류는 기존 문구와 오류 코드를 함께 표시한다.
+- **실행:** `pendingCount`가 0이 아닐 때 확정 버튼을 비활성화하고 초안에서 재시도하도록 안내한다. `DRAFT_FEATURES_PENDING` 등 게시 검증 코드는 사용자 안내로 변환하고 매핑되지 않은 오류는 기존 문구와 오류 코드를 함께 표시한다. 폐기된 `CLIENT_PROFILE_INCOMPLETE`는 잘못된 고객센터 안내를 재사용하지 않고 오류 코드로 표시한다.
 - **완료 조건:** 대기 기능이 있으면 게시 POST가 전송되지 않고, 확인된 게시 검증 오류가 구체적인 한국어 사유를 표시한다.
 - **최소 QA:** 인접 `Confirm-Client.test.tsx` RED→GREEN, 해당 테스트, `pnpm typecheck`, `pnpm build`.
-- **확인 결과(2026-11-07 KST):** 새 테스트 3건을 기존 동작에서 먼저 실패하는 것을 확인한 뒤 수정 후 3/3 통과. `pnpm typecheck`, `pnpm build` 통과(번들 크기 경고 포함). **남은 확인:** 현재 인증 브라우저에서 실패 요청을 확인하지 못해 스크린샷의 실제 API 오류 코드와 운영 게시 성공은 미검증이다. 따라서 상태는 부분완료로 둔다.
-- **후속 수정(2026-11-07 KST):** D-33에 따라 상호가 없어도 게시할 수 있도록 BE 필수 검사를 제거했다. 미완성 의뢰인 프로필 정보는 공급자 상세에 노출하지 않고, FE `businessName: null`은 `상호 미등록`으로 표시한다. 가입 안내의 상호 필수 문구도 바로잡았다. FE 게시 이동·공급자 상세 테스트 10/10, typecheck PASS; BE source typecheck/build PASS. BE 전용 PostgreSQL 테스트 및 실제 게시 확인은 전용 DB 미설정으로 미실행.
+- **확인 결과(2026-11-07 KST):** 새 테스트 3건 RED→GREEN, 전체 484/484·typecheck·build 통과. staging 실제 API로 **상호 미등록 의뢰인 게시 201** → 공급자 상세 `client.name/businessName/industryField/storeAddress/bio/websiteUrl` 모두 `null` 반환을 확인했다. 반영 대기 기능이 있는 초안은 **409 `DRAFT_FEATURES_PENDING`**으로 차단되고 게시되지 않는다. BE `5f40443`에서 D-33 게시 게이트를 제거·상세 필드 은닉을 배포했다.
+- **후속 수정(2026-11-07 KST):** D-33에 따라 상호가 없어도 게시할 수 있도록 BE 필수 검사를 제거했다. 미완성 의뢰인 프로필 정보는 공급자 상세에 노출하지 않고, FE `businessName: null`은 `상호 미등록`으로 표시한다. 가입 안내의 상호 필수 문구와 폐기된 `CLIENT_PROFILE_INCOMPLETE` 고객센터 매핑도 바로잡았다. FE 게시 이동·공급자 상세 테스트 10/10, typecheck PASS; BE source typecheck/build PASS. BE 전용 PostgreSQL 테스트 및 실제 게시 확인은 전용 DB 미설정으로 미실행.
 
 ## 공통 개발 준수 사항
 

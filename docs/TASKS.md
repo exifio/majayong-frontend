@@ -32,7 +32,7 @@
 - [x] **FE-07** 문의 답변 알림 링크 — 실제 답변 알림·상세 이동 PASS; `tab=my` 처리 수정 `70cbcbc`
 - [x] **FE-09** 운영자 후처리 상태 — 세 관리자 화면 실제 API 저장 연결(staging reports/blocks 확인, disputes 빈 목록)
 - [x] **FE-13** NDA·지원·채팅·합의·서명 회귀 — staging 1~7 PASS, 보호 코드 무변경
-- [ ] **FE-19** 명세 확정 선행조건 차단·오류 안내 로컬 테스트/typecheck/build PASS; 실제 게시 거절 코드·성공 흐름은 미검증
+- [x] **FE-19** 명세 확정 선행조건 차단·오류 안내 — staging 상호 미등록 게시 201·대기 기능 409·상세 필드 은닉 확인
 
 **현재 FE 실행 가능 상태 (2026-11-06)**
 - FE-17·FE-18·FE-12·FE-04/07/13·INT-02·FE-09는 완료됐습니다. INT-03은 staging GO·production NO-GO로 판정했습니다. 자동 복구 scheduler도 Vercel Cron으로 연결했습니다. 남은 작업은 production 전환 준비입니다.
@@ -98,7 +98,7 @@
 | FE-16 | FE | P1 | Next | 변경 영역별 가벼운 QA와 57보드 비교 마감 | FE-13, FE-03 | 하 | **완료** / 57보드 렌더·변경 14화면 대조, 468/468·overflow 0 |
 | FE-17 | FE | P1 | Next | 리뷰 작성·받은 리뷰 실제 API 연결 | BE-05, FE-11 | 상 | **완료** / 2026-11-06 staging 리뷰 201·받은 리뷰 1건, production `fgtpf2s80` |
 | FE-18 | FE | P2 | Next | 계약 완료 배너·공급자 정산 라벨 정리 | FE-11 | 하 | **완료** / 완료 문구·세후 받을 금액, production `lh28yr0l2` |
-| FE-19 | FE | P1 | Now | 명세 확정 선행조건 차단 및 오류 안내 | 없음 | 하 | **부분완료** / 로컬 테스트 2/2·typecheck·build 통과, 인증 게시 응답 미검증 |
+| FE-19 | FE | P1 | Now | 명세 확정 선행조건 차단 및 오류 안내 | 없음 | 하 | **완료** / staging 게시 201·대기 기능 409·상세 필드 은닉 확인 |
 | BE-00 | BE | P0 | Now | API 기준선과 스테이징 환경 검증 | INT-00 | 하 | 대기 / 실호출 미검증 |
 | BE-01 | BE | P0 | Now | auth/register/reset/Google/role 계약 및 실제 호출 검증 | BE-00 | 중 | 대기 / 로컬 register·login·reset confirm 200 |
 | BE-02 | BE | P1 | Now | 고객센터 문의 5개 API·DTO·권한 검증 | BE-00 | 중 | 대기 / 로컬 GET·POST·상세 200, 비관리자 403 |
