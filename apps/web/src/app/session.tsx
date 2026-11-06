@@ -19,7 +19,9 @@ import {
   logoutAuthSession,
   registerWithPassword,
   refreshAuthSession,
+  storedAuthSession,
   storedRefreshToken,
+  storeAuthSession,
   storeRefreshToken,
   type AuthSession,
   type AuthUser,
@@ -95,8 +97,14 @@ export function SessionProvider({ initial, children }: { initial?: Session; chil
   const [devSession, setDevSessionState] = useState<Session>(() =>
     initial ?? loadInitialDevSession());
   const [devToken, setDevToken] = useState('');
-  const [auth, setAuth] = useState<AuthState>(() => (initial ? { status: 'guest' } : { status: 'loading' }));
-  const [authReady, setAuthReady] = useState(Boolean(initial));
+  const [restored] = useState(() => (initial ? null : storedAuthSession()));
+  const [auth, setAuth] = useState<AuthState>(() =>
+    initial
+      ? { status: 'guest' }
+      : restored
+        ? { status: 'authenticated', user: restored.user, accessToken: restored.accessToken, expiresAt: restored.expiresAt }
+        : { status: 'loading' });
+  const [authReady, setAuthReady] = useState(Boolean(initial) || Boolean(restored));
   const refreshing = useRef<Promise<string | null> | null>(null);
 
   const storeGoogleOnboardingToken = useCallback((token: string | null) => {
@@ -107,6 +115,7 @@ export function SessionProvider({ initial, children }: { initial?: Session; chil
   }, []);
 
   const applySession = useCallback((session: AuthSession) => {
+    storeAuthSession(session);
     setAuth({
       status: 'authenticated',
       user: session.user,
@@ -119,6 +128,7 @@ export function SessionProvider({ initial, children }: { initial?: Session; chil
     if (refreshing.current) return refreshing.current;
     const token = storedRefreshToken();
     if (!token) {
+      storeAuthSession(null);
       const onboardingToken = storedGoogleOnboardingToken();
       setAuth(onboardingToken ? { status: 'signup', onboardingToken } : { status: 'guest' });
       return null;
@@ -131,6 +141,7 @@ export function SessionProvider({ initial, children }: { initial?: Session; chil
       .catch(() => {
         // Reused/expired refresh token: clear the session instead of retrying forever.
         storeRefreshToken(null);
+        storeAuthSession(null);
         setAuth({ status: 'guest' });
         return null;
       })
@@ -148,9 +159,9 @@ export function SessionProvider({ initial, children }: { initial?: Session; chil
   }, [refresh]);
 
   useEffect(() => {
-    if (initial) return;
+    if (initial || restored) return;
     void refresh().finally(() => setAuthReady(true));
-  }, [initial, refresh]);
+  }, [initial, restored, refresh]);
 
   // Refresh shortly before the access token expires; the backend rotates the refresh token.
   useEffect(() => {
@@ -220,6 +231,7 @@ export function SessionProvider({ initial, children }: { initial?: Session; chil
 
   const logout = useCallback(async () => {
     await logoutAuthSession(storedRefreshToken());
+    storeAuthSession(null);
     storeGoogleOnboardingToken(null);
     try { window.sessionStorage.removeItem(SIGNUP_SESSION_KEY); } catch { /* storage unavailable */ }
     setAuth({ status: 'guest' });

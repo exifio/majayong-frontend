@@ -1,6 +1,7 @@
 /* 실제 인증 — 백엔드 계약(access/refresh token body)만 사용한다.
- * access token은 메모리에, refresh token은 sessionStorage에 둔다(새로고침 복원).
- * 백엔드가 httpOnly 쿠키를 지원하지 않으므로 XSS 시 refresh token 노출 위험이 남는다. */
+ * access/refresh token 모두 sessionStorage에 둔다(새로고침·페이지 이동 복원).
+ * 페이지 이동마다 refresh를 호출하지 않아 rotating refresh token 경합을 피한다.
+ * 백엔드가 httpOnly 쿠키를 지원하지 않으므로 XSS 시 token 노출 위험이 남는다. */
 import type { Role } from '@majayong/types';
 import { API_BASE_PATH } from '@/lib/api';
 
@@ -26,6 +27,60 @@ export class AuthError extends Error {
 }
 
 const REFRESH_KEY = 'mj.auth.refresh';
+const ACCESS_KEY = 'mj.auth.access';
+
+export interface StoredAuthSession {
+  user: AuthUser;
+  accessToken: string;
+  expiresAt: number;
+}
+
+/** 저장된 access token이 아직 유효하면 페이지 이동 직후 refresh를 생략한다. */
+export function storedAuthSession(): StoredAuthSession | null {
+  try {
+    const raw = window.sessionStorage.getItem(ACCESS_KEY);
+    if (!raw) return null;
+    const parsed: unknown = JSON.parse(raw);
+    if (typeof parsed !== 'object' || parsed === null) return null;
+    const candidate = parsed as Partial<StoredAuthSession>;
+    const user = candidate.user as Partial<AuthUser> | undefined;
+    const role = user?.role;
+    if (
+      typeof candidate.accessToken !== 'string' || !candidate.accessToken ||
+      typeof candidate.expiresAt !== 'number' ||
+      typeof user?.id !== 'string' || typeof user.email !== 'string' ||
+      (role !== 'CLIENT' && role !== 'SUPPLIER' && role !== 'ADMIN')
+    ) {
+      window.sessionStorage.removeItem(ACCESS_KEY);
+      return null;
+    }
+    // 만료 60초 전부터는 저장값을 쓰지 않고 refresh 경로로 보낸다.
+    if (candidate.expiresAt - Date.now() < 60_000) return null;
+    const name = typeof user.name === 'string' || user.name === null ? user.name : undefined;
+    return {
+      user: { id: user.id, email: user.email, role, ...(name === undefined ? {} : { name }) },
+      accessToken: candidate.accessToken,
+      expiresAt: candidate.expiresAt,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export function storeAuthSession(session: AuthSession | null): void {
+  try {
+    if (!session) {
+      window.sessionStorage.removeItem(ACCESS_KEY);
+      return;
+    }
+    const value: StoredAuthSession = {
+      user: session.user,
+      accessToken: session.accessToken,
+      expiresAt: Date.parse(session.accessExpiresAt),
+    };
+    window.sessionStorage.setItem(ACCESS_KEY, JSON.stringify(value));
+  } catch { /* storage unavailable */ }
+}
 
 export function storedRefreshToken(): string | null {
   try {

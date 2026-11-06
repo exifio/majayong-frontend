@@ -65,9 +65,9 @@
 - [x] **INT-03** 57보드/배포 go-no-go — 샌드박스 GO(테스트 키·웹훅 200·Cron 복구·FE 예치 ON), production live는 범위 제외
 - [ ] **PROD-FE-E2E-20261107** production 브라우저 E2E·OAuth·문안 인벤토리 — **DONE/PARTIAL(2026-11-07 KST)**, FE `a28dc04` 기준
   - **PASS:** CLIENT 가입·로그인(`a254fbbf-1473-4a1b-9c73-345072700cd5`)·프로필, 초안 생성·명세 확정(프로젝트 `df8a6c34-bb00-4c44-91b2-f7d7b7cc519f`), SUPPLIER(`0c32e429-785a-489e-b9ae-d01daaa00e8a`) 지원(`a3016166-6763-4cbf-ac91-be5e96fac2c5`), 채팅 양방향, 합의 확정·양측 서명(계약 `c6513769-d8ca-4f5b-9b2f-86fecd39b225` `ACTIVE`), 예치 `PENDING` 2,940,000원(`a4ed68a5-72b4-47a3-9578-cd4c5be4c816`) 생성, 1440·390 렌더, FE typecheck·488 tests·build PASS.
-  - **OAuth:** Google Cloud OAuth 클라이언트에 `https://majayong-frontend-production.vercel.app/auth/google/callback`·JS 원본 등록 저장, FE `googleOAuthRedirectUri`가 production 도메인 자기 origin 사용. 실제 로그인은 production BE `GOOGLE_REDIRECT_URI`가 staging Supabase 콜백이라 **BLOCKED** — A가 `https://majayong-frontend-production.vercel.app/auth/google/callback`로 교체·재배포 필요.
+  - **OAuth:** Google Cloud OAuth 클라이언트에 production 콜백·JS 원본 등록, FE `googleOAuthRedirectUri`가 production 도메인 자기 origin 사용. BE `GOOGLE_REDIRECT_URI` 교체·재배포 후 production 브라우저 Google 로그인 **PASS** — `/signup/role` 도달, `POST /auth/google/exchange` **200**(Vercel 로그), 오류 코드 없음, onboardingRequired라 신규 user row 없음.
   - **Toss:** 테스트 키·`VITE_ENABLE_DEPOSIT=true`로 결제창·`실제 결제가 안되는 테스트입니다` 배너 확인. 카드 완료는 신한/토스뱅크 발급사 앱·SMS 인증 요구로 **BLOCKED**(가상계좌 미노출). 납품·검수·정산·리뷰는 예치 완료 의존으로 미실행.
-  - **관찰:** 초안 AI `recommendations` 1회 5xx(재시도 200, 7초), 빠른 연속 페이지 이동 시 refresh rotation 경합으로 로그아웃 재현, 명세 확정 화면 `초안으로 돌아가기`가 `/c/drafts/d-1` 고정이던 FE 버그 수정.
+  - **관찰:** 초안 AI `recommendations` 1회 5xx(재시도 200, 7초). 빠른 연속 페이지 이동 시 refresh rotation 경합 로그아웃 재현(BE 동시 요청 200+401 `REFRESH_TOKEN_REUSED`) → access token을 sessionStorage에 저장하고 유효하면 마운트 refresh를 생략하도록 FE 수정, 491 tests PASS. 명세 확정 화면 `초안으로 돌아가기`가 `/c/drafts/d-1` 고정이던 FE 버그 수정.
   - **테스트 계정 정리:** A가 위 CLIENT/SUPPLIER 계정과 프로젝트·지원·계약·예치·초안(`5638a63c-b924-49ef-be74-d281cafd661a`, `001a3420-c483-45fa-9ac8-681968a364c0`)을 삭제한다.
 
 ## 사용법

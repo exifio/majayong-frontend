@@ -53,6 +53,37 @@ describe('refresh token handling', () => {
     expect(calls).toBe(2);
   });
 
+  it('저장된 access token이 유효하면 마운트에서 refresh하지 않는다', async () => {
+    window.sessionStorage.setItem('mj.auth.refresh', 'refresh-old');
+    window.sessionStorage.setItem('mj.auth.access', JSON.stringify({
+      user: { id: 'user-1', email: 'user@example.invalid', role: 'CLIENT' },
+      accessToken: 'access-cached',
+      expiresAt: Date.now() + 3_600_000,
+    }));
+
+    render(<SessionProvider><State /></SessionProvider>);
+    await waitFor(() => expect(screen.getByLabelText('auth state').textContent).toBe('user'));
+
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('저장된 access token이 만료 직전이면 refresh하고 새 값을 저장한다', async () => {
+    window.sessionStorage.setItem('mj.auth.refresh', 'refresh-old');
+    window.sessionStorage.setItem('mj.auth.access', JSON.stringify({
+      user: { id: 'user-1', email: 'user@example.invalid', role: 'CLIENT' },
+      accessToken: 'access-old',
+      expiresAt: Date.now() + 10_000,
+    }));
+    fetchMock.mockResolvedValue(jsonResponse(sessionBody('access-new')));
+
+    render(<SessionProvider><State /></SessionProvider>);
+    await waitFor(() => expect(screen.getByLabelText('auth state').textContent).toBe('user'));
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const stored = JSON.parse(window.sessionStorage.getItem('mj.auth.access') ?? '{}') as { accessToken?: string };
+    expect(stored.accessToken).toBe('access-new');
+  });
+
   it('clears the session when the refresh token is no longer valid', async () => {
     window.sessionStorage.setItem('mj.auth.refresh', 'refresh-old');
     fetchMock.mockResolvedValue(jsonResponse({
