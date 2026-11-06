@@ -9,6 +9,7 @@ import { useSession } from '@/app/session';
 import { ApiRequestError, apiRequest } from '@/lib/api';
 import { applicationStatusLabel } from '@/lib/application-status';
 import { formatTime } from '@/lib/format';
+import loadingStyles from './LiveChatLoading.module.css';
 import {
   chatMessageText,
   chatMessagesToItems,
@@ -32,6 +33,19 @@ function StateLine({ state, onRetry }: { state: Exclude<LoadState, 'success'>; o
       {STATE_MESSAGE[state]}
       {state !== 'loading' && <Button variant="text" onClick={onRetry}>다시 시도</Button>}
     </p>
+  );
+}
+
+function LoadingPlaceholder({ announce = true }: { announce?: boolean }) {
+  return (
+    <div className={loadingStyles.placeholder} role={announce ? 'status' : undefined} aria-hidden={announce ? undefined : true}>
+      <span className={loadingStyles.srOnly}>대화를 불러오는 중입니다.</span>
+      <div aria-hidden="true">
+        <div className={loadingStyles.line} />
+        <div className={loadingStyles.line} />
+        <div className={loadingStyles.line} />
+      </div>
+    </div>
   );
 }
 
@@ -177,6 +191,22 @@ export function LiveChat({ pid, sid, styles }: { pid?: string; sid?: string; sty
     }
   }
 
+  if (listState === 'loading') {
+    return (
+      <div className={s.page} data-screen="Chat-Live" data-role={role}>
+        <div className={s.ch}>
+          <aside className={s.ls} aria-label="대화 목록">
+            <div className={s.lh}>채팅</div>
+            <LoadingPlaceholder />
+          </aside>
+          <section className={s.cv} aria-label="대화">
+            <div className={s.cvh}><LoadingPlaceholder announce={false} /></div>
+            <div className={s.msgs}><LoadingPlaceholder announce={false} /></div>
+          </section>
+        </div>
+      </div>
+    );
+  }
   if (listState !== 'success') {
     return <div className={s.page}><StateLine state={listState} onRetry={retryAll} /></div>;
   }
@@ -236,7 +266,8 @@ export function LiveChat({ pid, sid, styles }: { pid?: string; sid?: string; sty
           </div>
 
           <div className={s.msgs}>
-            {messageState !== 'success' && <StateLine state={messageState} onRetry={retryAll} />}
+            {messageState === 'loading' && <LoadingPlaceholder />}
+            {(messageState === 'auth-error' || messageState === 'error') && <StateLine state={messageState} onRetry={retryAll} />}
             {messageState === 'success' && items.length === 0 && (
               <p role="status" style={{ padding: 24 }}>아직 메시지가 없습니다.</p>
             )}
@@ -258,20 +289,20 @@ export function LiveChat({ pid, sid, styles }: { pid?: string; sid?: string; sty
                     void send();
                   }
                 }}
-                placeholder={canReply ? '메시지 입력' : '의뢰인의 첫 메시지 이후 답장할 수 있습니다'}
+                placeholder={messageState !== 'success' ? '대화를 불러오는 중입니다.' : canReply ? '메시지 입력' : '의뢰인의 첫 메시지 이후 답장할 수 있습니다'}
                 aria-label="메시지 입력"
-                disabled={sending || !canReply}
+                disabled={sending || messageState !== 'success' || !canReply}
               />
               <Button
                 variant="tint"
                 onClick={() => void send()}
-                disabled={sending || !canReply || !draft.trim()}
-                disabledReason={!canReply ? '의뢰인의 첫 메시지 이후 답장할 수 있습니다.' : '메시지를 입력해 주세요.'}
+                disabled={sending || messageState !== 'success' || !canReply || !draft.trim()}
+                disabledReason={messageState !== 'success' ? '대화를 불러오는 중입니다.' : !canReply ? '의뢰인의 첫 메시지 이후 답장할 수 있습니다.' : '메시지를 입력해 주세요.'}
               >
                 {sending ? '보내는 중' : '보내기'}
               </Button>
             </div>
-            {!canReply && <p className={s.hint} role="status">의뢰인의 첫 메시지 이후에 답장할 수 있습니다.</p>}
+            {messageState === 'success' && !canReply && <p className={s.hint} role="status">의뢰인의 첫 메시지 이후에 답장할 수 있습니다.</p>}
             {sendError && <p className={s.hint} role="alert">{sendError}</p>}
           </div>
         </section>

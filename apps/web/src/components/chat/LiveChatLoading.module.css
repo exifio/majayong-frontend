@@ -1,0 +1,28 @@
+.placeholder {
+  padding: 20px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.line {
+  height: 12px;
+  max-width: 260px;
+  margin-bottom: 12px;
+  border-radius: 6px;
+  background: var(--slate-100);
+}
+
+.line:nth-child(2) { width: 75%; }
+.line:nth-child(3) { width: 50%; }
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
