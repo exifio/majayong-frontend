@@ -200,7 +200,7 @@
 
 ## FE-09 — 운영자 후처리 UI 상태 보완
 
-- **상태/난이도:** BLOCKED / 관리자 목록 DTO에 신고자·대상·메시지 문맥·블록 결정 근거가 없어 실제 저장 연결 불가 / 중 · **우선순위:** P2 · **단계:** Later.
+- **상태/난이도:** 완료 / 관리자 목록 DTO 확장 후 세 화면 실제 API 저장 연결 / 중 · **우선순위:** P2 · **단계:** Later.
 - **선행:** FE-05, BE-05.
 - **대상:** `admin/Admin-Blocks.tsx; Admin-Reports.tsx; Admin-Disputes.tsx`.
 - **목표/범위:** 병합·조치·판정의 성공/실패/완료 상태와 비활성 버튼 규칙 반영.
@@ -209,7 +209,7 @@
 - **실행:** 실데이터 저장 여부 확인 전 ?mock 상태를 완료로 오인 금지.
 - **완료 조건:** 해당 결과 상태를 각 화면에서 명확히 표시.
 - **최소 QA:** 변경 3화면의 인접 테스트와 승인 결과 상태 확인.
-- **확인 결과(2026-11-06 KST):** `AdminDemoNotice`를 추가해 세 화면의 `?mock` 완료/조치/판정 상태가 **서버에 저장된 결과가 아님**을 명시했다(기본 목록에서는 숨김). 대상은 Admin-Reports(조치 작성·계정 정지·처리 완료), Admin-Disputes(판정 작성·판정 완료), Admin-Blocks(병합·단가·비활성화). 테스트 4건·전체 457/457·typecheck·build 통과. **실제 POST 저장 연결은 목록이 데모 ID 기반이라 BE-05에서 실데이터·ID 계약이 확인된 뒤 진행**해야 한다.
+- **확인 결과(2026-11-07 KST):** BE 관리자 DTO를 확장해 세 화면의 데모 행·`?mock` 분기를 제거하고 실제 API로 전환했다. **Admin-Reports**: `GET /admin/reports`의 신고자·대상 표시명, 프로젝트 제목, 신고 메시지 본문·시각을 표시하고 `POST /admin/reports/{id}/resolve`로 경고·정지·조치 없음 저장. staging에서 신고 생성→관리자 목록 200(문맥 포함)→경고 저장 200→`RESOLVED`·알림·이벤트 기록 확인, 브라우저에서 폼 제출 후 상태 전환 확인. **Admin-Blocks**: `GET /admin/blocks`의 설명·조건·단가 근거·태그·출처 프로젝트 수를 표시하고 `POST /admin/blocks/{id}/actions`로 병합·단가·비활성화 저장. staging 브라우저에서 단가 180,000→181,000 저장 후 원복 확인. **Admin-Disputes**: `GET /admin/inspection-requests/escalated`의 당사자·합의 조건·양쪽 주장·보완 이력·납품을 표시하고 `POST .../decision`으로 3택 판정 저장. staging은 ESCALATED 데이터가 없어 목록 200(빈 상태)만 확인했고, 판정 저장은 단위 테스트로만 검증했다. 전체 479/479·typecheck·build 통과. 해결 중 `POST /admin/reports/{id}/resolve` 500(알림 delegate 미어댑터)을 발견해 BE에서 수정했다.
 - **보고 형식:** 기준 SHA·변경 파일·통과/미검증·실제 요청·남은 위험을 5줄 이내로 보고. 범위 확대가 필요하면 작업을 멈추고 별도 제안.
 
 ## FE-10 — 검수·납품의 보완/완료 후 상태 보완

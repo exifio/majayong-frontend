@@ -30,11 +30,11 @@
 - [ ] **FE-02** 비밀번호 재설정 — 성공 화면에 시연용 전송 가정·실제 미발송을 명시; 실제 이메일은 보류, staging request API 200은 미검증
 - [x] **FE-04** 운영자 1:1 문의 — staging ADMIN 부트스트랩·목록·UI 답변·배지 1→0 PASS
 - [x] **FE-07** 문의 답변 알림 링크 — 실제 답변 알림·상세 이동 PASS; `tab=my` 처리 수정 `70cbcbc`
-- [ ] **FE-09** 운영자 후처리 상태 — 시연 고지 완료, 실제 저장은 관리자 목록 실데이터 전환 후
+- [x] **FE-09** 운영자 후처리 상태 — 세 관리자 화면 실제 API 저장 연결(staging reports/blocks 확인, disputes 빈 목록)
 - [x] **FE-13** NDA·지원·채팅·합의·서명 회귀 — staging 1~7 PASS, 보호 코드 무변경
 
 **현재 FE 실행 가능 상태 (2026-11-06)**
-- FE-17·FE-18·FE-12·FE-04/07/13·INT-02는 완료됐습니다. INT-03은 staging GO·production NO-GO로 판정했습니다. 남은 작업은 FE-09 실제 저장, 자동 복구 scheduler, production 전환 준비입니다.
+- FE-17·FE-18·FE-12·FE-04/07/13·INT-02·FE-09는 완료됐습니다. INT-03은 staging GO·production NO-GO로 판정했습니다. 남은 작업은 자동 복구 scheduler와 production 전환 준비입니다.
 - FE-12는 INT-02 sandbox 승인 E2E(가상계좌)까지 확인했고, production은 `VITE_ENABLE_DEPOSIT=false`를 유지합니다. 웹훅·복구는 INT-02 잔여 항목입니다.
 - FE-02의 실제 메일 발송은 사용자 결정으로 보류, FE-15는 계약 결정 전 보류입니다. 외부 선행 조건 전에는 API·fixture·DB 쓰기를 추가하지 않습니다.
 
@@ -87,7 +87,7 @@
 | FE-06 | FE | P2 | Later | 랜딩 2종 디자인 차이 최소 반영 | FE-05 | 중 | **완료** / 2026-11-06 가치 카드 3장·정적 히어로 확인 |
 | FE-07 | FE | P1 | Next | 알림 문의 답변 링크 추가·상태 유지 | FE-03, BE-03 | 하 | **완료** / 실제 답변 알림·상세 이동 PASS, `tab=my` 수정 |
 | FE-08 | FE | P2 | Next | 계정 설정의 증빙·정산 계좌 UI 정리 | BE-00, FE-05 | 중 | **완료** / 2026-11-06 로컬 PATCH·마스킹 확인 |
-| FE-09 | FE | P2 | Later | 운영자 후처리 UI 상태 보완 | FE-05, BE-05 | 중 | **BLOCKED** / 관리자 목록 DTO에 표시명·문맥·결정 근거 없음; 실제 저장 불가 |
+| FE-09 | FE | P2 | Later | 운영자 후처리 UI 상태 보완 | FE-05, BE-05 | 중 | **완료** / reports·blocks·disputes 실제 API 저장 연결 |
 | FE-10 | FE | P1 | Next | 검수·납품의 보완/완료 후 상태 보완 | BE-05, FE-11 | 중 | **완료** / D-26 항목 id로 납품·승인·보완 연결 |
 | FE-11 | FE | P1 | Next | 계약·정산 목록의 실데이터 경계 정리 | BE-04, FE-00 | 상 | **완료** / 2026-11-06 계약 픽스처로 목록·정산 확인 |
 | FE-12 | FE | P0 | Now | Toss 예치 UI 사실표시·승인 연결 게이트 | BE-06, BE-07, INT-02 | 상 | **완료** / INT-02 sandbox 승인 E2E PASS(가상계좌), production OFF 유지 |
