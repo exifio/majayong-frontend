@@ -37,6 +37,7 @@ describe('Google OAuth', () => {
     expect(canonicalVercelUrl('https://majayong-frontend.vercel.app/signup?source=google#form'))
       .toBe('https://majayong.vercel.app/signup?source=google#form');
     expect(canonicalVercelUrl('https://majayong.vercel.app/signup')).toBeNull();
+    expect(canonicalVercelUrl('https://majayong-frontend-production.vercel.app/signup')).toBeNull();
     expect(canonicalVercelUrl('http://localhost:5173/signup')).toBeNull();
   });
 

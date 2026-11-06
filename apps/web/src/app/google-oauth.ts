@@ -1,5 +1,9 @@
 export const GOOGLE_OAUTH_STATE_KEY = 'mj.auth.google-state';
 const MAJAYONG_PRODUCTION_ORIGIN = 'https://majayong.vercel.app';
+const ALLOWED_VERCEL_ORIGINS = new Set([
+  'https://majayong.vercel.app',
+  'https://majayong-frontend-production.vercel.app',
+]);
 const GOOGLE_CALLBACK_PATH = '/auth/google/callback';
 
 export function googleOAuthRedirectUri(origin: string, production: boolean): string {
@@ -8,7 +12,8 @@ export function googleOAuthRedirectUri(origin: string, production: boolean): str
 
 export function canonicalVercelUrl(currentUrl: string): string | null {
   const current = new URL(currentUrl);
-  if (!current.hostname.endsWith('.vercel.app') || current.hostname === 'majayong.vercel.app') return null;
+  if (!current.hostname.endsWith('.vercel.app')) return null;
+  if (ALLOWED_VERCEL_ORIGINS.has(`https://${current.hostname}`)) return null;
 
   current.protocol = 'https:';
   current.host = 'majayong.vercel.app';
