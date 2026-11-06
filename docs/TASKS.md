@@ -59,7 +59,7 @@
 - [x] **BE-10** 취소 철회/1원 인증 계약
 - [x] **BE-11** API 문서/권한/최종 스모크
 - [x] **BE-12 (샌드박스)** 메일 no-op adapter — `PASSWORD_RESET_SANDBOX=true`에서 request 200; production은 env OFF로 503 유지
-- [x] **INT-00** production 분리·계약 고정 — BE `majayong-backend-production`·FE `majayong-frontend-production`, DB schema `majayong_production`·bucket `majayong-production`, v1.0.1 120 op vs 코드 124 op 대조. 남은 것: 디자인 저장소 SHA·참조 partial DTO 문안(문서 전용)
+- [x] **INT-00** production 분리·계약 고정 — BE `majayong-backend-production`·FE `majayong-frontend-production`, 전용 Supabase Pro 프로젝트 `fynqcxfoylaljxmqumin`(Seoul)·bucket `majayong-production`, v1.0.1 120 op vs 코드 124 op 대조. 남은 것: 디자인 저장소 SHA·참조 partial DTO 문안(문서 전용)
 - [x] **INT-01** 로그인 후 실제 사용자 흐름 재현 — staging API 01~10·FE 13 1~7 PASS; FE 08~10 화면은 FE-04/07/10/13에서 확인
 - [x] **INT-02** 결제 승인·복구 계약·PAY-01~06 — 승인 E2E·서명 웹훅·수동·Vercel Cron 자동 복구 PASS
 - [x] **INT-03** 57보드/배포 go-no-go — 샌드박스 GO(테스트 키·웹훅 200·Cron 복구·FE 예치 ON), production live는 범위 제외
@@ -112,7 +112,7 @@
 | BE-10 | BE | P2 | Later | 취소 요청 철회/1원 인증 발송은 계약 결정 후 | BE-00 | 중 | **완료** / 취소 철회 API·staging 200, 1원 인증은 샌드박스 |
 | BE-11 | BE | P1 | Next | API 문서/권한/최종 시연 스모크 | BE-02, BE-04, BE-05, BE-08 | 중 | 대기 / 실호출 미검증 |
 | BE-12 | BE | 미정 | 미정 | 메일 발송 안전 게이트·비밀번호 재설정 staging 검증 | BE-01 | 미정 | **보류** / 사용자 결정으로 실제 메일 발송 defer; 재개 전 safety gate·staging test 필요 |
-| INT-00 | Integration | P0 | Now | FE/BE/디자인 SHA·계약 고정 | 없음 | 하 | **진행** / Vercel staging 명명 프로젝트는 Ready/Production; DB ref/격리 미확인, FE 배포 SHA·승인 계정·공식 계약 미완 |
+| INT-00 | Integration | P0 | Now | FE/BE/디자인 SHA·계약 고정 | 없음 | 하 | **완료(코드)** / 전용 production BE·FE·Supabase Pro 인스턴스·bucket, v1.0.1 대조; 디자인 SHA만 남음 |
 | INT-01 | Integration | P1 | Next | 로그인 후 실제 사용자 흐름 재현 | FE-01, FE-13, BE-04 | 중 | 대기 / 실호출 미검증 |
 | INT-02 | Integration | P0 | Now | 결제 승인·복구 FE/BE 계약 승인 및 PAY-01~06 | BE-00 | 상 | **완료** / 승인 E2E·서명 웹훅·수동·Vercel Cron 자동 복구 PASS |
 | INT-03 | Integration | P1 | Next | 설계 통합 57보드/배포 go-no-go | FE-16, BE-11, INT-01, INT-02 | 중 | **샌드박스 GO** / 테스트 키·웹훅·Cron·FE 예치 ON, production live 결제는 범위 제외 |
