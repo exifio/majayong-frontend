@@ -1,5 +1,5 @@
 /* 의뢰인 제안 비교 Compare-Client — F-09 · 디자인 시스템 10.5 */
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, screen, within } from '@testing-library/react';
 import { findDesignViolations } from '@/app/devChecks';
 import {
@@ -10,8 +10,11 @@ import {
 } from '@/pages/client/Compare-Client.data';
 import { formatWon } from '@/lib/format';
 import { location, renderAt } from './render';
+import compareStyles from '@/pages/client/Compare-Client.module.css';
 
 const PATH = '/c/projects/p-ondo/proposals';
+
+afterEach(() => vi.unstubAllGlobals());
 
 describe('Compare-Client — 제안 비교', () => {
   it('지원 3건: 카드 · 수수료 줄 · 채팅 링크 · 판정·파란 버튼 없음', () => {
@@ -77,5 +80,46 @@ describe('Compare-Client — 제안 비교', () => {
     expect(compareDemoOf('이전 명세 기준').stale).toBe(true);
     expect(compareDemoOf('결렬 후 선택 중').broke).toBe(true);
     expect(compareDemoOf('결렬 후 선택 중').cards.map((c) => c.sid)).toEqual(['s-sera', 's-nut']);
+  });
+
+  it('지원서 상세는 지원자 카드의 좁은 grid 규칙을 사용하지 않는다', async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockImplementation(async (input) => {
+      const url = String(input);
+      if (url === '/api/v1/projects/p-ondo/applications') {
+        return new Response(JSON.stringify({ data: [{
+          applicationId: 'application-1',
+          supplierId: 'supplier-1',
+          status: 'SUBMITTED',
+          totalAmount: 3_000_000,
+          durationDays: 22,
+          questionCount: 0,
+          revisionCount: 1,
+          submittedAt: '2026-11-07T05:30:00.000Z',
+          careerYears: null,
+          ratingAvg: null,
+          reviewCount: 0,
+          completedContractCount: 0,
+          portfolioSummary: null,
+        }] }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      }
+      if (url === '/api/v1/profiles/suppliers/supplier-1') {
+        return new Response(JSON.stringify({ data: { supplierId: 'supplier-1', displayName: '공급자', profileImageUrl: null } }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+      return new Response(JSON.stringify({ error: { code: 'NOT_FOUND', message: 'not found', requestId: 'r' } }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    renderAt(PATH, 'client', undefined, 'test-token');
+
+    fireEvent.click(await screen.findByRole('button', { name: '지원서 보기' }));
+    const detail = await screen.findByLabelText('지원서 상세');
+    const applicationDetailClass = compareStyles.applicationDetail ?? 'applicationDetail';
+    expect(detail.classList.contains(applicationDetailClass)).toBe(true);
   });
 });

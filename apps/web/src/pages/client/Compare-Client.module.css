@@ -119,6 +119,14 @@
   outline-offset: 2px;
 }
 
+.applicationDetail {
+  display: block;
+  box-sizing: border-box;
+  min-width: 0;
+  padding: 16px;
+  cursor: default;
+}
+
 .cardHold {
   background: var(--slate-50);
 }
