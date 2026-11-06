@@ -7,7 +7,10 @@ const ALLOWED_VERCEL_ORIGINS = new Set([
 const GOOGLE_CALLBACK_PATH = '/auth/google/callback';
 
 export function googleOAuthRedirectUri(origin: string, production: boolean): string {
-  return `${production ? MAJAYONG_PRODUCTION_ORIGIN : origin}${GOOGLE_CALLBACK_PATH}`;
+  if (!production) return `${origin}${GOOGLE_CALLBACK_PATH}`;
+  const normalized = origin.replace(/\/+$/, '');
+  const target = ALLOWED_VERCEL_ORIGINS.has(normalized) ? normalized : MAJAYONG_PRODUCTION_ORIGIN;
+  return `${target}${GOOGLE_CALLBACK_PATH}`;
 }
 
 export function canonicalVercelUrl(currentUrl: string): string | null {

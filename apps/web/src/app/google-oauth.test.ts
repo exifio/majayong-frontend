@@ -29,6 +29,10 @@ describe('Google OAuth', () => {
   it('uses the canonical production callback and the local origin during development', () => {
     expect(googleOAuthRedirectUri('https://majayong-frontend.vercel.app', true))
       .toBe('https://majayong.vercel.app/auth/google/callback');
+    expect(googleOAuthRedirectUri('https://majayong.vercel.app', true))
+      .toBe('https://majayong.vercel.app/auth/google/callback');
+    expect(googleOAuthRedirectUri('https://majayong-frontend-production.vercel.app', true))
+      .toBe('https://majayong-frontend-production.vercel.app/auth/google/callback');
     expect(googleOAuthRedirectUri('http://localhost:5173', false))
       .toBe('http://localhost:5173/auth/google/callback');
   });
