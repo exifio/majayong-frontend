@@ -26,6 +26,8 @@
 | FE-14 | P1 | Now | ChatIndex 고정 데모 링크 제거 | BE-04, FE-00 | 하 |
 | FE-15 | P2 | Later | 선택 검색/취소 철회 UI 확장 보류 관리 | BE-09, BE-10 | 하 |
 | FE-16 | P1 | Next | 변경 영역별 가벼운 QA와 57보드 비교 마감 | FE-13, FE-03 | 하 |
+| FE-17 | P1 | Next | 리뷰 작성·받은 리뷰 실제 API 연결 | BE-05, FE-11 | 상 |
+| FE-18 | P2 | Next | 계약 완료 배너·공급자 정산 라벨 정리 | FE-11 | 하 |
 
 ## 현재 FE 실행 가능 상태 (2026-11-06)
 
@@ -309,6 +311,32 @@
 
 **누락 리스트(2026-11-06):** ① ~~57보드 원본·픽셀 비교~~ → 보드 렌더·57/57 라우트·변경 14화면 대조 완료(픽셀 전수 diff는 아님) ② ~~FAQ 14개 중 8개만 제공~~ → 14개 반영, 첨부 3개 UI는 업로드 계약 대기 ③ staging 실호출(가입·문의·계약·검수 1~7) ④ FE-09 관리자 실제 저장 ⑤ FE-12 결제 OFF(INT-02/BE-06/07) ⑥ 문의 답변 알림 실이벤트(BE-03) ⑦ 1원 계좌 인증 미지원 ⑧ 계약 픽스처는 로컬 DB에만 존재.
 - **보고 형식:** 기준 SHA·변경 파일·통과/미검증·실제 요청·남은 위험을 5줄 이내로 보고. 범위 확대가 필요하면 작업을 멈추고 별도 제안.
+
+## FE-17 — 리뷰 작성·받은 리뷰 실제 API 연결
+
+- **상태/난이도:** 완료 / 2026-11-06 로컬·staging API·production 배포 확인 / 상 · **우선순위:** P1 · **단계:** Next.
+- **선행:** BE-05, FE-11.
+- **대상:** `components/review/LiveReview.tsx; LiveReceivedReviews.tsx; useLiveReviews.ts; pages/client/Review-Client.tsx; pages/supplier/Review-Supplier.tsx; pages/client/Profile-Client.tsx; pages/supplier/Profile-Supplier.tsx; packages/types/src/api.ts`.
+- **목표/범위:** DEMO 고정 리뷰를 계약·상대·금액·API 리뷰로 전환. `/c|s/contracts/:cid/review`는 `GET /contracts/{cid}`, `GET /me/chats`, `GET /contracts/{cid}/reviews`로 초기화하고 `POST /contracts/{cid}/reviews`로 제출한다. 프로필 받은 리뷰는 완료 계약별 리뷰에서 상대가 쓴 것만 집계한다.
+- **보존:** 별점·태그·한 줄 리뷰 UI, 연락처 마스킹, 계약당 1회·수정 불가 안내, `?mock=` 시연 경로.
+- **API 계약:** `POST/GET /contracts/{contractId}/reviews`, `GET /profiles/suppliers/{supplierId}/reviews`, `GET /projects/{projectId}/client-reviews`, `GET /me/chats`, `GET /contracts/{id}`.
+- **실행:** 계약 `COMPLETED` 전 작성 차단, 본인 계약만, 제출 성공 전 완료 표시 금지. BE `reviewerDisplayName`이 `익명`이면 채팅방 `counterpartDisplayName`으로 대체한다.
+- **완료 조건:** 실제 상대·프로젝트·금액 표시, 제출 후 `보낸 리뷰`, 새로고침 유지, 받은 리뷰 0/오류/권한 상태.
+- **최소 QA:** `LiveReview.test.tsx` 3건, `LiveReceivedReviews.test.tsx` 1건, `pnpm typecheck`, `pnpm test` 472/472, `pnpm build`.
+- **확인 결과(2026-11-06 KST):** 커밋 `3b6919f`, `main` 머지 `89714a1`. 로컬 dev + staging API에서 CLIENT 리뷰 제출 201·`보낸 리뷰` 전환, SUPPLIER 기존 리뷰 4점 표시, CLIENT/SUPPLIER 받은 리뷰 1건씩 확인. production 배포 `fgtpf2s80`에서 live 경로(없는 계약 오류·받은 리뷰 0건) 확인. **한계:** 프로필 기본 정보 탭은 기존 DEMO 유지, 받은 리뷰는 완료 계약별 순차 조회(N+1), BE 리뷰어 이름 포트 미연결로 채팅방 이름을 사용한다.
+
+## FE-18 — 계약 완료 배너·공급자 정산 라벨 정리
+
+- **상태/난이도:** 완료 / 2026-11-06 / 하 · **우선순위:** P2 · **단계:** Next.
+- **선행:** FE-11.
+- **대상:** `components/contract/LiveContract.tsx; LiveSettlements.tsx; pages/supplier/Settle-Supplier.tsx`.
+- **목표/범위:** `COMPLETED`/`CANCELLED` 계약에서 "거래가 진행 중" 문구를 완료·취소 문구로 분기하고, 공급자 `받을 예정` 라벨을 `세후 받을 금액`으로 명확히 한다.
+- **보존:** 상태 칩·금액은 서버 응답 값만 사용, 기존 정산 링크.
+- **API 계약:** `GET /contracts/{id}`, `GET /me/payment-statements`.
+- **실행:** 서버 `status`/`paymentStatus` 기준으로만 분기하고 완료 전 진행 문구를 재사용하지 않는다.
+- **완료 조건:** 완료 화면에 진행 중 문구 없음, 라벨·금액 일치, 1440/390 확인.
+- **최소 QA:** `LiveSettlements.test.tsx` 라벨, `contract-live.test.tsx` 완료 배너, `pnpm typecheck`, `pnpm test` 474/474, `pnpm build`.
+- **확인 결과(2026-11-06 KST):** 커밋 `c435a4b`, 머지 `f2ad121`. staging 완료 계약에서 의뢰인·공급자 모두 "거래와 정산이 모두 완료되었습니다.", 공급자 정산 "세후 받을 금액 91,700원" 확인. production `lh28yr0l2` 번들에 두 문구 반영. **한계:** 문구 변경만, 실제 이체 없음.
 
 ## 공통 개발 준수 사항
 
