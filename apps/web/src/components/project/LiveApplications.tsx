@@ -64,7 +64,24 @@ export function LiveApplications({ pid, styles }: { pid?: string; styles: Record
 
       {state !== 'success' && (
         <>
-          {state === 'loading' && <p role="status" style={{ padding: 24 }}>지원자를 불러오는 중입니다.</p>}
+          {state === 'loading' && (
+            <>
+              <div className={s.head}>
+                <div>
+                  <h1 className={s.title}>지원자</h1>
+                  <p className={s.sub}>지원 금액·기간·경력·포트폴리오 요약을 확인하고 지원서를 열어 보세요.</p>
+                </div>
+              </div>
+              <div role="status">
+                <span className={s.loadingLabel}>지원자를 불러오는 중입니다.</span>
+                <div className={s.loadingCard} aria-hidden="true">
+                  <div className={s.loadingLine} />
+                  <div className={s.loadingLine} />
+                  <div className={s.loadingLine} />
+                </div>
+              </div>
+            </>
+          )}
           {state === 'auth-error' && <p role="alert" style={{ padding: 24 }}>API 토큰 인증에 실패했습니다. 토큰을 확인해 주세요.</p>}
           {state === 'error' && <p role="alert" style={{ padding: 24 }}>지원자를 불러오지 못했습니다.</p>}
         </>
