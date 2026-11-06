@@ -108,8 +108,8 @@
 | BE-06 | BE | P0 | Now | Toss sandbox 승인 계약 설계·구현(P0) | BE-00, INT-02 | 상 | 대기 / 실호출 미검증 |
 | BE-07 | BE | P0 | Now | Toss 웹훅 원형 정규화·재조회·장애 복구 | BE-06 | 상 | 대기 / 실호출 미검증 |
 | BE-08 | BE | P1 | Next | staging 시연 fixture 2세트/리셋·데모 판정 | BE-04, BE-05 | 중 | 대기 / 실호출 미검증 |
-| BE-09 | BE | P2 | Later | 검색 keyword/sort/deadlineBefore 선택적 확장 | BE-00 | 중 | 대기 / 실호출 미검증 |
-| BE-10 | BE | P2 | Later | 취소 요청 철회/1원 인증 발송은 계약 결정 후 | BE-00 | 중 | 대기 / 실호출 미검증 |
+| BE-09 | BE | P2 | Later | 검색 keyword/sort/deadlineBefore 선택적 확장 | BE-00 | 중 | **완료** / staging search keyword·sort·deadlineBefore 200 확인 |
+| BE-10 | BE | P2 | Later | 취소 요청 철회/1원 인증 발송은 계약 결정 후 | BE-00 | 중 | **완료** / 취소 철회 API·staging 200, 1원 인증은 샌드박스 |
 | BE-11 | BE | P1 | Next | API 문서/권한/최종 시연 스모크 | BE-02, BE-04, BE-05, BE-08 | 중 | 대기 / 실호출 미검증 |
 | BE-12 | BE | 미정 | 미정 | 메일 발송 안전 게이트·비밀번호 재설정 staging 검증 | BE-01 | 미정 | **보류** / 사용자 결정으로 실제 메일 발송 defer; 재개 전 safety gate·staging test 필요 |
 | INT-00 | Integration | P0 | Now | FE/BE/디자인 SHA·계약 고정 | 없음 | 하 | **진행** / Vercel staging 명명 프로젝트는 Ready/Production; DB ref/격리 미확인, FE 배포 SHA·승인 계정·공식 계약 미완 |
