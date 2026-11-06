@@ -87,7 +87,7 @@
 | FE-06 | FE | P2 | Later | 랜딩 2종 디자인 차이 최소 반영 | FE-05 | 중 | **완료** / 2026-11-06 가치 카드 3장·정적 히어로 확인 |
 | FE-07 | FE | P1 | Next | 알림 문의 답변 링크 추가·상태 유지 | FE-03, BE-03 | 하 | **완료** / 실제 답변 알림·상세 이동 PASS, `tab=my` 수정 |
 | FE-08 | FE | P2 | Next | 계정 설정의 증빙·정산 계좌 UI 정리 | BE-00, FE-05 | 중 | **완료** / 2026-11-06 로컬 PATCH·마스킹 확인 |
-| FE-09 | FE | P2 | Later | 운영자 후처리 UI 상태 보완 | FE-05, BE-05 | 중 | **완료** / reports·blocks·disputes 실제 API 저장 연결 |
+| FE-09 | FE | P2 | Later | 운영자 후처리 UI 상태 보완 | FE-05, BE-05 | 중 | **완료** / reports·blocks·disputes 실제 API 저장 연결, disputes 판정 E2E 포함 |
 | FE-10 | FE | P1 | Next | 검수·납품의 보완/완료 후 상태 보완 | BE-05, FE-11 | 중 | **완료** / D-26 항목 id로 납품·승인·보완 연결 |
 | FE-11 | FE | P1 | Next | 계약·정산 목록의 실데이터 경계 정리 | BE-04, FE-00 | 상 | **완료** / 2026-11-06 계약 픽스처로 목록·정산 확인 |
 | FE-12 | FE | P0 | Now | Toss 예치 UI 사실표시·승인 연결 게이트 | BE-06, BE-07, INT-02 | 상 | **완료** / INT-02 sandbox 승인 E2E PASS(가상계좌), production OFF 유지 |
