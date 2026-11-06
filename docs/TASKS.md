@@ -59,10 +59,16 @@
 - [x] **BE-10** 취소 철회/1원 인증 계약
 - [x] **BE-11** API 문서/권한/최종 스모크
 - [x] **BE-12 (샌드박스)** 메일 no-op adapter — `PASSWORD_RESET_SANDBOX=true`에서 request 200; production은 env OFF로 503 유지
-- [x] **INT-00** production 분리·계약 고정 — BE `majayong-backend-production`·FE `majayong-frontend-production`, 전용 Supabase Pro 프로젝트 `fynqcxfoylaljxmqumin`(Seoul)·bucket `majayong-production`, v1.0.1 120 op vs 코드 124 op 대조. 남은 것: 디자인 저장소 SHA·참조 partial DTO 문안(문서 전용)
-- [x] **INT-01** 로그인 후 실제 사용자 흐름 재현 — staging API 01~10·FE 13 1~7 PASS; FE 08~10 화면은 FE-04/07/10/13에서 확인
+- [x] **INT-00** production 분리·계약 고정 — BE `majayong-backend-production`·FE `majayong-frontend-production`, 전용 Supabase Pro 프로젝트 `fynqcxfoylaljxmqumin`(Seoul)·bucket `majayong-production`, v1.0.1 120 op vs 코드 124 op 대조, 디자인 SHA `4360783ff52ba5f55d45bcbb9ff2b3b6d5efc829` 확인. 남은 것: 참조 partial DTO 문안(문서 전용)
+- [x] **INT-01** 로그인 후 실제 사용자 흐름 재현 — staging API 01~10·FE 13 1~7 PASS; FE 08~10 화면은 FE-04/07/10/13에서 확인. **production(2026-11-07):** 브라우저로 가입→로그인→프로필→초안→명세 확정→지원→채팅→합의→양측 서명 PASS, 예치 `PENDING` 생성 PASS, Toss 카드 완료는 발급사 인증 필요로 BLOCKED
 - [x] **INT-02** 결제 승인·복구 계약·PAY-01~06 — 승인 E2E·서명 웹훅·수동·Vercel Cron 자동 복구 PASS
 - [x] **INT-03** 57보드/배포 go-no-go — 샌드박스 GO(테스트 키·웹훅 200·Cron 복구·FE 예치 ON), production live는 범위 제외
+- [ ] **PROD-FE-E2E-20261107** production 브라우저 E2E·OAuth·문안 인벤토리 — **DONE/PARTIAL(2026-11-07 KST)**, FE `a28dc04` 기준
+  - **PASS:** CLIENT 가입·로그인(`a254fbbf-1473-4a1b-9c73-345072700cd5`)·프로필, 초안 생성·명세 확정(프로젝트 `df8a6c34-bb00-4c44-91b2-f7d7b7cc519f`), SUPPLIER(`0c32e429-785a-489e-b9ae-d01daaa00e8a`) 지원(`a3016166-6763-4cbf-ac91-be5e96fac2c5`), 채팅 양방향, 합의 확정·양측 서명(계약 `c6513769-d8ca-4f5b-9b2f-86fecd39b225` `ACTIVE`), 예치 `PENDING` 2,940,000원(`a4ed68a5-72b4-47a3-9578-cd4c5be4c816`) 생성, 1440·390 렌더, FE typecheck·488 tests·build PASS.
+  - **OAuth:** Google Cloud OAuth 클라이언트에 `https://majayong-frontend-production.vercel.app/auth/google/callback`·JS 원본 등록 저장, FE `googleOAuthRedirectUri`가 production 도메인 자기 origin 사용. 실제 로그인은 production BE `GOOGLE_REDIRECT_URI`가 staging Supabase 콜백이라 **BLOCKED** — A가 `https://majayong-frontend-production.vercel.app/auth/google/callback`로 교체·재배포 필요.
+  - **Toss:** 테스트 키·`VITE_ENABLE_DEPOSIT=true`로 결제창·`실제 결제가 안되는 테스트입니다` 배너 확인. 카드 완료는 신한/토스뱅크 발급사 앱·SMS 인증 요구로 **BLOCKED**(가상계좌 미노출). 납품·검수·정산·리뷰는 예치 완료 의존으로 미실행.
+  - **관찰:** 초안 AI `recommendations` 1회 5xx(재시도 200, 7초), 빠른 연속 페이지 이동 시 refresh rotation 경합으로 로그아웃 재현, 명세 확정 화면 `초안으로 돌아가기`가 `/c/drafts/d-1` 고정이던 FE 버그 수정.
+  - **테스트 계정 정리:** A가 위 CLIENT/SUPPLIER 계정과 프로젝트·지원·계약·예치·초안(`5638a63c-b924-49ef-be74-d281cafd661a`, `001a3420-c483-45fa-9ac8-681968a364c0`)을 삭제한다.
 
 ## 사용법
 
@@ -153,3 +159,19 @@ flowchart TD
   K --> M[INT-03 릴리스 판정]
   L --> M
 ```
+
+## 문안 입력 대기 (BLOCKED, 2026-11-07)
+
+실제 값이 없어 창작하지 않는다. 아래 값을 받으면 해당 파일만 교체한다.
+
+| 위치 | 현재 예시값 | 필요한 입력 |
+|---|---|---|
+| `apps/web/src/components/layout/Footer.tsx:10` | 대표 홍길동(예시) | 대표자명 |
+| `apps/web/src/components/layout/Footer.tsx:11` | 사업자등록번호 000-00-00000(예시) | 사업자등록번호 |
+| `apps/web/src/components/layout/Footer.tsx:12` | 통신판매업 신고 제2026-서울-0000호(예시) | 통신판매업 신고번호 |
+| `apps/web/src/components/layout/Footer.tsx:13` | 서울특별시 예시구 예시로 00(예시) | 사업장 주소 |
+| `apps/web/src/pages/public/Help.data.ts:58` | 1600-0000 | 고객센터 전화 |
+| `apps/web/src/pages/public/Help.data.ts:60` | help@majayong.example | 고객센터 이메일 |
+| `apps/web/src/mocks/demo.ts:41` | 로켓단 / 1600-0000 / help@majayong.example | 운영 주체명·연락처(데모 전용 여부 결정) |
+
+추가 확인 필요: 상호(법인명), 개인정보 보호책임자, 통신판매업 신고일, 유료 서비스 약관·환불 정책의 최종 법률 검토본.

@@ -51,6 +51,7 @@ export default function ConfirmClient() {
 function LiveConfirm() {
   const { apiAccessToken } = useSession();
   const { did = '' } = useParams();
+  const draftHref = `/c/drafts/${encodeURIComponent(did)}`;
   const navigate = useNavigate();
   const [draft, setDraft] = useState<DraftDto | null>(null);
   const [screen, setScreen] = useState<DraftScreen | null>(null);
@@ -100,7 +101,7 @@ function LiveConfirm() {
       <div className={s.page} data-screen="Confirm-Client">
         <PageHeader title="명세를 불러오지 못했습니다" description="잠시 후 다시 시도해 주세요." />
         <p role="alert" style={{ padding: 24 }}>{loadError ?? '초안 정보가 없습니다.'}</p>
-        <Button variant="tint" to={DRAFT_HREF}>초안으로 돌아가기</Button>
+        <Button variant="tint" to={draftHref}>초안으로 돌아가기</Button>
       </div>
     );
   }
@@ -112,7 +113,7 @@ function LiveConfirm() {
           title={draft.status === 'CONFIRMED' ? '이미 게시된 초안입니다' : '보관된 초안입니다'}
           description={draft.status === 'CONFIRMED' ? '내 프로젝트에서 게시된 프로젝트를 확인할 수 있습니다.' : '초안 목록에서 다시 열어 주세요.'}
         />
-        <Button variant="primary" to={draft.status === 'CONFIRMED' ? '/c/projects' : DRAFT_HREF}>
+        <Button variant="primary" to={draft.status === 'CONFIRMED' ? '/c/projects' : draftHref}>
           {draft.status === 'CONFIRMED' ? '내 프로젝트로' : '초안으로 돌아가기'}
         </Button>
       </div>
@@ -294,7 +295,7 @@ function LiveConfirm() {
       {submitError && <p className={s.err} role="alert">{submitError}</p>}
 
       <div className={s.foot}>
-        <Button variant="ghost" to={DRAFT_HREF}>초안으로 돌아가기</Button>
+        <Button variant="ghost" to={draftHref}>초안으로 돌아가기</Button>
         {canSubmit ? (
           <Button variant="primary" size="lg" onClick={() => void publish()}>확정하고 공급자 모집 시작</Button>
         ) : (

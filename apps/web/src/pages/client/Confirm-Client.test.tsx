@@ -66,6 +66,19 @@ describe('Confirm-Client 명세 확정', () => {
     expect(fetchMock.mock.calls.some(([url, init]) => String(url).endsWith('/publish') && init?.method === 'POST')).toBe(false);
   });
 
+  it('초안으로 돌아가기 링크는 현재 초안 ID를 사용한다', async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockImplementation(async (input) => {
+      if (String(input) === '/api/v1/drafts/d-9') return jsonResponse({ data: draft([]) });
+      return jsonResponse({ error: { code: 'NOT_FOUND', message: '요청을 확인해 주세요.', requestId: 'req-back' } }, 404);
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    renderAt('/c/drafts/d-9/confirm', 'client', undefined, 'test-token');
+
+    const back = await screen.findByRole('link', { name: '초안으로 돌아가기' });
+    expect(back.getAttribute('href')).toBe('/c/drafts/d-9');
+  });
+
   it('상호가 없어도 게시 성공 응답 뒤 프로젝트 화면으로 이동한다', async () => {
     const fetchMock = vi.fn<typeof fetch>().mockImplementation(async (input, init) => {
       if (String(input) === '/api/v1/drafts/d-1' && init?.method !== 'POST') {

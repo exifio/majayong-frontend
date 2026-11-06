@@ -40,6 +40,7 @@
 - **완료 조건:** 각 주요 단계 요청 ID/HTTP/화면/상태 동일, 실패·권한 1건.
 - **최소 QA:** 실제 HTTP/화면 시나리오 1회, 불필요한 전체 반복 금지.
 - **보고 형식:** 기준 SHA·변경 파일·통과/미검증·실제 요청·남은 위험을 5줄 이내로 보고. 범위 확대가 필요하면 작업을 멈추고 별도 제안.
+- **확인 결과(production, 2026-11-07 KST):** FE `a28dc04`. 브라우저로 CLIENT 가입·로그인·프로필 → 초안 생성·명세 확정(프로젝트 `df8a6c34-bb00-4c44-91b2-f7d7b7cc519f`) → SUPPLIER 지원(`a3016166-6763-4cbf-ac91-be5e96fac2c5`) → 채팅 양방향 → 합의 확정 → 의뢰인·공급자 서명(계약 `c6513769-d8ca-4f5b-9b2f-86fecd39b225` `ACTIVE`)까지 PASS. 예치 `PENDING` 2,940,000원 생성 PASS. **미완:** Toss 카드 완료는 신한/토스뱅크 발급사 앱·SMS 인증이 필요해 BLOCKED, 가상계좌 미노출. 납품·검수·정산·리뷰는 예치 완료 의존으로 미실행. **OAuth:** 콘솔 production 콜백·JS 원본 등록, FE 자기 origin 콜백 수정 완료. 실제 로그인은 production BE `GOOGLE_REDIRECT_URI`가 staging Supabase 콜백이라 실패 — A가 production FE 콜백으로 교체 필요. **관찰:** 초안 AI 5xx 1회(재시도 200), 빠른 연속 이동 시 refresh rotation 경합 로그아웃. 테스트 계정·데이터는 A가 삭제한다.
 
 ## INT-02 — 결제 승인·복구 FE/BE 계약 승인 및 PAY-01~06
 
