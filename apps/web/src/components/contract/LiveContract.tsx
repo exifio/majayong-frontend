@@ -117,6 +117,17 @@ export function LiveContract({ cid, styles }: { cid?: string; styles: Record<str
   const canSign = CONTRACT_SIGN_ENABLED && role !== 'ADMIN' &&
     contract.status === 'PENDING_CONSENT' && mySignedAt === null && deadlineValid;
   const listHref = isSupplier ? '/s/contracts' : '/c/contracts';
+  const bandBody = contract.status === 'PENDING_CONSENT'
+    ? (mySignedAt === null
+      ? '서명하면 계약에 서명한 것으로 기록되고, 양측 서명이 끝나면 계약이 체결됩니다.'
+      : '내 서명은 완료되었습니다. 상대방 서명을 기다리고 있습니다.')
+    : contract.status === 'COMPLETED'
+      ? '거래와 정산이 모두 완료되었습니다.'
+      : contract.status === 'CANCELLED'
+        ? '계약이 취소되었습니다.'
+        : contract.paymentStatus === 'PENDING'
+          ? '서명이 끝났습니다. 예치가 완료되면 거래가 진행됩니다.'
+          : '예치가 완료되어 거래가 진행 중입니다.';
 
   return (
     <div className={s.page} data-screen="Contract-Live" data-role={role}>
@@ -137,15 +148,7 @@ export function LiveContract({ cid, styles }: { cid?: string; styles: Record<str
       <div className={`${s.bandRow} ${contract.status === 'PENDING_CONSENT' ? s.bandWarn : s.bandDone}`}>
         <div>
           <b className={s.bandTitle}>{headline}</b>
-          <p className={s.bandBody}>
-            {contract.status === 'PENDING_CONSENT'
-              ? (mySignedAt === null
-                ? '서명하면 계약에 서명한 것으로 기록되고, 양측 서명이 끝나면 계약이 체결됩니다.'
-                : '내 서명은 완료되었습니다. 상대방 서명을 기다리고 있습니다.')
-              : contract.paymentStatus === 'PENDING'
-                ? '서명이 끝났습니다. 예치가 완료되면 거래가 진행됩니다.'
-                : '예치가 완료되어 거래가 진행 중입니다.'}
-          </p>
+          <p className={s.bandBody}>{bandBody}</p>
         </div>
       </div>
 

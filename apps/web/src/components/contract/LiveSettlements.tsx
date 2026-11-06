@@ -99,7 +99,7 @@ export function LiveSettlements({ role }: { role: 'CLIENT' | 'SUPPLIER' }) {
                     <>
                       <Metric label="합의 금액" amount={statement.totalAgreed} />
                       <Metric label="받은 금액" amount={statement.totalReceived} />
-                      <Metric label="받을 예정" amount={statement.expectedToReceive} />
+                      <Metric label="세후 받을 금액" amount={statement.expectedToReceive} />
                       <Metric label="낸 수수료" amount={statement.supplierFeePaid} />
                       <Metric label="원천징수" amount={statement.withholdingTaxTotal} />
                     </>
