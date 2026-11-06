@@ -27,7 +27,7 @@
 - [x] **FE-14** ChatIndex 고정 데모 링크 제거 — `GET /me/chats` 기반, 프로덕션 번들에 빈 상태·API 반영 확인
 
 **진행 중**
-- [ ] **FE-02** 비밀번호 재설정 — 성공 화면에 시연용 전송 가정·실제 미발송을 명시; 실제 이메일은 보류, staging request API 200은 미검증
+- [x] **FE-02** 비밀번호 재설정 — 샌드박스 request 200·성공 화면 확인; 실제 메일은 no-op(발송 안 함)
 - [x] **FE-04** 운영자 1:1 문의 — staging ADMIN 부트스트랩·목록·UI 답변·배지 1→0 PASS
 - [x] **FE-07** 문의 답변 알림 링크 — 실제 답변 알림·상세 이동 PASS; `tab=my` 처리 수정 `70cbcbc`
 - [x] **FE-09** 운영자 후처리 상태 — 세 관리자 화면 실제 API 저장 연결(staging reports/blocks 확인, disputes 빈 목록)
@@ -58,7 +58,7 @@
 - [x] **BE-09** 검색 keyword/sort/deadlineBefore
 - [x] **BE-10** 취소 철회/1원 인증 계약
 - [x] **BE-11** API 문서/권한/최종 스모크
-- [ ] **BE-12 (보류)** 메일 발송 안전 게이트·비밀번호 재설정 staging 실메일 검증 — 실제 발송은 사용자 결정으로 현재 단계에서 제외; 재개 전 allowlist·production 승인·테스트 완료 필요
+- [x] **BE-12 (샌드박스)** 메일 no-op adapter — `PASSWORD_RESET_SANDBOX=true`에서 request 200; production은 env OFF로 503 유지
 - [ ] **INT-00** FE/BE/디자인 SHA·계약 고정 — BE `5f40443`·FE `c7e93a9`, staging DB·Vercel 프로젝트 확인; production 분리·API v1.0.1 전수 대조는 미완료
 - [x] **INT-01** 로그인 후 실제 사용자 흐름 재현 — staging API 01~10·FE 13 1~7 PASS; FE 08~10 화면은 FE-04/07/10/13에서 확인
 - [x] **INT-02** 결제 승인·복구 계약·PAY-01~06 — 승인 E2E·서명 웹훅·수동·Vercel Cron 자동 복구 PASS
@@ -81,7 +81,7 @@
 |---|---|:---:|:---:|---|---|:---:|---|
 | FE-00 | FE | P0 | Now | 실제 배포 FE 기준선·UI 경로 확인 | INT-00 | 하 | **완료** / 2026-11-06 프로덕션 확인 |
 | FE-01 | FE | P0 | Now | 이메일 회원가입 3단계 실제 API 연결 | BE-01, FE-00 | 상 | **완료** / 2026-11-06 프로덕션 실백엔드 201·NDA PATCH 200·ndaAgreedAt·/s 확인 |
-| FE-02 | FE | P1 | Now | 비밀번호 재설정 실제 API·초기값 정리 | BE-01, FE-00 | 중 | **진행** / 성공 화면에 시연용 전송 가정·실제 미발송 명시; 실제 메일 보류, staging request 200 미검증 |
+| FE-02 | FE | P1 | Now | 비밀번호 재설정 실제 API·초기값 정리 | BE-01, FE-00 | 중 | **샌드박스 완료** / request 200·성공 화면, 실제 메일은 no-op |
 | FE-03 | FE | P1 | Now | 고객센터 FAQ 분리 및 신규 1:1 문의 화면 | BE-02, FE-05 | 중 | **완료** / FAQ 14개·1:1 문의·첨부 3개 presign/업로드/다운로드, 485/485 |
 | FE-04 | FE | P1 | Next | 운영자 1:1 문의 페이지 신규 구현 | BE-02, FE-05 | 중 | **완료** / staging ADMIN 목록·UI 답변·배지 1→0 |
 | FE-05 | FE | P1 | Now | 푸터·메뉴·약관 셸 공통 수정 | FE-00 | 중 | **완료** / 2026-11-06 기능·1440/390 확인 |
