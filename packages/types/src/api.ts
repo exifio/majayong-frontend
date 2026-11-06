@@ -614,6 +614,45 @@ export interface AdminReportDto extends ReportDto {
   message: ReportMessageContextDto;
 }
 
+export interface AdminBlockConditionDto {
+  key: string;
+  text: string;
+}
+
+/** 관리자 블록 검토(`GET /admin/blocks`). */
+export interface AdminBlockDto {
+  id: string;
+  title: string;
+  unitPrice: number;
+  isActive: boolean;
+  mergedIntoId: string | null;
+  description: string;
+  functionSummary: string;
+  industryCode: string;
+  techTags: string[];
+  conditions: AdminBlockConditionDto[];
+  priceBasis: string;
+  source: string;
+  reviewedAt: IsoDate | null;
+  createdAt: IsoDate;
+  sourceProjectCount: number;
+}
+
+export type AdminBlockAction = 'UPDATE_PRICE' | 'MERGE' | 'DISABLE' | 'ENABLE';
+
+export interface ExecuteAdminBlockActionRequestDto {
+  action: AdminBlockAction;
+  reason: string;
+  unitPrice?: number;
+  mergedIntoId?: string;
+}
+
+export interface AdminBlockActionResultDto {
+  success: boolean;
+  blockId: string;
+  action: string;
+}
+
 export interface InquiryAttachmentDto {
   /** Server-relative path: ^/(?!/)[A-Za-z0-9/_:.-]+$ */
   url: string;
@@ -783,6 +822,7 @@ export interface BApiRequestBodies {
   resolveReport: ResolveReportRequestDto;
   createInquiry: CreateInquiryRequestDto;
   answerInquiry: AnswerInquiryRequestDto;
+  executeAdminBlockAction: ExecuteAdminBlockActionRequestDto;
 }
 
 /** Query DTOs accepted by the matching handlers. */
@@ -879,6 +919,8 @@ export interface BApiResponses {
   getInquiry: DataEnvelope<InquiryDto>;
   listAdminInquiries: DataEnvelope<InquiryDto[]>;
   answerInquiry: DataEnvelope<InquiryDto>;
+  listAdminBlocks: DataEnvelope<AdminBlockDto[]>;
+  executeAdminBlockAction: DataEnvelope<AdminBlockActionResultDto>;
 }
 
 export type BApiOperationId = keyof BApiResponses;

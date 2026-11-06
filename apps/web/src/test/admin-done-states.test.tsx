@@ -11,11 +11,6 @@ describe('운영자 후처리 ?mock 완료 상태', () => {
     expect(screen.getByText(NOTICE)).toBeTruthy();
   });
 
-  it('블록 병합 화면은 저장 전 시연임을 알린다', () => {
-    renderAt(`/admin/blocks?mock=${encodeURIComponent('병합')}`, 'admin');
-    expect(screen.getByText(NOTICE)).toBeTruthy();
-  });
-
   it('기본 목록에서는 고지를 표시하지 않는다', () => {
     renderAt('/admin/reports', 'admin');
     expect(screen.queryByText(NOTICE)).toBeNull();
