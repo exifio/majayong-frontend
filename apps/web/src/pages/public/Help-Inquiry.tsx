@@ -15,7 +15,7 @@ export default function HelpInquiry() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const { session, apiAccessToken } = useSession();
-  const tab: Tab = params.get('tab') === 'mine' ? 'mine' : 'write';
+  const tab: Tab = params.get('tab') === 'mine' || params.get('tab') === 'my' ? 'mine' : 'write';
   const detailId = params.get('id');
 
   const [category, setCategory] = useState<ApiInquiryCategory>('USAGE');

@@ -82,4 +82,13 @@ describe('Help-Inquiry — 1:1 문의', () => {
     await waitFor(() => expect(screen.getByText('확인했습니다.')).toBeTruthy());
     expect(location.current).toBe('/help/inquiry?tab=mine&id=inquiry-1');
   });
+
+  it('알림의 tab=my 링크도 내 문의 상세로 연다', async () => {
+    vi.stubGlobal('fetch', vi.fn<typeof fetch>().mockImplementation(async () =>
+      jsonResponse({ data: inquiry({ status: 'ANSWERED', answer: '알림 답변입니다.' }) })));
+    renderAt('/help/inquiry?tab=my&id=inquiry-1', 'client', undefined, 'test-token');
+
+    await waitFor(() => expect(screen.getByText('알림 답변입니다.')).toBeTruthy());
+    expect(screen.getByRole('tab', { name: PAGE.tabMine })).toBeTruthy();
+  });
 });
