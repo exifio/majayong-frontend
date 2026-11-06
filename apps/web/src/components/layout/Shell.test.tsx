@@ -11,8 +11,12 @@ afterEach(() => {
 
 describe('운영자 셸', () => {
   it('문의가 아닌 운영자 화면에서도 WAITING 문의만 메뉴 배지로 표시한다', async () => {
-    vi.stubGlobal('fetch', vi.fn<typeof fetch>().mockImplementation(async () =>
-      jsonResponse({ data: [{ status: 'WAITING' }, { status: 'ANSWERED' }, { status: 'WAITING' }] })));
+    vi.stubGlobal('fetch', vi.fn<typeof fetch>().mockImplementation(async (input) => {
+      if (String(input).includes('/admin/support/inquiries')) {
+        return jsonResponse({ data: [{ status: 'WAITING' }, { status: 'ANSWERED' }, { status: 'WAITING' }] });
+      }
+      return jsonResponse({ data: [] });
+    }));
     renderAt('/admin/blocks', 'admin', undefined, 'test-token');
     const inquiryLink = within(screen.getByRole('navigation', { name: '운영자 메뉴' }))
       .getByRole('link', { name: /1:1 문의/ });

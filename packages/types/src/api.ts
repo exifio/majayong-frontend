@@ -653,6 +653,73 @@ export interface AdminBlockActionResultDto {
   action: string;
 }
 
+export type ApiDisputeDecision = 'REWORK_VALID' | 'APPROVE' | 'UNDECIDED_CONDITION';
+
+export interface AdminInspectionConditionDto {
+  key: string;
+  text: string;
+  state: string;
+}
+
+export interface AdminInspectionClaimDto {
+  requestedBy: string | null;
+  what: string | null;
+  client: string;
+  supplier: string;
+  evidence: { type: string; ref: string }[];
+}
+
+export interface AdminInspectionHistoryDto {
+  id: string;
+  reason: string;
+  conditionKey: string | null;
+  note: string | null;
+  status: string;
+  deliveryAttemptNo: number;
+  createdAt: IsoDate;
+  resolvedAt: IsoDate | null;
+  decision: string | null;
+}
+
+export interface AdminDeliveryInfoDto {
+  id: string;
+  attemptNo: number;
+  summary: string | null;
+  items: unknown;
+  submittedAt: IsoDate;
+}
+
+export interface AdminEscalatedInspectionDto {
+  id: string;
+  contractItemId: string;
+  deliveryId: string;
+  status: 'ESCALATED' | 'OPEN' | 'RESOLVED';
+  reason: string;
+  decision?: ApiDisputeDecision;
+  decisionNotes?: { client: string; supplier: string };
+  contractId: string;
+  projectTitle: string;
+  itemTitle: string;
+  itemDescription: string;
+  clientName: string | null;
+  supplierName: string | null;
+  agreedAmount: number;
+  clientFee: number;
+  interimRatio: number;
+  conditions: AdminInspectionConditionDto[];
+  escalation: AdminInspectionClaimDto | null;
+  history: AdminInspectionHistoryDto[];
+  delivery: AdminDeliveryInfoDto | null;
+  createdAt: IsoDate;
+  resolvedAt: IsoDate | null;
+}
+
+export interface DecideInspectionDisputeRequestDto {
+  decision: ApiDisputeDecision;
+  reason: string;
+  decisionNotes: { client: string; supplier: string };
+}
+
 export interface InquiryAttachmentDto {
   /** Server-relative path: ^/(?!/)[A-Za-z0-9/_:.-]+$ */
   url: string;
@@ -823,6 +890,7 @@ export interface BApiRequestBodies {
   createInquiry: CreateInquiryRequestDto;
   answerInquiry: AnswerInquiryRequestDto;
   executeAdminBlockAction: ExecuteAdminBlockActionRequestDto;
+  decideInspectionDispute: DecideInspectionDisputeRequestDto;
 }
 
 /** Query DTOs accepted by the matching handlers. */
@@ -921,6 +989,8 @@ export interface BApiResponses {
   answerInquiry: DataEnvelope<InquiryDto>;
   listAdminBlocks: DataEnvelope<AdminBlockDto[]>;
   executeAdminBlockAction: DataEnvelope<AdminBlockActionResultDto>;
+  listEscalatedInspections: DataEnvelope<AdminEscalatedInspectionDto[]>;
+  decideInspectionDispute: DataEnvelope<AdminEscalatedInspectionDto>;
 }
 
 export type BApiOperationId = keyof BApiResponses;
