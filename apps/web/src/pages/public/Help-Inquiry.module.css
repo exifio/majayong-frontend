@@ -128,3 +128,51 @@
   color: var(--blue-600);
   font-size: 14px;
 }
+
+.field {
+  margin-top: 14px;
+}
+
+.fileInput {
+  display: block;
+  width: 100%;
+  font-size: 14px;
+}
+
+.attachList {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.attachItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 10px;
+  border: 1px solid var(--slate-200);
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.attachRemove {
+  border: 0;
+  background: transparent;
+  color: var(--slate-600);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.attachLink {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: var(--blue-600);
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}

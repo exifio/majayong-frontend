@@ -721,11 +721,19 @@ export interface DecideInspectionDisputeRequestDto {
 }
 
 export interface InquiryAttachmentDto {
+  /** 신규 업로드 첨부. 구버전 응답에는 없을 수 있다. */
+  fileId?: string;
   /** Server-relative path: ^/(?!/)[A-Za-z0-9/_:.-]+$ */
   url: string;
   /** 1..255 characters; no path separators or control characters. */
   name: string;
   /** Integer byte size, from 1 through 10 MiB. */
+  size: number;
+}
+
+export interface CreateInquiryAttachmentDto {
+  fileId: string;
+  name: string;
   size: number;
 }
 
@@ -801,11 +809,49 @@ export interface CreateInquiryRequestDto {
   title: string;
   body: string;
   /** Up to 3 metadata entries for private uploaded files; file content is sent separately. */
-  attachments?: UpToThree<InquiryAttachmentDto>;
+  attachments?: UpToThree<CreateInquiryAttachmentDto>;
 }
 
 export interface AnswerInquiryRequestDto {
   answer: string;
+}
+
+export interface PresignUploadRequestDto {
+  purpose: 'SUPPORT_INQUIRY';
+  fileName: string;
+  fileSize: number;
+  mimeType: string;
+}
+
+export interface PresignUploadResponseDto {
+  fileId: string;
+  uploadUrl: string;
+  objectKey: string;
+  expiresInSec: number;
+}
+
+export interface PresignDownloadResponseDto {
+  downloadUrl: string;
+  expiresInSec: number;
+}
+
+export interface PresignUploadRequestDto {
+  purpose: 'SUPPORT_INQUIRY';
+  fileName: string;
+  fileSize: number;
+  mimeType: string;
+}
+
+export interface PresignUploadResponseDto {
+  fileId: string;
+  uploadUrl: string;
+  objectKey: string;
+  expiresInSec: number;
+}
+
+export interface PresignDownloadResponseDto {
+  downloadUrl: string;
+  expiresInSec: number;
 }
 
 /** These operations require JSON on the wire but accept no fields. */
@@ -889,6 +935,7 @@ export interface BApiRequestBodies {
   resolveReport: ResolveReportRequestDto;
   createInquiry: CreateInquiryRequestDto;
   answerInquiry: AnswerInquiryRequestDto;
+  presignUpload: PresignUploadRequestDto;
   executeAdminBlockAction: ExecuteAdminBlockActionRequestDto;
   decideInspectionDispute: DecideInspectionDisputeRequestDto;
 }
@@ -987,6 +1034,8 @@ export interface BApiResponses {
   getInquiry: DataEnvelope<InquiryDto>;
   listAdminInquiries: DataEnvelope<InquiryDto[]>;
   answerInquiry: DataEnvelope<InquiryDto>;
+  presignUpload: DataEnvelope<PresignUploadResponseDto>;
+  presignDownload: DataEnvelope<PresignDownloadResponseDto>;
   listAdminBlocks: DataEnvelope<AdminBlockDto[]>;
   executeAdminBlockAction: DataEnvelope<AdminBlockActionResultDto>;
   listEscalatedInspections: DataEnvelope<AdminEscalatedInspectionDto[]>;

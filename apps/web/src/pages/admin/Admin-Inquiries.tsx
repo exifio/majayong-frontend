@@ -7,6 +7,7 @@ import { Band, Button, Chip, EmptyState, Tabs, TextAreaField } from '@/component
 import { useSession } from '@/app/session';
 import { useSetAdminInquiryCount } from '@/components/layout/Shell';
 import { ApiRequestError, apiRequest } from '@/lib/api';
+import { AttachmentLink } from '@/components/attachments/AttachmentLink';
 import { formatDateTime } from '@/lib/format';
 import { CATEGORY_LABEL, STATUS_LABEL } from '@/pages/public/Help-Inquiry.data';
 import s from './Admin-Inquiries.module.css';
@@ -160,6 +161,28 @@ export default function AdminInquiries() {
                 {CATEGORY_LABEL[selected.category]} · {formatDateTime(selected.createdAt)}
               </p>
               <p className={s.bodyText}>{selected.body}</p>
+              {selected.attachments.length > 0 ? (
+                <div>
+                  <p className={s.attachLabel}>첨부 파일</p>
+                  <ul className={s.attachList}>
+                    {selected.attachments.map((attachment, index) => (
+                      <li key={attachment.fileId ?? `${attachment.url}-${index}`} className={s.attachItem}>
+                        {attachment.fileId ? (
+                          <AttachmentLink
+                            fileId={attachment.fileId}
+                            name={attachment.name}
+                            accessToken={apiAccessToken}
+                            className={s.attachLink}
+                          />
+                        ) : (
+                          <span>{attachment.name}</span>
+                        )}
+                        <span className={s.detailMeta}>{Math.ceil(attachment.size / 1024)}KB</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
 
               {selected.answer ? (
                 <div className={s.answered}>

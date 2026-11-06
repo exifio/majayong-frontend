@@ -131,3 +131,40 @@
   color: var(--teal-700, var(--slate-700));
   font-size: 14px;
 }
+
+.attachLabel {
+  margin: 14px 0 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--slate-900);
+}
+
+.attachList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.attachItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 10px;
+  border: 1px solid var(--slate-200);
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.attachLink {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: var(--blue-600);
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}

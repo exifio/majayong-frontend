@@ -63,6 +63,41 @@ describe('Help-Inquiry — 1:1 문의', () => {
     });
   });
 
+  it('첨부를 presign·업로드한 뒤 fileId로 문의를 만든다', async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockImplementation(async (input, init) => {
+      if (String(input).includes('/uploads/presign') && init?.method === 'POST') {
+        return jsonResponse({ data: { fileId: 'file-1', uploadUrl: 'https://storage.example/upload/1', objectKey: 'inquiry/file-1', expiresInSec: 300 } }, 201);
+      }
+      if (String(input) === 'https://storage.example/upload/1') {
+        return new Response('', { status: 200 });
+      }
+      if (String(input).endsWith('/api/v1/support/inquiries') && init?.method === 'POST') {
+        return jsonResponse({ data: inquiry() }, 201);
+      }
+      return jsonResponse({ error: { code: 'NOT_FOUND', message: '없음', requestId: 'req' } }, 404);
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const { container } = renderAt('/help/inquiry', 'client', undefined, 'test-token');
+    const root = container.querySelector('[data-screen="Help-Inquiry"]') as HTMLElement;
+
+    fireEvent.change(within(root).getByLabelText(new RegExp(PAGE.titleLabel)), { target: { value: '증빙 문의' } });
+    fireEvent.change(within(root).getByLabelText(PAGE.bodyLabel), { target: { value: '첨부했습니다.' } });
+    fireEvent.change(within(root).getByLabelText(PAGE.attachLabel), {
+      target: { files: [new File(['hello'], 'evidence.pdf', { type: 'application/pdf' })] },
+    });
+    fireEvent.click(within(root).getByRole('button', { name: PAGE.submit }));
+
+    expect(await within(root).findByText(PAGE.sentTitle)).toBeTruthy();
+    const createCall = fetchMock.mock.calls.find(([path, init]) =>
+      String(path).endsWith('/api/v1/support/inquiries') && init?.method === 'POST');
+    expect(JSON.parse(String(createCall![1]?.body))).toEqual({
+      category: 'USAGE',
+      title: '증빙 문의',
+      body: '첨부했습니다.',
+      attachments: [{ fileId: 'file-1', name: 'evidence.pdf', size: 5 }],
+    });
+  });
+
   it('내 문의 목록에 상태를 표시한다', async () => {
     vi.stubGlobal('fetch', vi.fn<typeof fetch>().mockImplementation(async () =>
       jsonResponse({ data: [inquiry(), inquiry({ id: 'inquiry-2', title: '계정 문의', status: 'ANSWERED', answer: '답변입니다.' })] })));

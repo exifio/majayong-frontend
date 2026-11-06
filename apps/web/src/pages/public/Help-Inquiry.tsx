@@ -1,15 +1,44 @@
 /* 1:1 문의 — 작성·내 문의·상세. 실제 /support/inquiries API만 사용한다. */
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import type { ApiInquiryCategory, InquiryDto } from '@majayong/types/api';
+import type { ApiInquiryCategory, CreateInquiryAttachmentDto, InquiryDto, UpToThree } from '@majayong/types/api';
 import { Band, Button, Chip, EmptyState, Tabs, TextAreaField, TextField } from '@/components/ui';
 import { useSession } from '@/app/session';
 import { ApiRequestError, apiRequest } from '@/lib/api';
+import { AttachmentLink } from '@/components/attachments/AttachmentLink';
 import { CATEGORIES, CATEGORY_LABEL, PAGE, STATUS_LABEL } from './Help-Inquiry.data';
 import s from './Help-Inquiry.module.css';
 
 type LoadState = 'loading' | 'ready' | 'error';
 type Tab = 'write' | 'mine';
+
+const MAX_FILES = 3;
+const MAX_FILE_BYTES = 10 * 1024 * 1024;
+const ALLOWED_EXTENSION = /\.(png|jpe?g|webp|pdf|zip|mp4|txt)$/i;
+const MIME_BY_EXTENSION: Record<string, string> = {
+  png: 'image/png',
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  webp: 'image/webp',
+  pdf: 'application/pdf',
+  zip: 'application/zip',
+  mp4: 'video/mp4',
+  txt: 'text/plain',
+};
+
+function mimeOf(file: File): string {
+  if (file.type.trim().length > 0) return file.type;
+  const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
+  return MIME_BY_EXTENSION[ext] ?? 'application/octet-stream';
+}
+
+function toAttachmentTuple(items: CreateInquiryAttachmentDto[]): UpToThree<CreateInquiryAttachmentDto> | undefined {
+  const [first, second, third] = items;
+  if (items.length === 0 || first === undefined) return undefined;
+  if (second === undefined) return [first];
+  if (third === undefined) return [first, second];
+  return [first, second, third];
+}
 
 export default function HelpInquiry() {
   const [params] = useSearchParams();
@@ -21,6 +50,8 @@ export default function HelpInquiry() {
   const [category, setCategory] = useState<ApiInquiryCategory>('USAGE');
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
+  const [files, setFiles] = useState<File[]>([]);
+  const [fileError, setFileError] = useState<string | null>(null);
   const [tried, setTried] = useState(false);
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
@@ -82,20 +113,63 @@ export default function HelpInquiry() {
     );
   }
 
+  const chooseFiles = (list: FileList | null) => {
+    setFileError(null);
+    if (list === null) return;
+    const next = [...list];
+    if (files.length + next.length > MAX_FILES) {
+      setFileError(PAGE.attachLimit);
+      return;
+    }
+    for (const file of next) {
+      if (file.size > MAX_FILE_BYTES) {
+        setFileError(PAGE.attachSize);
+        return;
+      }
+      if (!ALLOWED_EXTENSION.test(file.name)) {
+        setFileError(PAGE.attachType);
+        return;
+      }
+    }
+    setFiles([...files, ...next]);
+  };
+
   const submit = async () => {
     setTried(true);
     setError(null);
     if (!title.trim() || !body.trim()) return;
     setBusy(true);
     try {
+      const uploaded: CreateInquiryAttachmentDto[] = [];
+      for (const file of files) {
+        const presign = await apiRequest('presignUpload', '/uploads/presign', {
+          method: 'POST',
+          accessToken: apiAccessToken,
+          jsonBody: { purpose: 'SUPPORT_INQUIRY', fileName: file.name, fileSize: file.size, mimeType: mimeOf(file) },
+        });
+        const upload = await fetch(presign.data.uploadUrl, {
+          method: 'PUT',
+          headers: { 'content-type': mimeOf(file) },
+          body: file,
+        });
+        if (!upload.ok) throw new Error('ATTACHMENT_UPLOAD_FAILED');
+        uploaded.push({ fileId: presign.data.fileId, name: file.name, size: file.size });
+      }
+      const attachments = toAttachmentTuple(uploaded);
       await apiRequest('createInquiry', '/support/inquiries', {
         method: 'POST',
         accessToken: apiAccessToken,
-        jsonBody: { category, title: title.trim(), body: body.trim() },
+        jsonBody: {
+          category,
+          title: title.trim(),
+          body: body.trim(),
+          ...(attachments === undefined ? {} : { attachments }),
+        },
       });
       setSent(true);
       setTitle('');
       setBody('');
+      setFiles([]);
     } catch (caught) {
       setError(caught instanceof ApiRequestError ? caught.message : PAGE.error);
     } finally {
@@ -153,6 +227,39 @@ export default function HelpInquiry() {
               value={body}
               onChange={(event) => setBody(event.target.value)}
             />
+            <div className={s.field}>
+              <label className={s.label} htmlFor="inquiry-attachments">{PAGE.attachLabel}</label>
+              <input
+                id="inquiry-attachments"
+                className={s.fileInput}
+                type="file"
+                multiple
+                accept=".png,.jpg,.jpeg,.webp,.pdf,.zip,.mp4,.txt"
+                disabled={busy}
+                onChange={(event) => {
+                  chooseFiles(event.target.files);
+                  event.target.value = '';
+                }}
+              />
+              <p className={s.rowMeta}>{PAGE.attachHint}</p>
+              {files.length > 0 ? (
+                <ul className={s.attachList}>
+                  {files.map((file, index) => (
+                    <li key={`${file.name}-${index}`} className={s.attachItem}>
+                      <span>{file.name}</span>
+                      <button
+                        type="button"
+                        className={s.attachRemove}
+                        onClick={() => setFiles(files.filter((_, current) => current !== index))}
+                      >
+                        {PAGE.attachRemove}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+              {fileError ? <p className={s.error} role="alert">{fileError}</p> : null}
+            </div>
             {error ? <p className={s.error} role="alert">{error}</p> : null}
             <div className={s.actions}>
               <Button
@@ -172,7 +279,7 @@ export default function HelpInquiry() {
       {tab === 'mine' ? (
         <section className={s.card} aria-label={PAGE.tabMine}>
           {detail ? (
-            <InquiryDetail inquiry={detail} />
+            <InquiryDetail inquiry={detail} accessToken={apiAccessToken} />
           ) : listState === 'loading' ? (
             <p role="status" className={s.state}>문의를 불러오는 중입니다.</p>
           ) : listState === 'error' ? (
@@ -200,7 +307,7 @@ export default function HelpInquiry() {
   );
 }
 
-function InquiryDetail({ inquiry }: { inquiry: InquiryDto }) {
+function InquiryDetail({ inquiry, accessToken }: { inquiry: InquiryDto; accessToken: string }) {
   return (
     <article className={s.detail}>
       <div className={s.detailHead}>
@@ -211,6 +318,28 @@ function InquiryDetail({ inquiry }: { inquiry: InquiryDto }) {
       </div>
       <p className={s.rowMeta}>{CATEGORY_LABEL[inquiry.category]}</p>
       <p className={s.bodyText}>{inquiry.body}</p>
+      {inquiry.attachments.length > 0 ? (
+        <div>
+          <p className={s.label}>{PAGE.attachments}</p>
+          <ul className={s.attachList}>
+            {inquiry.attachments.map((attachment, index) => (
+              <li key={attachment.fileId ?? `${attachment.url}-${index}`} className={s.attachItem}>
+                {attachment.fileId ? (
+                  <AttachmentLink
+                    fileId={attachment.fileId}
+                    name={attachment.name}
+                    accessToken={accessToken}
+                    className={s.attachLink}
+                  />
+                ) : (
+                  <span>{attachment.name}</span>
+                )}
+                <span className={s.rowMeta}>{Math.ceil(attachment.size / 1024)}KB</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
       <h3 className={s.answerTitle}>{PAGE.answer}</h3>
       {inquiry.answer ? (
         <p className={s.bodyText}>{inquiry.answer}</p>
