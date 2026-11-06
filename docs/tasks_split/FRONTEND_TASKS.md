@@ -125,7 +125,7 @@
 
 ## FE-04 — 운영자 1:1 문의 페이지 신규 구현
 
-- **상태/난이도:** 진행 / 로컬 API·권한·답변·WAITING 배지 구현 완료; **staging 검증 BLOCKED (`FE-04-STAGING-20261106`)** — 확인된 Vercel target은 Production이며 DB 연결 ref·운영 DB 분리 증거, 공식 계정 생성/승인 절차가 없음 / 중 · **우선순위:** P1 · **단계:** Next.
+- **상태/난이도:** 완료 / 2026-11-07 staging ADMIN 부트스트랩·목록·답변·배지 검증 / 중 · **우선순위:** P1 · **단계:** Next.
 - **선행:** BE-02, FE-05.
 - **대상:** `apps/web/src/pages/admin/Admin-Inquiries.tsx/.module.css/.test.tsx; components/layout/Shell.tsx/.test.tsx; app/menus.ts; routes.ts`.
 - **목표/범위:** 보드 목록/상세/답변·완료 상태 React 구현, 운영자 메뉴 배지.
@@ -135,7 +135,7 @@
 - **완료 조건:** 운영자만 접근, WAITING→ANSWERED, 입력 빈값 차단, 타인 정보 최소 노출.
 - **최소 QA:** 인접 Admin-Inquiries/Shell 테스트: 권한·목록·WAITING 집계·답변 후 배지 갱신·빈값.
 - **로컬 구현/검증:** `Admin-Inquiries`는 목록 GET과 답변 POST만 사용하며 상세 GET은 호출하지 않는다. 로컬 관리자 토큰에서 목록 200 → 답변 200 → 작성자 상세 `ANSWERED`, 비관리자 403, 빈 답변 사전 차단을 확인했다. 배지는 문의 화면 밖에서 `WAITING`만 집계하고, 문의 화면에서는 기존 목록으로 답변 성공 시 갱신한다. 브라우저 fetch mock 대기 2건에서 배지 `2` 표시. 인접 테스트 6건, 전체 469/469, typecheck/build 통과(705.86 kB 청크 경고).
-- **Staging 상태(사용자 보고, `FE-04-STAGING-20261106`):** 계정·문의 생성 보류, API/DB 쓰기 없음. Vercel 배포는 Ready/Production `main@3601095`; `DATABASE_URL`·`SUPABASE_URL`은 Production 범위 Secret이라 ref를 열람하지 않았다. 공식 ADMIN bootstrap·승인 담당자를 찾지 못했고, 직접 Prisma ADMIN 생성은 공식 staging 절차가 아니다. 내부 Slack/Notion 문서는 세션 만료로 미확인. 공개 가입은 CLIENT/SUPPLIER만 허용하고 문의 작성은 비ADMIN에게만 허용하며 기본 상태는 WAITING이다. ADMIN 목록 GET·답변 POST 경로는 staging 계정으로 호출하지 않았다.
+- **Staging 확인(2026-11-07 KST):** 격리 테스트 계정을 만들고 DB에서 role만 ADMIN으로 바꾼 뒤 재로그인해 `/admin/inquiries`를 확인했다. 관리자 목록 200·WAITING 2건·1:1 문의 배지 1, UI에서 답변 등록 후 `답변 완료`·배지 0, 두 번째 문의는 API 답변 200·작성자 상세 `ANSWERED`. 비관리자 접근 차단과 빈 답변 차단은 기존 테스트로 유지. 테스트 계정·문의는 삭제해 users 37·inquiries 0 복구.
 - **환경 근거:** 사용자 보고 staging 도메인 `/health` 200·무인증 `/api/v1/me` 401은 DB 격리 증거가 아니다. 조회된 Supabase `health-record-restore` (`wwkuktblvadeynufjllk`, INACTIVE/테이블 접근 불가)와 `health` (`jleboocxejidigclepxt`, ACTIVE_HEALTHY/daily_records 등 다른 서비스 schema)는 Vercel 배포와 연결되지 않았다. `scripts/seed-staging.mjs`는 catalog만 upsert; `scripts/seed-demo-fixtures.mjs`/BE-08은 계정·문의 생성 절차가 아니다.
 - **추가 접근·담당자 확인(사용자 보고):** `wgeoqlfpmwzgdhbkvytc`는 과거 기록의 ref이며 Supabase `get_project`·read-only `list_tables`가 권한 거부됐다. Free 요금제 한도로 신규 프로젝트도 생성되지 않았다.
 - **담당자 식별(사용자 보고):** Vercel 팀의 유일한 Owner 계정은 `exifio-4593`이나 실명·연락은 확인되지 않았다. GitHub 저장소 owner/admin `SeungHun (exifio)`와 동일 인물인지 미검증이고, Supabase 담당자는 미확인이다. 요청/회신 대기; 초대·계정 생성·DB/API/Vercel 변경·자격증명 공유 없음.
@@ -172,7 +172,7 @@
 
 ## FE-07 — 알림 문의 답변 링크 추가·상태 유지
 
-- **상태/난이도:** 진행 / 링크·테스트 완료, 실제 답변 알림 미검증 / 하 · **우선순위:** P1 · **단계:** Next.
+- **상태/난이도:** 완료 / 2026-11-07 실제 답변 알림·상세 이동 확인 / 하 · **우선순위:** P1 · **단계:** Next.
 - **선행:** FE-03, BE-03.
 - **대상:** `components/layout/Chrome.tsx; lib/notification-adapter.ts`.
 - **목표/범위:** Notify-Client/Notify-Supplier 보드를 기존 공통 드롭다운에서 처리.
@@ -181,7 +181,7 @@
 - **실행:** INQUIRY_ANSWERED targetUrl=/help/inquiry?tab=my&id=... 그대로 이용, 민감 내용 노출 금지.
 - **완료 조건:** 문의 답변 알림에서 정확한 내 문의 상세 이동, 읽음 수 갱신.
 - **최소 QA:** Chrome.test.tsx 또는 adapter.test.ts 인접; 한국어 2개.
-- **확인 결과(2026-11-06 KST):** `notification-adapter`가 `INQUIRY_ANSWERED`에서 서버 `targetUrl`(`/help/inquiry?tab=my&id=...`)을 그대로 사용하고, 없을 때만 같은 형식으로 보정한다. 알림 문구는 고정 안내만 노출하며 payload 내용을 쓰지 않는다. `notification-adapter.test.ts` 2건 통과. **실제 답변 알림 이벤트와 읽음 수 갱신 실화면은 BE-03 전이라 미검증.**
+- **확인 결과(2026-11-07 KST):** staging에서 문의 답변 후 작성자 `/me/notifications`에 `INQUIRY_ANSWERED` targetUrl `/help/inquiry?tab=my&id=...`가 생성됨을 확인했다. 알림 드롭다운에서 링크 2건·안 읽음 2를 확인하고 클릭 시 내 문의 상세로 이동했다. **수정:** FE가 `tab=mine`만 인식해 `tab=my` 링크가 작성 탭으로 열리던 문제를 `tab=my`도 내 문의로 인식하도록 고쳤다(`70cbcbc`). production 재배포 후 알림 링크→`배치1 UI 답변 문의` 상세·답변 표시 확인. `Help-Inquiry.test.tsx` 5건, 전체 478/478, typecheck/build 통과.
 - **보고 형식:** 기준 SHA·변경 파일·통과/미검증·실제 요청·남은 위험을 5줄 이내로 보고. 범위 확대가 필요하면 작업을 멈추고 별도 제안.
 
 ## FE-08 — 계정 설정의 증빙·정산 계좌 UI 정리
@@ -256,7 +256,7 @@
 
 ## FE-13 — 기존 NDA·지원·채팅·합의·서명 보호 회귀
 
-- **상태/난이도:** 진행 / 코드 변경 없이 로컬 회귀 통과, staging 1~7 미검증 / 중 · **우선순위:** P1 · **단계:** Next.
+- **상태/난이도:** 완료 / 2026-11-07 staging 1~7 PASS / 중 · **우선순위:** P1 · **단계:** Next.
 - **선행:** BE-04, INT-00.
 - **대상:** `components/project/Live*; components/chat/LiveChat.tsx; components/agreement/LiveAgreement.tsx; components/contract/LiveContract.tsx`.
 - **목표/범위:** 변경 없이 베이스라인 보호, 누락된 오류 핸들링만 최소 수정.
@@ -265,7 +265,7 @@
 - **실행:** 스키마/DTO·ID 재생성 금지, 화면 구조와 API 어댑터를 전면 교체하지 않음.
 - **완료 조건:** CLIENT/SUPPLIER 핵심 단계 1~7을 staging에서 성공/실패로 구분.
 - **최소 QA:** 각 영향 변경 파일만 단위/통합; 전체 E2E 반복 금지.
-- **확인 결과(2026-11-06 KST):** 보호 대상 코드는 수정하지 않았다. `project-live`(NDA→specItemId→지원), `chat-live`, `agreement-live`, `contract-live` 4개 파일 **23/23 통과**. 무토큰 로컬 실호출은 `/api/v1/me/chats`·`/api/v1/me/contracts` 모두 401로 권한 차단 확인. **staging에서 CLIENT/SUPPLIER 1~7단계 성공/실패 구분은 테스트 계정·데이터가 없어 미실행** — INT-00/BE-04 산출물 필요. 이어서 로컬 계약 픽스처로 `GET /applications/{id}/agreement-preview` 200(의뢰인·공급자), `/me/applications` 200, `/me/chats` 200(빈 목록), `/contracts/{id}`·`/document` 200을 확인했다. 픽스처 프로젝트가 CONTRACTED라 공급자 상세 `/projects/{id}`는 404(계약 후 상태)이며 FE 버그가 아니다.
+- **확인 결과(2026-11-07 KST):** 보호 대상 코드는 수정하지 않았다. staging에서 CLIENT/SUPPLIER 1~7단계(가입·프로필/NDA·초안→게시·상세 specItemId·지원·채팅·합의→계약→서명→예치)를 실제 API와 FE 화면으로 확인했다(INT-01/INT-02 기록). `project-live`·`chat-live`·`agreement-live`·`contract-live` 23/23, 무토큰 401 차단 유지. 실패 상태는 NDA 미동의·구버전 403과 비당사자 403/404로 확인했다.
 - **보고 형식:** 기준 SHA·변경 파일·통과/미검증·실제 요청·남은 위험을 5줄 이내로 보고. 범위 확대가 필요하면 작업을 멈추고 별도 제안.
 
 ## FE-14 — ChatIndex 고정 데모 링크 제거
