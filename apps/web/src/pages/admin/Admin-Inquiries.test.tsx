@@ -35,6 +35,9 @@ describe('Admin-Inquiries — 운영자 1:1 문의', () => {
     const { container } = renderAt('/admin/inquiries', 'admin', undefined, 'test-token');
 
     expect(await screen.findByRole('heading', { level: 2, name: '예치 확인이 늦어요' })).toBeTruthy();
+    const inquiryLink = within(screen.getByRole('navigation', { name: '운영자 메뉴' }))
+      .getByRole('link', { name: /1:1 문의/ });
+    await waitFor(() => expect(inquiryLink.textContent).toBe('1:1 문의1'));
     expect(screen.getAllByText('결제 · 예치').length).toBeGreaterThan(0);
     expect(screen.getByText('예치했는데 확인 중으로 나옵니다.')).toBeTruthy();
     expect(findDesignViolations(container)).toEqual([]);
@@ -52,10 +55,14 @@ describe('Admin-Inquiries — 운영자 1:1 문의', () => {
     const root = container.querySelector('[data-screen="Admin-Inquiries"]') as HTMLElement;
 
     fireEvent.change(await within(root).findByLabelText('답변'), { target: { value: '확인했습니다.' } });
+    const inquiryLink = within(screen.getByRole('navigation', { name: '운영자 메뉴' }))
+      .getByRole('link', { name: /1:1 문의/ });
+    expect(inquiryLink.textContent).toBe('1:1 문의1');
     fireEvent.click(within(root).getByRole('button', { name: '답변 등록' }));
 
     await waitFor(() => expect(within(root).getByText('확인했습니다.')).toBeTruthy());
     expect(within(root).getAllByText('답변 완료').length).toBeGreaterThan(0);
+    expect(inquiryLink.textContent).toBe('1:1 문의');
     const answerCall = fetchMock.mock.calls.find(([path]) => String(path).endsWith('/answer'));
     expect(answerCall).toBeTruthy();
     expect(JSON.parse(String(answerCall![1]?.body))).toEqual({ answer: '확인했습니다.' });

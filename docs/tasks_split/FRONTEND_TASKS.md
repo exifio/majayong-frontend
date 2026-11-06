@@ -27,6 +27,18 @@
 | FE-15 | P2 | Later | 선택 검색/취소 철회 UI 확장 보류 관리 | BE-09, BE-10 | 하 |
 | FE-16 | P1 | Next | 변경 영역별 가벼운 QA와 57보드 비교 마감 | FE-13, FE-03 | 하 |
 
+## 현재 FE 실행 가능 상태 (2026-11-06)
+
+현재 즉시 시작할 수 있는 미완료 FE 구현 작업은 없다. 완료된 로컬 범위와 남은 외부 선행 조건은 다음과 같다.
+- **FE-04:** 로컬 목록·답변·WAITING 배지 구현 완료. 승인 staging의 DB 격리·ADMIN/작성자 계정 절차·vault 경로가 없어 실검증 BLOCKED.
+- **FE-07:** targetUrl 링크와 adapter 테스트 완료. 실제 `INQUIRY_ANSWERED` 이벤트 및 읽음 수 갱신은 staging·승인 계정 필요.
+- **FE-09:** 시연 상태 고지는 완료. 실제 POST 저장은 BE-05의 승인된 API 계약과 실데이터 ID 확인 후 진행.
+- **FE-13:** 로컬 회귀 23건과 로컬 API 확인 완료. staging CLIENT/SUPPLIER 흐름 1~7은 승인 계정·데이터가 없어 미검증.
+- **FE-12:** `DEPOSIT_ENABLED`는 OFF이고 예치 요청은 전송하지 않는다. 기존 `escrow-live.test.tsx`는 비활성 버튼과 `/deposits` 미호출을 확인한다. BE-06/07·INT-02 승인 전 결제 연결 금지.
+- **FE-02:** 실제 이메일 발송은 사용자 결정으로 보류; staging request 200은 미검증. **FE-15:** 계약 결정 전 보류.
+
+외부 선행 조건이 제공되기 전에는 신규 API 계약·mock ID를 만들거나 staging/DB 쓰기를 하지 않는다.
+
 ## FE-00 — 실제 배포 FE 기준선·UI 경로 확인
 
 - **상태/난이도:** 완료 / 2026-11-06 프로덕션 읽기 전용 확인 / 하 · **우선순위:** P0 · **단계:** Now.
@@ -79,16 +91,19 @@
 
 ## FE-02 — 비밀번호 재설정 실제 API·초기값 정리
 
-- **상태/난이도:** 진행 / FE 연결·confirm 실HTTP 완료; BE-12 PARTIAL (Resend adapter·`sendPasswordReset` 주입은 미커밋, 안전 게이트·검증 미완) · 중 · **우선순위:** P1 · **단계:** Now.
-- **선행:** BE-01, FE-00. staging 메일 발송·request 200 검증은 BE-12 안전 게이트 완료 후.
+- **상태/난이도:** 진행 / FE 연결·confirm 실HTTP 완료; 시연 화면에 메일 발송 가정을 명시; 실제 이메일 발송은 사용자 결정으로 보류; staging request API 200은 미검증 / 중 · **우선순위:** P1 · **단계:** Now.
+- **선행:** BE-01, FE-00. 실제 이메일 발송(BE-12)은 현재 단계에서 제외; API request/confirm 검증은 별도 미완료로 둔다.
 - **대상:** `public/Reset.tsx; Reset.data.ts`.
 - **목표/범위:** DEMO.emailValue 초기값과 ?mock 성공 전환 제거, 요청/확정 2단계.
 - **보존:** 현재 Reset UI와 폼 디자인.
 - **API 계약:** POST /auth/password-reset/request|confirm.
-- **실행:** request 성공 시 메일 수신을 단정하지 않음; token 없을 때 실패 처리, 예시 값 입력 금지.
+- **실행:** request API 성공 시 계정 여부와 무관한 동일 응답 뒤 시연 가정 문구를 표시하고 실제 발송이 아님을 알린다. API 오류는 성공으로 바꾸지 않으며, token 없을 때 실패 처리·예시 값 입력 금지.
 - **완료 조건:** 빈 이메일로 시작, request/confirm 200 처리, 만료/오류 화면 정상.
 - **최소 QA:** Reset.test.tsx 인접; 초기값/성공/만료 3개 검증.
 - **확인 결과(2026-11-06 KST):** `?mock`·`DEMO.emailValue`·`pwValue` 제거. `/reset`은 빈 이메일로 시작하고, `?token=`이 있으면 확정 단계로 바로 진입한다. `POST /auth/password-reset/confirm`은 실제 토큰으로 **200** + 새 비밀번호 로그인 **200** 확인; 잘못된 토큰은 401 `RESET_TOKEN_INVALID` → 만료 화면. 백엔드 작업자 제공 정보 기준 BE-12 작업본에는 Resend adapter와 `sendPasswordReset` 주입이 이미 있으나 미커밋이며, 수신 허용목록·production 승인 게이트는 미구현이다. 계획된 게이트는 `MAIL_RECIPIENT_ALLOWLIST`와 `MAIL_PRODUCTION_APPROVED`를 사용하며 `NODE_ENV`로 환경을 판정하지 않는다; 자격증명·게이트가 없으면 mailer를 만들지 않고 503을 유지한다. 이메일 변경은 FE 경로가 없어 `sendEmailChange` 503 유지, URL을 만들지 않는다. BE-12 미완료 QA: 게이트 3케이스, 잘못된 body 400, 발송 실패에도 동일한 일반 응답, reset 후 이전 비밀번호 로그인 401. staging 실메일/request 200은 아직 미검증; production 발송은 별도 승인 필요. 인접 `Reset.test.tsx` 6/6, 전체 Vitest 461/461, typecheck/build 통과(빌드 청크 크기 경고).
+- **추가 보정(2026-11-06):** `requestPasswordReset`은 계정 존재 여부와 무관하게 같은 성공 응답을 반환한다. 성공 화면을 요청 접수·조건부 안내 문구로 바꾸고, “메일을 보냈다”는 단정을 제거했다. 전체 Vitest **468/468**, typecheck·build 통과(기존 청크 크기 경고). 390px 로컬 UI smoke에서 요청 확인 화면과 overflow 0을 확인했으며 성공 응답은 브라우저 내 mock으로 주입했다. 로컬 BE는 `localhost:3000` 연결 거부, staging request 200·실제 메일 발송은 BE-12 완료 전 미검증.
+- **BE-12 main 확인(2026-11-06):** GitHub BE `main` `3601095b5d96b28eda0810bf3dd9682b12a0ec21`의 [`identity/auth.ts`](https://github.com/exifio/majayong-backend/blob/3601095b5d96b28eda0810bf3dd9682b12a0ec21/src/modules/identity/auth.ts)는 reset token 발급·확정만 포함하고 request 메일 발송 어댑터는 없다. [`deploy/vercel-supabase.md`](https://github.com/exifio/majayong-backend/blob/3601095b5d96b28eda0810bf3dd9682b12a0ec21/deploy/vercel-supabase.md)는 이메일 발송을 미연결로 명시한다. 작업자 제공 미커밋 구현과 main 배포 근거를 혼동하지 않는다.
+- **범위 결정(2026-11-06, 사용자):** 실제 이메일 발송은 이번 단계에서 보류. 성공 화면은 메일이 전송된 것으로 가정하는 시연임을 표시하고, 실제 미발송도 함께 알린다. BE-12는 완료 처리하지 않으며, 실제 발송 재개 시 안전 게이트와 승인된 staging 검증이 필요하다.
 - **보고 형식:** 기준 SHA·변경 파일·통과/미검증·실제 요청·남은 위험을 5줄 이내로 보고. 범위 확대가 필요하면 작업을 멈추고 별도 제안.
 
 ## FE-03 — 고객센터 FAQ 분리 및 신규 1:1 문의 화면
@@ -108,16 +123,21 @@
 
 ## FE-04 — 운영자 1:1 문의 페이지 신규 구현
 
-- **상태/난이도:** 진행 / 로컬 실 API·권한·답변 완료, staging 미검증 / 중 · **우선순위:** P1 · **단계:** Next.
+- **상태/난이도:** 진행 / 로컬 API·권한·답변·WAITING 배지 구현 완료; **staging 검증 BLOCKED (`FE-04-STAGING-20261106`)** — 확인된 Vercel target은 Production이며 DB 연결 ref·운영 DB 분리 증거, 공식 계정 생성/승인 절차가 없음 / 중 · **우선순위:** P1 · **단계:** Next.
 - **선행:** BE-02, FE-05.
-- **대상:** `신규 admin/Admin-Inquiries.tsx/.data.ts/.module.css; app/menus.ts; routes.ts`.
+- **대상:** `apps/web/src/pages/admin/Admin-Inquiries.tsx/.module.css/.test.tsx; components/layout/Shell.tsx/.test.tsx; app/menus.ts; routes.ts`.
 - **목표/범위:** 보드 목록/상세/답변·완료 상태 React 구현, 운영자 메뉴 배지.
 - **보존:** 운영자 공통 셸, 접근 가드, 기존 운영자 다른 화면.
 - **API 계약:** GET /admin/support/inquiries; POST /admin/support/inquiries/{inquiryId}/answer.
 - **실행:** 없는 admin 상세 GET 호출 금지. 목록 DTO로 가능한지 검증 후 부족할 때 BE 계약 요청.
 - **완료 조건:** 운영자만 접근, WAITING→ANSWERED, 입력 빈값 차단, 타인 정보 최소 노출.
-- **최소 QA:** Admin-Inquiries.test.tsx 인접; 권한/답변/빈값.
-- **확인 결과(2026-11-06 KST):** `Admin-Inquiries` 화면과 운영자 메뉴 `1:1 문의`를 추가했다. `GET /admin/support/inquiries`, `POST /admin/support/inquiries/{id}/answer`만 사용하고 별도 상세 GET은 호출하지 않는다. 로컬 관리자 토큰으로 목록 200(1건) → 답변 200 → 사용자 상세에서 `ANSWERED`·답변 확인, 비관리자 요청 403 확인. 답변 빈값은 전송 전에 차단한다. 인접 테스트 5건·전체 449/449·typecheck·build 통과. **staging 운영자 계정 검증은 미실행**, 메뉴 배지는 실제 대기 건수 연동 전이라 0으로 둔다.
+- **최소 QA:** 인접 Admin-Inquiries/Shell 테스트: 권한·목록·WAITING 집계·답변 후 배지 갱신·빈값.
+- **로컬 구현/검증:** `Admin-Inquiries`는 목록 GET과 답변 POST만 사용하며 상세 GET은 호출하지 않는다. 로컬 관리자 토큰에서 목록 200 → 답변 200 → 작성자 상세 `ANSWERED`, 비관리자 403, 빈 답변 사전 차단을 확인했다. 배지는 문의 화면 밖에서 `WAITING`만 집계하고, 문의 화면에서는 기존 목록으로 답변 성공 시 갱신한다. 브라우저 fetch mock 대기 2건에서 배지 `2` 표시. 인접 테스트 6건, 전체 469/469, typecheck/build 통과(705.86 kB 청크 경고).
+- **Staging 상태(사용자 보고, `FE-04-STAGING-20261106`):** 계정·문의 생성 보류, API/DB 쓰기 없음. Vercel 배포는 Ready/Production `main@3601095`; `DATABASE_URL`·`SUPABASE_URL`은 Production 범위 Secret이라 ref를 열람하지 않았다. 공식 ADMIN bootstrap·승인 담당자를 찾지 못했고, 직접 Prisma ADMIN 생성은 공식 staging 절차가 아니다. 내부 Slack/Notion 문서는 세션 만료로 미확인. 공개 가입은 CLIENT/SUPPLIER만 허용하고 문의 작성은 비ADMIN에게만 허용하며 기본 상태는 WAITING이다. ADMIN 목록 GET·답변 POST 경로는 staging 계정으로 호출하지 않았다.
+- **환경 근거:** 사용자 보고 staging 도메인 `/health` 200·무인증 `/api/v1/me` 401은 DB 격리 증거가 아니다. 조회된 Supabase `health-record-restore` (`wwkuktblvadeynufjllk`, INACTIVE/테이블 접근 불가)와 `health` (`jleboocxejidigclepxt`, ACTIVE_HEALTHY/daily_records 등 다른 서비스 schema)는 Vercel 배포와 연결되지 않았다. `scripts/seed-staging.mjs`는 catalog만 upsert; `scripts/seed-demo-fixtures.mjs`/BE-08은 계정·문의 생성 절차가 아니다.
+- **추가 접근·담당자 확인(사용자 보고):** `wgeoqlfpmwzgdhbkvytc`는 과거 기록의 ref이며 Supabase `get_project`·read-only `list_tables`가 권한 거부됐다. Free 요금제 한도로 신규 프로젝트도 생성되지 않았다.
+- **담당자 식별(사용자 보고):** Vercel 팀의 유일한 Owner 계정은 `exifio-4593`이나 실명·연락은 확인되지 않았다. GitHub 저장소 owner/admin `SeungHun (exifio)`와 동일 인물인지 미검증이고, Supabase 담당자는 미확인이다. 요청/회신 대기; 초대·계정 생성·DB/API/Vercel 변경·자격증명 공유 없음.
+- **재개 조건:** 운영 DB와 분리된 승인 staging 배포·DB project ref의 근거, 공식 ADMIN 생성 절차와 승인 담당자, 문의 작성자용 CLIENT/SUPPLIER 계정의 승인된 접근 경로, WAITING 테스트 문의 준비 절차, 승인된 비밀 저장소 항목 경로. 비밀 값은 문서/채팅에 기록하지 않는다.
 - **보고 형식:** 기준 SHA·변경 파일·통과/미검증·실제 요청·남은 위험을 5줄 이내로 보고. 범위 확대가 필요하면 작업을 멈추고 별도 제안.
 
 ## FE-05 — 푸터·메뉴·약관 셸 공통 수정

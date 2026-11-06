@@ -22,7 +22,7 @@ describe('Reset — 비밀번호 재설정', () => {
     expect(findDesignViolations(container)).toEqual([]);
   });
 
-  it('이메일 요청이 성공하면 메일 보냄 화면으로 이동한다', async () => {
+  it('요청 성공 시 전송 가정과 실제 미발송을 구분해 보여 준다', async () => {
     vi.stubGlobal('fetch', vi.fn<typeof fetch>().mockResolvedValue(jsonResponse({ data: { requested: true } })));
     const { container } = renderAt('/reset', 'guest');
     const root = container.querySelector('[data-screen="Reset"]') as HTMLElement;
@@ -31,6 +31,8 @@ describe('Reset — 비밀번호 재설정', () => {
     fireEvent.click(within(root).getByRole('button', { name: DEMO.send }));
 
     expect(await screen.findByRole('heading', { level: 1, name: DEMO.sentTitle })).toBeTruthy();
+    expect(screen.getByText(DEMO.sentSub).textContent).toContain('전송된 것으로 가정');
+    expect(screen.getByText(DEMO.sentBody).textContent).toContain('실제 이메일은 발송되지 않습니다');
   });
 
   it('메일 발송을 사용할 수 없으면 서버 안내를 보여 주고 입력 화면에 머문다', async () => {

@@ -1,5 +1,5 @@
 /* 비밀번호 재설정 — 보드 Reset · /reset · M1
- * 상태: 이메일 입력 / 메일 보냄 / 새 비밀번호 / 링크 만료 / 완료
+ * 상태: 이메일 입력 / 요청 접수 / 새 비밀번호 / 링크 만료 / 완료
  * F-06. 요청과 확정은 실제 API를 쓰고, 성공해도 메일 수신을 단정하지 않는다. */
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
@@ -44,7 +44,7 @@ export default function Reset() {
       await requestPasswordReset(email.trim());
       setStep('sent');
     } catch (caught) {
-      setError(caught instanceof AuthError ? caught.message : '재설정 메일을 보내지 못했습니다. 다시 시도해 주세요.');
+      setError(caught instanceof AuthError ? caught.message : '재설정 요청을 처리하지 못했습니다. 다시 시도해 주세요.');
     } finally {
       setBusy(false);
     }
@@ -98,7 +98,7 @@ export default function Reset() {
                 full
                 type="button"
                 disabled={busy}
-                disabledReason={busy ? '메일을 보내는 중입니다' : undefined}
+                disabledReason={busy ? '요청을 처리하는 중입니다' : undefined}
                 onClick={() => void sendReset()}
               >
                 {busy ? DEMO.sending : DEMO.send}
