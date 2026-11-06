@@ -242,7 +242,7 @@
 
 ## FE-12 — Toss 예치 UI 사실표시·승인 연결 게이트
 
-- **상태/난이도:** 진행 / 코드·SDK 창 로컬 확인, 플래그 OFF 유지, 실카드 E2E는 INT-02 / 상 · **우선순위:** P0 · **단계:** Now.
+- **상태/난이도:** 완료 / INT-02 sandbox 승인 E2E PASS(가상계좌), production 플래그 OFF / 상 · **우선순위:** P0 · **단계:** Now.
 - **선행:** BE-06, BE-07, INT-02.
 - **대상:** `components/contract/LiveEscrow.tsx; lib/deposit-api.ts; lib/toss-payment.ts; lib/feature-flags.ts; packages/types/src/api.ts; .env.example`.
 - **목표/범위:** C 예치 API(PENDING 생성·목록·confirm)와 Toss 결제창을 플래그 뒤에서 연결한다. 결제 성공 리다이렉트의 `paymentKey`/`orderId`/`amount`로 서버 confirm을 호출한 뒤에만 완료로 표시한다.
@@ -251,7 +251,7 @@
 - **실행:** 프론트에는 공개 클라이언트 키(`VITE_TOSS_CLIENT_KEY`)만 둔다. 시크릿 키 금지. `DEPOSIT_ENABLED=false`면 예치 API·SDK를 호출하지 않고 기존 안내를 유지한다.
 - **완료 조건:** OFF에서 버튼 비활성·`/deposits` 미호출. ON에서 PENDING 생성 후 결제창이 열리고, 성공 리다이렉트 confirm 200 전에는 완료 표시 금지. 실패 리다이렉트는 오류 표시.
 - **최소 QA:** `escrow-live.test.tsx` 7건(OFF 4 + ON 생성/SDK·성공 confirm·실패 3), `pnpm typecheck`, `pnpm test` 477/477, `pnpm build`.
-- **확인 결과(2026-11-07 KST):** 로컬 dev(`VITE_ENABLE_DEPOSIT=true`, 테스트 클라이언트 키) + staging API에서 버튼 활성·`POST /deposits` 201 PENDING 105,000원·Toss 카드 결제창(테스트 환경, 105,000원) 열림 확인. DB 예치 `PENDING`, method `CARD`. 성공/실패 리다이렉트와 confirm 호출은 단위 테스트로 확인했고, BE confirm은 실제 Toss sandbox 가상계좌로 이미 200 완료(STAGING-PAY-20261106). **한계:** 실카드 결제·전체 리다이렉트 E2E는 INT-02 승인 환경에서 수행해야 하며, production은 `VITE_ENABLE_DEPOSIT=false` 유지다.
+- **확인 결과(2026-11-07 KST):** 로컬 dev(`VITE_ENABLE_DEPOSIT=true`, 테스트 클라이언트 키) + staging API에서 버튼 활성·`POST /deposits` 201 PENDING 105,000원·Toss 결제창 열림 확인. INT-02에서 실제 Toss sandbox 가상계좌 결제→대시보드 입금처리→FE 성공 리다이렉트→confirm 200으로 예치 `COMPLETED`·계약 `DEPOSITED`·구간 2개까지 확인했다. 성공/실패 리다이렉트 단위 테스트 3건, 전체 477/477. **한계:** 실카드는 사용하지 않았고, production은 `VITE_ENABLE_DEPOSIT=false` 유지다.
 - **보고 형식:** 기준 SHA·변경 파일·통과/미검증·실제 요청·남은 위험을 5줄 이내로 보고. 범위 확대가 필요하면 작업을 멈추고 별도 제안.
 
 ## FE-13 — 기존 NDA·지원·채팅·합의·서명 보호 회귀
