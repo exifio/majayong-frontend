@@ -36,14 +36,14 @@
 
 **현재 FE 실행 가능 상태 (2026-11-06)**
 - FE-17·FE-18·FE-12·FE-04/07/13·INT-02·FE-09는 완료됐습니다. INT-03은 staging GO·production NO-GO로 판정했습니다. 자동 복구 scheduler도 Vercel Cron으로 연결했습니다. 남은 작업은 production 전환 준비입니다.
-- FE-12는 INT-02 sandbox 승인 E2E(가상계좌)까지 확인했고, production은 `VITE_ENABLE_DEPOSIT=false`를 유지합니다. 웹훅·복구는 INT-02 잔여 항목입니다.
+- FE-12는 샌드박스 승인 E2E·실제 웹훅 200·자동 Cron 복구까지 확인했고, 테스트 키와 `VITE_ENABLE_DEPOSIT=true`로 배포했습니다. live 결제는 범위에서 제외합니다.
 - FE-02의 실제 메일 발송은 사용자 결정으로 보류, FE-15는 계약 결정 전 보류입니다. 외부 선행 조건 전에는 API·fixture·DB 쓰기를 추가하지 않습니다.
 
 **대기 (Next/Later)**
 - [ ] **FE-15** 검색/취소 철회 확장 보류 — 미지원 UI 없음 확인, 계약 결정 전
 
 **차단 (외부 계약·증거 필요)**
-- [x] **FE-12** Toss 예치 SDK 연결 — INT-02 sandbox 승인 E2E PASS(가상계좌), production `VITE_ENABLE_DEPOSIT=false` 유지
+- [x] **FE-12** Toss 예치 SDK 연결 — 샌드박스 승인 E2E PASS(가상계좌), 테스트 client key·`VITE_ENABLE_DEPOSIT=true` 배포
 
 **BE · Integration (이 저장소 밖)**
 - [x] **BE-00** API 기준선·staging 검증
@@ -53,16 +53,16 @@
 - [x] **BE-04** NDA/specItemId/지원·채팅·합의·서명 회귀
 - [x] **BE-05** 납품·검수·운영자 결정 API — D-26 `items[].id` 추가, 로컬 납품 201·승인 200·보완 201
 - [x] **BE-06** Toss sandbox 승인 계약
-- [ ] **BE-07** Toss 웹훅·재조회·복구
+- [x] **BE-07** Toss 웹훅·재조회·복구 — 실제 테스트 웹훅 200·가상계좌 COMPLETED·15분 Cron 복구 PASS
 - [x] **BE-08** staging fixture 2세트/리셋
 - [x] **BE-09** 검색 keyword/sort/deadlineBefore
 - [x] **BE-10** 취소 철회/1원 인증 계약
 - [x] **BE-11** API 문서/권한/최종 스모크
 - [ ] **BE-12 (보류)** 메일 발송 안전 게이트·비밀번호 재설정 staging 실메일 검증 — 실제 발송은 사용자 결정으로 현재 단계에서 제외; 재개 전 allowlist·production 승인·테스트 완료 필요
-- [ ] **INT-00** FE/BE/디자인 SHA·계약 고정 — Vercel의 staging 명명 프로젝트가 Ready/Production; DB ref·운영 분리, 승인 계정, FE 배포 SHA·API v1.0.1 미확인
-- [ ] **INT-01** 로그인 후 실제 사용자 흐름 재현
+- [ ] **INT-00** FE/BE/디자인 SHA·계약 고정 — BE `5f40443`·FE `c7e93a9`, staging DB·Vercel 프로젝트 확인; production 분리·API v1.0.1 전수 대조는 미완료
+- [x] **INT-01** 로그인 후 실제 사용자 흐름 재현 — staging API 01~10·FE 13 1~7 PASS; FE 08~10 화면은 FE-04/07/10/13에서 확인
 - [x] **INT-02** 결제 승인·복구 계약·PAY-01~06 — 승인 E2E·서명 웹훅·수동·Vercel Cron 자동 복구 PASS
-- [ ] **INT-03** 57보드/배포 go-no-go — staging demo GO, production NO-GO(테스트 키·플래그 OFF·복구 worker·웹훅 등록·문안·메일·ADMIN)
+- [x] **INT-03** 57보드/배포 go-no-go — 샌드박스 GO(테스트 키·웹훅 200·Cron 복구·FE 예치 ON), production live는 범위 제외
 
 ## 사용법
 
