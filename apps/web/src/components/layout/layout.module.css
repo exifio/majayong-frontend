@@ -79,7 +79,6 @@
 .ic-deadline { background: var(--amber-50); color: var(--amber-700); }
 .ddText { flex: 1; min-width: 0; }
 .ddMsg { font-size: 15px; margin: 0; }
-.ddTarget { font-size: 13px; color: var(--slate-600); margin: 2px 0 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ddTime { font-size: 13px; color: var(--slate-600); white-space: nowrap; }
 .ddUnreadDot { width: 7px; height: 7px; border-radius: 50%; background: var(--blue-600); margin-top: 8px; flex: none; }
 .ddFoot { background: var(--slate-50); font-size: 13px; color: var(--slate-600); padding: 12px 20px; margin: 0; }

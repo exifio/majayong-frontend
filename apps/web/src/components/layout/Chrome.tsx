@@ -296,7 +296,6 @@ export function NotificationDropdown({
                     <span className={`${s.ddIcon} ${s[`ic-${kind}`]}`} aria-hidden="true"><Icon size={16} /></span>
                     <span className={s.ddText}>
                       <p className={s.ddMsg}>{notification.message}</p>
-                      <p className={s.ddTarget}>{notification.target}</p>
                     </span>
                     {!notification.isRead && <span className={s.ddUnreadDot} aria-label="안 읽음" />}
                   </Link>
