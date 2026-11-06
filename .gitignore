@@ -7,8 +7,10 @@ dist/
 .DS_Store
 coverage/
 .vercel/
-docs/
-AGENTS.md
+# docs/
+# AGENTS.md
 CLAUDE.md
 .cursor/
 .vercel
+.code-review-graph
+.playwright-cli

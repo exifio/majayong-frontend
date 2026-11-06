@@ -3,8 +3,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import type { InquiryDto } from '@majayong/types/api';
 import { findDesignViolations } from '@/app/devChecks';
-import { PAGE } from '@/pages/public/Help-Inquiry.data';
-import { location, renderAt } from './render';
+import { PAGE } from './Help-Inquiry.data';
+import { location, renderAt } from '@/test/render';
 
 const jsonResponse = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });

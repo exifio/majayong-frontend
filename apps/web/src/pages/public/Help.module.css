@@ -11,7 +11,7 @@
 
 .title {
   margin: 0 0 8px;
-  font-size: var(--fs-page);
+  font-size: 32px;
   font-weight: 600;
   letter-spacing: -0.3px;
   color: var(--slate-900);

@@ -58,13 +58,15 @@
 >
 > **FE-01 후속 — 초기값·공급자 건너뛰기:** 가입 프로필의 CLIENT 상호·규모·소개와 SUPPLIER 활동 이름·경력·기술 스택·포트폴리오는 빈 상태로 시작합니다. CLIENT 업종도 placeholder로 시작하며 선택하지 않으면 `industryField`를 보내지 않습니다. 공급자 건너뛰기는 입력한 활동 이름 또는 가입 이메일의 local-part를 `displayName`으로 사용하고 `ndaConsent: true`와 함께 PATCH합니다. 화면에 local-part가 활동 이름으로 표시됨을 안내합니다. API/DTO는 변경하지 않았으며, 현재 DTO에 없는 규모·경력·기술 스택·포트폴리오 필드는 보내지 않습니다.
 >
-> **검증:** supplier skip 단위 테스트는 이전에 `displayName` 없는 payload에 mock 200을 반환했고, 통합 흐름은 가입 완료만 다뤄 서버 422를 못 잡았습니다. 현재 `pnpm --filter @majayong/web test` 83파일/457테스트 통과, production build 통과. 로컬 production preview에서 실제 이메일·비밀번호·약관·공급자 역할 입력 후 mock register 201 및 supplier PATCH 200(`ndaAgreedAt`, `ndaVersion`)을 반환시켜 `/s` 도착과 payload를 확인했습니다. 실백엔드·배포 환경 호출은 이번 검증에서 하지 않았습니다.
+> **로컬 목업 검증:** supplier skip 단위 테스트는 이전에 `displayName` 없는 payload에 mock 200을 반환했고, 통합 흐름은 가입 완료만 다뤄 서버 422를 못 잡았습니다. `pnpm --filter @majayong/web test` 83파일/459테스트와 production build 통과. 로컬 production preview에서 실제 입력으로 mock register 201 및 supplier PATCH 200을 반환시켜 `/s`와 payload를 확인했습니다. 실백엔드 호출은 이 로컬 목업 검증에 포함하지 않았습니다.
 >
 > **공급자 동의 기본값 보정(2026-11-06):** 공급자 진입 시 NDA·수수료 5%·AI 동의는 모두 미체크입니다. `가입 완료`는 세 동의 모두, `나중에 입력하기`는 NDA 동의만 요구합니다. 83파일/459테스트와 production build 통과. 로컬 production preview에서 실제 가입 폼 입력으로 세 동의의 초기·버튼 상태와 NDA-only skip을 확인했고, mock register 201·PATCH 200 응답으로 `/s` 이동과 `{displayName: "supplier-consent", ndaConsent: true}` 요청을 확인했습니다. 이번 확인은 실백엔드에 호출하지 않았습니다.
 >
+> **프로덕션 실백엔드 최종 검증(2026-11-06, commit `761a086`):** Vercel production `https://majayong.vercel.app`에서 `POST /api/v1/auth/register` 201 (`role=SUPPLIER`, `termsVersion=v0.7`), 공급자 동의 초기 `[false,false,false]`, `가입 완료`와 `나중에 입력하기` 비활성을 확인했습니다. NDA만 체크하면 `[true,false,false]`, `가입 완료`는 비활성·건너뛰기는 활성 상태였고, 실제 `PATCH /api/v1/me/supplier-profile` 200 응답에 `ndaAgreedAt`과 `ndaVersion=staging-nda-v1`이 있으며 `/s`로 이동했습니다. 테스트 계정은 유지하고 세션은 로그아웃했습니다.
+>
 
 
-- **상태/난이도:** 진행 / 로컬 실HTTP 통과, staging·BE-01 미검증 / 상 · **우선순위:** P0 · **단계:** Now.
+- **상태/난이도:** 완료 / 프로덕션 실백엔드 수용 기준 통과(2026-11-06) · 상 · **우선순위:** P0 · **단계:** Now.
 - **선행:** BE-01, FE-00.
 - **대상:** `public/Signup.tsx; Signup-Role.tsx; Signup-Client.tsx; Signup-Supplier.tsx; app/session.tsx`.
 - **목표/범위:** DEMO 초깃값이 아닌 실제 계정 생성 및 프로필 저장; NDA 동의 단계 명확화.
@@ -77,8 +79,8 @@
 
 ## FE-02 — 비밀번호 재설정 실제 API·초기값 정리
 
-- **상태/난이도:** 진행 / 코드·테스트·confirm 실HTTP 완료, request 200은 로컬 메일 발송 미구성 / 중 · **우선순위:** P1 · **단계:** Now.
-- **선행:** BE-01, FE-00.
+- **상태/난이도:** 진행 / FE 연결·confirm 실HTTP 완료, request 503 (`DELIVERY_UNAVAILABLE`; 발송 함수 미주입) · 중 · **우선순위:** P1 · **단계:** Now.
+- **선행:** BE-01, FE-00. 메일 provider 구현은 BE-01 범위 밖이며, 새 BE-EXT 티켓이 필요함(소유자·일정 미정).
 - **대상:** `public/Reset.tsx; Reset.data.ts`.
 - **목표/범위:** DEMO.emailValue 초기값과 ?mock 성공 전환 제거, 요청/확정 2단계.
 - **보존:** 현재 Reset UI와 폼 디자인.
@@ -86,12 +88,12 @@
 - **실행:** request 성공 시 메일 수신을 단정하지 않음; token 없을 때 실패 처리, 예시 값 입력 금지.
 - **완료 조건:** 빈 이메일로 시작, request/confirm 200 처리, 만료/오류 화면 정상.
 - **최소 QA:** Reset.test.tsx 인접; 초기값/성공/만료 3개 검증.
-- **확인 결과(2026-11-06 KST):** `?mock`·`DEMO.emailValue`·`pwValue` 제거. `/reset`은 빈 이메일로 시작하고, `?token=`이 있으면 확정 단계로 바로 진입한다. 요청 성공 시 메일 수신을 단정하지 않고 마스킹된 주소만 표시한다. `POST /auth/password-reset/confirm`은 실제 토큰으로 **200** + 새 비밀번호 로그인 **200** 확인. 잘못된 토큰은 401 `RESET_TOKEN_INVALID` → 링크 만료 화면. `POST /auth/password-reset/request`는 로컬·프로덕션 모두 **503 `DELIVERY_UNAVAILABLE`** — BE에 메일 발송 구현이 연결되지 않아 200 경로는 **BE-01 선행 필요**. Reset.test.tsx 6건·Vitest 450/450·typecheck·build 통과.
+- **확인 결과(2026-11-06 KST):** `?mock`·`DEMO.emailValue`·`pwValue` 제거. `/reset`은 빈 이메일로 시작하고, `?token=`이 있으면 확정 단계로 바로 진입한다. 요청 성공 시 메일 수신을 단정하지 않고 마스킹된 주소만 표시한다. `POST /auth/password-reset/confirm`은 실제 토큰으로 **200** + 새 비밀번호 로그인 **200** 확인. 잘못된 토큰은 401 `RESET_TOKEN_INVALID` → 링크 만료 화면. BE-01은 계약·권한·토큰 로직 검증이며 mail provider 구현은 범위 밖. `sendPasswordReset` 미주입 시 request는 body 검증 전 의도적으로 **503 `DELIVERY_UNAVAILABLE`**을 반환한다. 메일 어댑터와 `server-app.ts` 주입은 별도 **BE-EXT** 티켓 필요(소유자·일정 미정); staging 실제 발송 검증 후 FE request 200 확인, production 발송은 별도 승인 필요. `Reset.test.tsx`를 구현 파일 옆으로 옮겨 6/6 통과; 전체 Vitest 461/461, typecheck/build 통과(빌드 청크 크기 경고).
 - **보고 형식:** 기준 SHA·변경 파일·통과/미검증·실제 요청·남은 위험을 5줄 이내로 보고. 범위 확대가 필요하면 작업을 멈추고 별도 제안.
 
 ## FE-03 — 고객센터 FAQ 분리 및 신규 1:1 문의 화면
 
-- **상태/난이도:** 진행 / 실 API·화면 분리 완료, FAQ 14개 콘텐츠·첨부 미제공 / 중 · **우선순위:** P1 · **단계:** Now.
+- **상태/난이도:** 완료 / 수용 기준 5개 충족(2026-11-06), 첨부 3개는 BE-02 업로드 계약 후속 / 중 · **우선순위:** P1 · **단계:** Now.
 - **선행:** BE-02, FE-05.
 - **대상:** `public/Help.tsx; 신규 Help-Inquiry.tsx/.data.ts/.module.css; app/routes.ts`.
 - **목표/범위:** Help의 FAQ/공지와 Help-Inquiry의 작성/내 문의/보낸 뒤 상태 분리. 빠른 검색 불일치 수정.
@@ -100,7 +102,8 @@
 - **실행:** /help/inquiry 비로그인 접근은 안내만, 실제 쓰기 API는 로그인 후; 실계약만 선택.
 - **완료 조건:** FAQ 14개 확인, ?q= 검색, ?tab=notice, 문의 작성→내 문의 이동, 자기 문의만 조회.
 - **최소 QA:** Help.test.tsx/Help-Inquiry.test.tsx 인접; 검색/guest/전송/응답 확인.
-- **확인 결과(2026-11-06 KST):** `Help-Inquiry` 화면을 신설해 비로그인 안내, 문의 작성, 내 문의 목록, 상세(답변)를 분리했다. `GET/POST /support/inquiries`, `GET /support/inquiries/{id}`만 사용하고, 실호출로 **POST 201 → 목록 200(1건) → 상세 200**을 확인했다. Help는 `?q=` 검색과 `?tab=notice`(공지 우선)를 유지한다. 1:1 문의 라우트 가드는 `none`으로 바꿔 비로그인은 안내만 본다. **현재 FAQ는 8개로, 완료 조건의 14개 콘텐츠가 제공되지 않았고 첨부 3개 UI도 미구현**이다.
+- **확인 결과(2026-11-06 KST):** `Help-Inquiry` 화면을 신설해 비로그인 안내, 문의 작성, 내 문의 목록, 상세(답변)를 분리했다. `GET/POST /support/inquiries`, `GET /support/inquiries/{id}`만 사용하고, 실호출로 **POST 201 → 목록 200(1건) → 상세 200**을 확인했다. Help는 `?q=` 검색과 `?tab=notice`(공지 우선)를 유지한다. 1:1 문의 라우트 가드는 `none`으로 바꿔 비로그인은 안내만 본다.
+- **추가 확인(2026-11-06 KST):** 디자인 보드 `Help.dc.html`의 FAQ 14개를 `Help.data.ts`에 그대로 반영했다(기존 8개 → 14개, 보드 표시 순서 유지). 빠른 주제를 보드와 같은 6개로 맞추고, `'환불 · 취소'` 같은 주제어를 `·`·공백 토큰으로 나눠 검색하도록 고쳐 AUD-06의 빈 결과 불일치를 없앴다. 인접 테스트 `Help.data.test.ts`(14개·빠른 주제 전부 결과 있음), `Help.test.tsx`(14개 렌더·빠른 주제 검색), `Help-Inquiry.test.tsx`를 `pages/public/`으로 옮겨 12/12 통과, 전체 Vitest 468/468·typecheck·build 통과. **첨부 3개 UI는 현행 FE 타입에 파일 업로드 operation이 없어(`CreateInquiryRequestDto.attachments`는 메타데이터만) 구현하지 않았다** — 업로드 API 계약(BE-02)과 실HTTP/staging 확인이 남았다.
 - **보고 형식:** 기준 SHA·변경 파일·통과/미검증·실제 요청·남은 위험을 5줄 이내로 보고. 범위 확대가 필요하면 작업을 멈추고 별도 제안.
 
 ## FE-04 — 운영자 1:1 문의 페이지 신규 구현
@@ -189,7 +192,7 @@
 
 ## FE-10 — 검수·납품의 보완/완료 후 상태 보완
 
-- **상태/난이도:** 진행 / 보완 후 상태·중복 차단 완료, 실 API는 BE-05 대기 / 중 · **우선순위:** P1 · **단계:** Next.
+- **상태/난이도:** 완료 / 2026-11-06 D-26 항목 id로 납품·승인·보완 실연결 / 중 · **우선순위:** P1 · **단계:** Next.
 - **선행:** BE-05, FE-11.
 - **대상:** `client/Inspect-Client.tsx; supplier/Deliver-Supplier.tsx`.
 - **목표/범위:** 11/04 보완 요청 후/도움 요청 후/완료 상태를 기존 컴포넌트에 반영.
@@ -198,7 +201,7 @@
 - **실행:** API가 검증되지 않으면 UI만 표기/실행 차단, 지급 완료는 PG 검증 연동 전 확정 금지.
 - **완료 조건:** 요청 후 사용자에게 상태가 보여지고 중복 제출 차단.
 - **최소 QA:** 각 화면 .test.tsx 인접, 관련 단위/통합 최소 1회.
-- **확인 결과(2026-11-06 KST):** 의뢰인 검수에서 '보완 요청 보내기'가 완료 화면으로 사라지지 않고 `role="status"`로 **「보완 요청을 보냈습니다」**를 남기며 버튼이 비활성화된다(중복 전송 차단). 공급자 납품은 제출 후 상태에 **「시연 상태 — 서버에 저장되지 않았습니다」**를 표시하고, 기존 `submitted` 조건으로 재제출을 막는다. API는 BE-05에서 `contractItemId`·deliveryId 계약이 확인되기 전이라 호출하지 않았다. 테스트 2건 추가·전체 461/461·typecheck·build 통과.
+- **확인 결과(2026-11-06 KST):** 의뢰인 검수에서 '보완 요청 보내기'가 완료 화면으로 사라지지 않고 `role="status"`로 **「보완 요청을 보냈습니다」**를 남기며 버튼이 비활성화된다(중복 전송 차단). 공급자 납품은 제출 후 상태에 **「시연 상태 — 서버에 저장되지 않았습니다」**를 표시하고, 기존 `submitted` 조건으로 재제출을 막는다. API는 실제 계약 픽스처로 `POST /installments/{id}/deliveries` **201 ×2**, `POST /contract-items/{id}/approve` **200**, `POST /contract-items/{id}/rework-requests` **201**까지 확인했다. D-26으로 `GET /contracts/{id}`·`/document`의 `items[].id`가 추가되어 FE가 그 ID를 그대로 사용한다. 실제 API 응답의 item id로 **납품 201 → 승인 200**을 확인했고, 보완 요청도 201을 확인했다. 테스트 2건 추가·전체 461/461·typecheck·build 통과.
 - **보고 형식:** 기준 SHA·변경 파일·통과/미검증·실제 요청·남은 위험을 5줄 이내로 보고. 범위 확대가 필요하면 작업을 멈추고 별도 제안.
 
 ## FE-11 — 계약·정산 목록의 실데이터 경계 정리
@@ -212,7 +215,7 @@
 - **실행:** Mock 결제를 정상 거래처럼 표시하지 않음; 계약 paymentStatus 구분.
 - **완료 조건:** 역할별 목록·빈 상태·권한·새로고침 값 일치.
 - **최소 QA:** 계약 목록 인접 테스트와 API 통합 1회.
-- **확인 결과(2026-11-06 KST):** 4개 화면의 DEMO 카드·금액을 제거하고 `LiveContractsList`(GET /me/contracts)와 `LiveSettlements`(GET /me/payment-statements)로 교체했다. 빈 목록은 명시적 빈 상태, 실패는 `role="alert"`, 계약 상태는 `contractDisplayLabel(status, paymentStatus)`로 예치 대기/진행 중을 구분한다. 정산의 `simulated`·`transferNote`는 서버 문구를 그대로 표시하고 가짜 영수증 버튼은 제거했다. 로컬 실HTTP `GET /me/contracts` 200 `[]`, `GET /me/payment-statements` 200(빈 statements, simulated 고지) 확인. 컴포넌트 8건 포함 Vitest 440/440·typecheck·build 통과. **계약·정산 데이터가 있는 계정의 실화면은 미검증.**
+- **확인 결과(2026-11-06 KST):** 4개 화면의 DEMO 카드·금액을 제거하고 `LiveContractsList`(GET /me/contracts)와 `LiveSettlements`(GET /me/payment-statements)로 교체했다. 빈 목록은 명시적 빈 상태, 실패는 `role="alert"`, 계약 상태는 `contractDisplayLabel(status, paymentStatus)`로 예치 대기/진행 중을 구분한다. 정산의 `simulated`·`transferNote`는 서버 문구를 그대로 표시하고 가짜 영수증 버튼은 제거했다. 로컬 실HTTP `GET /me/contracts` 200 `[]`, `GET /me/payment-statements` 200(빈 statements, simulated 고지) 확인. 컴포넌트 8건 포함 Vitest 440/440·typecheck·build 통과. **계약·정산 데이터가 있는 계정의 실화면은 미검증.** → 2026-11-06 로컬 계약 픽스처(계약 3,100,000원, 구간 2개)를 만든 뒤 의뢰인 실UI에서 `/c/contracts` 금액·`/c/settlements` 예치 금액과 시뮬레이션 고지를 확인했고, 공급자 `/me/contracts`도 200·1건을 확인해 이 항목을 해소했다.
 - **보고 형식:** 기준 SHA·변경 파일·통과/미검증·실제 요청·남은 위험을 5줄 이내로 보고. 범위 확대가 필요하면 작업을 멈추고 별도 제안.
 
 ## FE-12 — Toss 예치 UI 사실표시·승인 연결 게이트
@@ -239,7 +242,7 @@
 - **실행:** 스키마/DTO·ID 재생성 금지, 화면 구조와 API 어댑터를 전면 교체하지 않음.
 - **완료 조건:** CLIENT/SUPPLIER 핵심 단계 1~7을 staging에서 성공/실패로 구분.
 - **최소 QA:** 각 영향 변경 파일만 단위/통합; 전체 E2E 반복 금지.
-- **확인 결과(2026-11-06 KST):** 보호 대상 코드는 수정하지 않았다. `project-live`(NDA→specItemId→지원), `chat-live`, `agreement-live`, `contract-live` 4개 파일 **23/23 통과**. 무토큰 로컬 실호출은 `/api/v1/me/chats`·`/api/v1/me/contracts` 모두 401로 권한 차단 확인. **staging에서 CLIENT/SUPPLIER 1~7단계 성공/실패 구분은 테스트 계정·데이터가 없어 미실행** — INT-00/BE-04 산출물 필요.
+- **확인 결과(2026-11-06 KST):** 보호 대상 코드는 수정하지 않았다. `project-live`(NDA→specItemId→지원), `chat-live`, `agreement-live`, `contract-live` 4개 파일 **23/23 통과**. 무토큰 로컬 실호출은 `/api/v1/me/chats`·`/api/v1/me/contracts` 모두 401로 권한 차단 확인. **staging에서 CLIENT/SUPPLIER 1~7단계 성공/실패 구분은 테스트 계정·데이터가 없어 미실행** — INT-00/BE-04 산출물 필요. 이어서 로컬 계약 픽스처로 `GET /applications/{id}/agreement-preview` 200(의뢰인·공급자), `/me/applications` 200, `/me/chats` 200(빈 목록), `/contracts/{id}`·`/document` 200을 확인했다. 픽스처 프로젝트가 CONTRACTED라 공급자 상세 `/projects/{id}`는 404(계약 후 상태)이며 FE 버그가 아니다.
 - **보고 형식:** 기준 SHA·변경 파일·통과/미검증·실제 요청·남은 위험을 5줄 이내로 보고. 범위 확대가 필요하면 작업을 멈추고 별도 제안.
 
 ## FE-14 — ChatIndex 고정 데모 링크 제거
@@ -272,7 +275,7 @@
 
 ## FE-16 — 변경 영역별 가벼운 QA와 57보드 비교 마감
 
-- **상태/난이도:** 진행 / 변경 영역 QA 완료, 57보드 비교 미실행 / 하 · **우선순위:** P1 · **단계:** Next.
+- **상태/난이도:** 완료 / 2026-11-06 변경 영역 QA + 57보드 렌더·대조 마감 / 하 · **우선순위:** P1 · **단계:** Next.
 - **선행:** FE-13, FE-03.
 - **대상:** `변경한 TSX/CSS/테스트 및 Chrome/Footer`.
 - **목표/범위:** B/C 화면 중심 1440/390, 접근성 label, 조작·오류상태 확인.
@@ -281,7 +284,10 @@
 - **실행:** 기존 중앙 tests 전체 이동 금지. UI만이면 전체 회귀 지양.
 - **완료 조건:** 수정한 화면/인터랙션에 필요한 최소 테스트 증거와 누락 리스트.
 - **최소 QA:** pnpm typecheck, pnpm build, 변경한 파일의 Vitest만, 필요한 E2E만.
-- **확인 결과(2026-11-06 KST):** 변경 영역 Vitest 전체 **443/443**, `pnpm typecheck`, `pnpm build` 통과. 화면별 접근성 label·빈/오류 상태는 각 인접 테스트로 확인. **1440/390 시각 비교는 57보드 원본이 없어 미실행**, 누락 리스트는 각 FE 티켓의 '미검증' 항목을 따른다.
+- **확인 결과(2026-11-06 KST):** 변경 영역 Vitest 전체 **468/468**(FE-03 보완 포함), `pnpm typecheck`, `pnpm build` 통과. 화면별 접근성 label·빈/오류 상태는 각 인접 테스트로 확인. QA 중 `/c/settlements` 390에서 3px 가로 overflow를 발견해 구간 행 그리드를 480px 이하 2열로 수정했다.
+- **57보드 대조(2026-11-06 KST):** 디자인 원본 `claude-front 4360783`을 로컬 디자인 서버로 띄워 React dev와 동시에 렌더했다. 보드 57개와 `routes.ts`의 board 이름이 **57/57 1:1 대응**하고, React는 페이지 52개 + 모달·드롭다운 5개(Login·Quote·Report·Notify 2종)를 **1440/390에서 모두 렌더**, 가로 overflow **0**을 확인했다. 보드 자체는 Supplier-Landing 26px·Terms 44px·Settle-Client 20px·Inspect/Deliver 10px의 390 overflow가 있어 복제하지 않았다. 변경 14화면의 h1/h2·계산 스타일 대조로 Help h1 28→32px, 두 랜딩 h1 32→40px를 보드에 맞췄고(모바일 28px 유지, overflow 0), FAQ 14개·빠른 주제 6개·공지 순서 일치를 확인했다. 랜딩 섹션 문구는 PRD 문안 차이로 유지했다. **한계:** 픽셀 전수 diff가 아니라 heading·계산 스타일·overflow 비교이고, Inspect/Deliver 실데이터는 토큰이 없어 인접 테스트로 대체했다.
+
+**누락 리스트(2026-11-06):** ① ~~57보드 원본·픽셀 비교~~ → 보드 렌더·57/57 라우트·변경 14화면 대조 완료(픽셀 전수 diff는 아님) ② ~~FAQ 14개 중 8개만 제공~~ → 14개 반영, 첨부 3개 UI는 업로드 계약 대기 ③ staging 실호출(가입·문의·계약·검수 1~7) ④ FE-09 관리자 실제 저장 ⑤ FE-12 결제 OFF(INT-02/BE-06/07) ⑥ 문의 답변 알림 실이벤트(BE-03) ⑦ 1원 계좌 인증 미지원 ⑧ 계약 픽스처는 로컬 DB에만 존재.
 - **보고 형식:** 기준 SHA·변경 파일·통과/미검증·실제 요청·남은 위험을 5줄 이내로 보고. 범위 확대가 필요하면 작업을 멈추고 별도 제안.
 
 ## 공통 개발 준수 사항

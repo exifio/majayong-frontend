@@ -40,7 +40,7 @@
 }
 
 .hl {
-  font-size: var(--fs-hero);
+  font-size: 40px;
   font-weight: 600;
   letter-spacing: -1.2px;
   line-height: 1.3;
