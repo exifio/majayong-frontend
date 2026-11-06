@@ -42,7 +42,7 @@
 
 ## INT-02 — 결제 승인·복구 FE/BE 계약 승인 및 PAY-01~06
 
-- **상태/난이도:** 진행 / FE-12 연결·로컬 Toss 창 확인, 실카드·전체 리다이렉트 E2E 대기 / 상 · **우선순위:** P0 · **단계:** Now.
+- **상태/난이도:** 진행 / FE-BE 승인 E2E PASS(가상계좌), 웹훅·복구·production go-live 미검증 / 상 · **우선순위:** P0 · **단계:** Now.
 - **선행:** BE-00.
 - **대상:** `Toss sandbox FE/BE 계약, FE-12 예치 SDK, BE deposit confirm`.
 - **목표/범위:** D-25 승인 계약(`POST /deposits` PENDING → Toss 승인 → `POST /deposits/{id}/confirm` 200 → `COMPLETED`/`DEPOSITED`)을 FE·BE가 같은 이름으로 사용한다.
@@ -51,8 +51,8 @@
 - **실행:** PAY-01~06 증거/승인 후만 플래그 ON. 실PG가 없는 fixture는 실제 결제로 표시하지 않는다.
 - **완료 조건:** sandbox에서 FE 결제창 → 성공 리다이렉트 → confirm 200 → 예치 완료, 실패/취소 시 PENDING 유지.
 - **최소 QA:** PG 샌드박스만, no real charges.
-- **확인 결과(2026-11-07 KST):** BE는 실제 Toss sandbox 가상계좌로 예치 `COMPLETED`·계약 `DEPOSITED` 확인(STAGING-PAY-20261106). FE-12는 `e5b668c`로 create/list/confirm과 Toss 카드 창을 연결했고, 로컬 `VITE_ENABLE_DEPOSIT=true` + staging API에서 `POST /deposits` 201 PENDING 105,000원·Toss 카드 결제창 105,000원 열림을 확인했다. FE 성공/실패 리다이렉트는 단위 테스트(confirm 200 전 완료 금지)로 확인. production은 `VITE_ENABLE_DEPOSIT=false`·클라이언트 키 미설정.
-- **미검증:** 실카드 또는 승인된 sandbox 결제수단으로 브라우저 결제창→성공 리다이렉트→FE confirm 전체 E2E, staging 웹훅·복구 worker. PAY-01~06 BE 증거와 FE 단위 검증은 있으나 위 두 항목 전에는 INT-02를 완료로 올리지 않는다.
+- **확인 결과(2026-11-07 KST):** FE-12 `e5b668c` + staging API로 전체 승인 흐름 PASS. FE가 예치 `PENDING` 105,000원 생성 → Toss sandbox 가상계좌 발급 → Toss 대시보드 입금처리 → FE 성공 URL(`payment=success&paymentKey&orderId&amount`) → FE `confirm` 200 → DB 예치 `COMPLETED`·`pgKey` 저장·계약 `DEPOSITED`·`totalDeposited` 105,000·구간 2개. 성공/실패 리다이렉트 단위 테스트 3건, 전체 477/477. production은 `VITE_ENABLE_DEPOSIT=false`·클라이언트 키 미설정.
+- **미검증:** staging 웹훅·복구 worker, production go-live(INT-03). 실카드는 사용하지 않았고 가상계좌로 승인 E2E를 확인했다.
 - **보고 형식:** 기준 SHA·변경 파일·통과/미검증·실제 요청·남은 위험을 5줄 이내로 보고. 범위 확대가 필요하면 작업을 멈추고 별도 제안.
 
 ## INT-03 — 설계 통합 57보드/배포 go-no-go

@@ -34,15 +34,15 @@
 - [ ] **FE-13** NDA·지원·채팅·합의·서명 회귀 — 로컬 23건+계약/합의/채팅 실호출 200, staging 미검증
 
 **현재 FE 실행 가능 상태 (2026-11-06)**
-- FE-17·FE-18은 완료됐습니다. FE-12는 코드·로컬 SDK 창까지 확인했고 플래그 OFF를 유지합니다. 남은 FE 작업은 FE-04/07/09/13의 실환경 검증과 FE-12 실카드 E2E(INT-02)입니다.
-- FE-12는 SDK 연결 코드를 갖췄지만 `VITE_ENABLE_DEPOSIT=false`를 유지합니다. 실카드 결제·전체 리다이렉트 E2E는 INT-02 승인 환경에서만 켭니다.
+- FE-17·FE-18·FE-12는 완료됐습니다. FE-12는 INT-02 sandbox 승인 E2E까지 PASS했고 production 플래그는 OFF입니다. 남은 FE 작업은 FE-04/07/09/13의 실환경 검증과 INT-02 웹훅·복구입니다.
+- FE-12는 INT-02 sandbox 승인 E2E(가상계좌)까지 확인했고, production은 `VITE_ENABLE_DEPOSIT=false`를 유지합니다. 웹훅·복구는 INT-02 잔여 항목입니다.
 - FE-02의 실제 메일 발송은 사용자 결정으로 보류, FE-15는 계약 결정 전 보류입니다. 외부 선행 조건 전에는 API·fixture·DB 쓰기를 추가하지 않습니다.
 
 **대기 (Next/Later)**
 - [ ] **FE-15** 검색/취소 철회 확장 보류 — 미지원 UI 없음 확인, 계약 결정 전
 
 **차단 (외부 계약·증거 필요)**
-- [ ] **FE-12** Toss 예치 SDK 연결 — 코드·로컬 창 확인, `VITE_ENABLE_DEPOSIT=false` 유지; 실카드 E2E는 INT-02 대기
+- [x] **FE-12** Toss 예치 SDK 연결 — INT-02 sandbox 승인 E2E PASS(가상계좌), production `VITE_ENABLE_DEPOSIT=false` 유지
 
 **BE · Integration (이 저장소 밖)**
 - [x] **BE-00** API 기준선·staging 검증
@@ -60,7 +60,7 @@
 - [ ] **BE-12 (보류)** 메일 발송 안전 게이트·비밀번호 재설정 staging 실메일 검증 — 실제 발송은 사용자 결정으로 현재 단계에서 제외; 재개 전 allowlist·production 승인·테스트 완료 필요
 - [ ] **INT-00** FE/BE/디자인 SHA·계약 고정 — Vercel의 staging 명명 프로젝트가 Ready/Production; DB ref·운영 분리, 승인 계정, FE 배포 SHA·API v1.0.1 미확인
 - [ ] **INT-01** 로그인 후 실제 사용자 흐름 재현
-- [ ] **INT-02** 결제 승인·복구 계약·PAY-01~06 — FE-12 연결·로컬 Toss 창 확인; 실카드/리다이렉트 브라우저 E2E·staging 웹훅 미실행
+- [ ] **INT-02** 결제 승인·복구 계약·PAY-01~06 — FE-BE 승인 E2E PASS(가상계좌, confirm 200); staging 웹훅·복구 미검증
 - [ ] **INT-03** 57보드/배포 go-no-go
 
 ## 사용법
@@ -90,7 +90,7 @@
 | FE-09 | FE | P2 | Later | 운영자 후처리 UI 상태 보완 | FE-05, BE-05 | 중 | **진행** / 시연 고지 완료, 실제 저장은 목록 실데이터 전환 후 |
 | FE-10 | FE | P1 | Next | 검수·납품의 보완/완료 후 상태 보완 | BE-05, FE-11 | 중 | **완료** / D-26 항목 id로 납품·승인·보완 연결 |
 | FE-11 | FE | P1 | Next | 계약·정산 목록의 실데이터 경계 정리 | BE-04, FE-00 | 상 | **완료** / 2026-11-06 계약 픽스처로 목록·정산 확인 |
-| FE-12 | FE | P0 | Now | Toss 예치 UI 사실표시·승인 연결 게이트 | BE-06, BE-07, INT-02 | 상 | **진행** / 코드·SDK 창 로컬 확인, 플래그 OFF 유지; 실카드 E2E는 INT-02 |
+| FE-12 | FE | P0 | Now | Toss 예치 UI 사실표시·승인 연결 게이트 | BE-06, BE-07, INT-02 | 상 | **완료** / INT-02 sandbox 승인 E2E PASS(가상계좌), production OFF 유지 |
 | FE-13 | FE | P1 | Next | 기존 NDA·지원·채팅·합의·서명 보호 회귀 | BE-04, INT-00 | 중 | **진행** / 로컬 23건+계약/합의/채팅 실호출 200, staging 미검증 |
 | FE-14 | FE | P1 | Now | ChatIndex 고정 데모 링크 제거 | BE-04, FE-00 | 하 | **완료** / 2026-11-06 배포 확인 |
 | FE-15 | FE | P2 | Later | 선택 검색/취소 철회 UI 확장 보류 관리 | BE-09, BE-10 | 하 | 대기 / 확인 완료·계약 결정 전 보류 |
@@ -112,7 +112,7 @@
 | BE-12 | BE | 미정 | 미정 | 메일 발송 안전 게이트·비밀번호 재설정 staging 검증 | BE-01 | 미정 | **보류** / 사용자 결정으로 실제 메일 발송 defer; 재개 전 safety gate·staging test 필요 |
 | INT-00 | Integration | P0 | Now | FE/BE/디자인 SHA·계약 고정 | 없음 | 하 | **진행** / Vercel staging 명명 프로젝트는 Ready/Production; DB ref/격리 미확인, FE 배포 SHA·승인 계정·공식 계약 미완 |
 | INT-01 | Integration | P1 | Next | 로그인 후 실제 사용자 흐름 재현 | FE-01, FE-13, BE-04 | 중 | 대기 / 실호출 미검증 |
-| INT-02 | Integration | P0 | Now | 결제 승인·복구 FE/BE 계약 승인 및 PAY-01~06 | BE-00 | 상 | 대기 / 실호출 미검증 |
+| INT-02 | Integration | P0 | Now | 결제 승인·복구 FE/BE 계약 승인 및 PAY-01~06 | BE-00 | 상 | **진행** / 승인 E2E PASS(가상계좌, confirm 200); 웹훅·복구 미검증 |
 | INT-03 | Integration | P1 | Next | 설계 통합 57보드/배포 go-no-go | FE-16, BE-11, INT-01, INT-02 | 중 | 대기 / 실호출 미검증 |
 
 ## 공동 병렬화 규칙
