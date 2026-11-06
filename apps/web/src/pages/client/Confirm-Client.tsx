@@ -27,6 +27,23 @@ import {
 } from './Confirm-Client.data';
 import s from './Confirm-Client.module.css';
 
+const PUBLISH_ERROR_MESSAGES: Partial<Record<string, string>> = {
+  INVALID_REQUEST: '요청 정보가 올바르지 않습니다. 화면을 새로고침한 뒤 다시 시도해 주세요.',
+  ROLE_MISMATCH: '의뢰인 계정으로 로그인한 뒤 다시 시도해 주세요.',
+  DRAFT_NOT_FOUND: '초안을 찾을 수 없습니다. 초안 목록에서 다시 열어 주세요.',
+  DRAFT_ALREADY_CONFIRMED: '이미 확정된 명세입니다. 내 프로젝트에서 확인해 주세요.',
+  DRAFT_NOT_IN_PROGRESS: '이 초안은 더 이상 확정할 수 없습니다. 초안 목록을 새로고침해 주세요.',
+  CLIENT_PROFILE_INCOMPLETE: '의뢰인 상호 정보가 누락되어 확정할 수 없습니다. 고객센터에 문의해 주세요.',
+  DRAFT_FEATURES_PENDING: '아직 반영하지 못한 기능이 있습니다. 초안으로 돌아가 다시 시도해 주세요.',
+  INVALID_RECRUITMENT_PERIOD: '모집 시작일과 마감일을 확인해 주세요. 마감일은 시작일 이후이고 오늘 이후여야 합니다.',
+  DISCLOSURE_CONSENT_REQUIRED: '공개 범위 동의가 필요합니다. 동의 항목을 확인해 주세요.',
+  DISCLOSURE_CONSENT_VERSION_MISMATCH: '공개 범위 동의가 갱신되었습니다. 화면을 새로고침한 뒤 다시 동의해 주세요.',
+  DISCLOSURE_CONSENT_UNAVAILABLE: '공개 범위 동의를 확인할 수 없습니다. 잠시 후 다시 시도해 주세요.',
+  INVALID_DISCLOSURE_SCOPE: '공개 범위를 다시 선택한 뒤 시도해 주세요.',
+  NO_SELECTED_BLOCKS: '확정할 명세 항목이 없습니다. 초안으로 돌아가 기능을 추가해 주세요.',
+  BLOCK_INDUSTRY_MISMATCH: '서로 다른 업종의 기능이 포함되어 있습니다. 초안에서 항목을 확인해 주세요.',
+};
+
 export default function ConfirmClient() {
   const { apiAccessToken } = useSession();
   const live = Boolean(apiAccessToken.trim()) || !import.meta.env.DEV;
@@ -107,11 +124,13 @@ function LiveConfirm() {
   const startDate = parseDateInput(start);
   const endDate = parseDateInput(end);
   const dateOk = startDate !== null && endDate !== null && startDate.getTime() < endDate.getTime();
-  const canSubmit = dateOk && agreed && !submitting && screen.included.length > 0;
+  const canSubmit = dateOk && agreed && !submitting && screen.pendingCount === 0 && screen.included.length > 0;
   const disabledReason = !dateOk
     ? DEMO.needDate
     : !agreed
       ? DEMO.needConsent
+      : screen.pendingCount > 0
+        ? `초안의 반영 대기 기능 ${screen.pendingCount}건을 먼저 처리해 주세요.`
       : screen.included.length === 0
         ? '명세 항목이 없습니다. 초안에 기능을 추가해 주세요.'
         : undefined;
@@ -134,7 +153,9 @@ function LiveConfirm() {
       });
       navigate(`/c/projects/${encodeURIComponent(response.data.projectId)}`);
     } catch (caught) {
-      setSubmitError(caught instanceof ApiRequestError ? caught.message : '프로젝트를 게시하지 못했습니다. 다시 시도해 주세요.');
+      setSubmitError(caught instanceof ApiRequestError
+        ? PUBLISH_ERROR_MESSAGES[caught.code] ?? caught.message
+        : '프로젝트를 게시하지 못했습니다. 다시 시도해 주세요.');
     } finally {
       setSubmitting(false);
     }
@@ -267,6 +288,11 @@ function LiveConfirm() {
         </div>
       </section>
 
+      {screen.pendingCount > 0 && (
+        <p className={s.err} role="alert">
+          아직 반영하지 못한 기능 {screen.pendingCount}건이 있습니다. 초안으로 돌아가 다시 시도한 뒤 확정해 주세요.
+        </p>
+      )}
       {submitError && <p className={s.err} role="alert">{submitError}</p>}
 
       <div className={s.foot}>
