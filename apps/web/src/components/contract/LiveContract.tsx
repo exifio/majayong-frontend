@@ -2,7 +2,7 @@
  * 서명은 계약 문서의 contentHash를 그대로 사용하고, 성공 후 서버 계약 상태로만 갱신한다. */
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import type { ContractDocumentDto, ContractRecordDto } from '@majayong/types/api';
+import type { CancellationDto, ContractDocumentDto, ContractRecordDto } from '@majayong/types/api';
 import { Button, Chip, ConfirmDialog, StatusChip } from '@/components/ui';
 import { useSession } from '@/app/session';
 import { ApiRequestError, apiRequest } from '@/lib/api';
@@ -18,7 +18,7 @@ const STAGE_LABEL = { INTERIM: '중간', FINAL: '최종' } as const;
 
 export function LiveContract({ cid, styles }: { cid?: string; styles: Record<string, string> }) {
   const s = styles;
-  const { apiAccessToken, session } = useSession();
+  const { apiAccessToken, session, authUser } = useSession();
   const role = session.status === 'user' ? session.role : 'CLIENT';
   const [state, setState] = useState<State>('loading');
   const [contract, setContract] = useState<ContractRecordDto | null>(null);
@@ -28,6 +28,11 @@ export function LiveContract({ cid, styles }: { cid?: string; styles: Record<str
   const [signing, setSigning] = useState(false);
   const [signError, setSignError] = useState<string | null>(null);
   const [signNotice, setSignNotice] = useState<string | null>(null);
+  const [cancellation, setCancellation] = useState<CancellationDto | null>(null);
+  const [withdrawOpen, setWithdrawOpen] = useState(false);
+  const [withdrawing, setWithdrawing] = useState(false);
+  const [withdrawError, setWithdrawError] = useState<string | null>(null);
+  const [withdrawNotice, setWithdrawNotice] = useState<string | null>(null);
 
   useEffect(() => {
     if (!cid) return;
@@ -46,6 +51,44 @@ export function LiveContract({ cid, styles }: { cid?: string; styles: Record<str
     });
     return () => controller.abort();
   }, [cid, apiAccessToken, retry]);
+
+  useEffect(() => {
+    if (!cid || contract?.status !== 'CANCEL_REQUESTED') {
+      setCancellation(null);
+      return;
+    }
+    const controller = new AbortController();
+    apiRequest('getCancellation', `/contracts/${encodeURIComponent(cid)}/cancellation`, {
+      accessToken: apiAccessToken,
+      signal: controller.signal,
+    }).then((response) => setCancellation(response.data)).catch((error: unknown) => {
+      if (error instanceof Error && error.name === 'AbortError') return;
+      setCancellation(null);
+    });
+    return () => controller.abort();
+  }, [cid, contract?.status, apiAccessToken]);
+
+  async function withdrawCancellation() {
+    if (!cid || withdrawing) return;
+    setWithdrawOpen(false);
+    setWithdrawing(true);
+    setWithdrawError(null);
+    setWithdrawNotice(null);
+    try {
+      await apiRequest('withdrawCancellation', `/contracts/${encodeURIComponent(cid)}/cancellation/withdraw`, {
+        method: 'POST',
+        accessToken: apiAccessToken,
+        jsonBody: {},
+      });
+      setWithdrawNotice('취소 요청을 철회했습니다. 계약이 다시 진행됩니다.');
+      setCancellation(null);
+      setRetry((count) => count + 1);
+    } catch (error) {
+      setWithdrawError(error instanceof ApiRequestError ? error.message : '취소 요청을 철회하지 못했습니다.');
+    } finally {
+      setWithdrawing(false);
+    }
+  }
 
   async function sign() {
     if (!cid || signing) return;
@@ -116,6 +159,10 @@ export function LiveContract({ cid, styles }: { cid?: string; styles: Record<str
   const deadlineValid = new Date(contract.consentDeadline).getTime() > Date.now();
   const canSign = CONTRACT_SIGN_ENABLED && role !== 'ADMIN' &&
     contract.status === 'PENDING_CONSENT' && mySignedAt === null && deadlineValid;
+  const canWithdraw = cancellation !== null &&
+    cancellation.cancelRequestedBy === authUser?.id &&
+    cancellation.cancelResolvedAt === null &&
+    cancellation.cancelEscalatedAt === null;
   const listHref = isSupplier ? '/s/contracts' : '/c/contracts';
   const bandBody = contract.status === 'PENDING_CONSENT'
     ? (mySignedAt === null
@@ -151,6 +198,25 @@ export function LiveContract({ cid, styles }: { cid?: string; styles: Record<str
           <p className={s.bandBody}>{bandBody}</p>
         </div>
       </div>
+
+      {cancellation ? (
+        <div className={s.bandRow}>
+          <div>
+            <b className={s.bandTitle}>취소 요청 중</b>
+            <p className={s.bandBody}>
+              {cancellation.cancelNote ?? '상대방이 취소를 요청했습니다.'}
+              {cancellation.cancelEscalatedAt ? ' · 운영자 판정 대기 중입니다.' : ''}
+            </p>
+            {withdrawNotice ? <p role="status">{withdrawNotice}</p> : null}
+            {withdrawError ? <p role="alert">{withdrawError}</p> : null}
+            {canWithdraw ? (
+              <Button variant="ghost" type="button" disabled={withdrawing} onClick={() => setWithdrawOpen(true)}>
+                {withdrawing ? '철회 중' : '취소 요청 철회'}
+              </Button>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
 
       <div className={s.lay}>
         <div>
@@ -256,6 +322,16 @@ export function LiveContract({ cid, styles }: { cid?: string; styles: Record<str
             서명 기한 {formatDateTime(contract.consentDeadline)}
           </p>
           <p>계약 내용과 금액·조건을 확인했습니다. 서명하면 계약에 서명한 것으로 기록되고, 양측 서명이 끝나면 계약이 체결됩니다.</p>
+        </ConfirmDialog>
+      )}
+      {withdrawOpen && (
+        <ConfirmDialog
+          title="취소 요청을 철회할까요?"
+          confirmLabel="철회"
+          onConfirm={() => void withdrawCancellation()}
+          onCancel={() => setWithdrawOpen(false)}
+        >
+          <p>철회하면 계약이 다시 진행됩니다. 상대방에게도 취소 요청이 철회된 것으로 표시됩니다.</p>
         </ConfirmDialog>
       )}
     </div>

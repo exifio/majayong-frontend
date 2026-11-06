@@ -344,6 +344,28 @@ export interface ContractRecordDto {
   items: ContractItemDto[];
 }
 
+export type ApiCancelCause = 'CLIENT' | 'SUPPLIER' | 'MUTUAL';
+export type ApiCancelResolution = 'AGREED' | 'ADMIN_DECIDED';
+
+export interface CancellationDto {
+  contractId: string;
+  status: string;
+  cancelCause: ApiCancelCause | null;
+  cancelRequestedBy: string | null;
+  cancelRequestedAt: IsoDate | null;
+  cancelNote: string | null;
+  objectionRate: number | null;
+  objectionNote: string | null;
+  cancelEscalatedAt: IsoDate | null;
+  compensationRate: number | null;
+  cancelResolution: ApiCancelResolution | null;
+  cancelResolvedAt: IsoDate | null;
+  refundAmount: number | null;
+  settledAmount: number | null;
+  clientFeeRefund: number | null;
+  paused: boolean;
+}
+
 export type ApiDepositStatus = 'PENDING' | 'HELD' | 'COMPLETED' | 'FAILED';
 
 export interface EscrowDepositDto {
@@ -867,7 +889,8 @@ export type BApiEmptyJsonBodyOperation =
   | 'readNotification'
   | 'readAllNotifications'
   | 'retryDraft'
-  | 'restoreDraft';
+  | 'restoreDraft'
+  | 'withdrawCancellation';
 
 /** Request bodies keyed by matching OpenAPI operationId. */
 export interface BApiRequestBodies {
@@ -915,6 +938,7 @@ export interface BApiRequestBodies {
   signContract: SignContractRequestDto;
   declineContract: EmptyJsonObjectDto;
   cancelProvisionalContract: EmptyJsonObjectDto;
+  withdrawCancellation: EmptyJsonObjectDto;
   readNotification: EmptyJsonObjectDto;
   readAllNotifications: EmptyJsonObjectDto;
   createDraft: { entryType: ApiDraftEntryType; text?: string };
@@ -945,6 +969,9 @@ export interface BApiQueryParams {
   listPublicProjects: {
     industryCode?: string;
     skill?: string;
+    keyword?: string;
+    sort?: 'LATEST' | 'DEADLINE_SOON' | 'BUDGET_HIGH';
+    deadlineBefore?: IsoDate;
     status?: ApiProjectStatus;
     minBudget?: number;
     maxBudget?: number;
@@ -1016,6 +1043,8 @@ export interface BApiResponses {
   listDeposits: DataEnvelope<EscrowDepositDto[]>;
   confirmDeposit: DataEnvelope<ConfirmDepositResultDto>;
   signContract: DataEnvelope<SignContractResultDto>;
+  getCancellation: DataEnvelope<CancellationDto>;
+  withdrawCancellation: DataEnvelope<CancellationDto>;
   createReview: DataEnvelope<ReviewDto>;
   listContractReviews: DataEnvelope<PublicReviewDto[]>;
   listSupplierReviews: DataEnvelope<PublicReviewDto[]>;

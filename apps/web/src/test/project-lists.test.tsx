@@ -84,6 +84,24 @@ describe('LiveProjectList', () => {
     expect(await screen.findByText('예약 기능 개발')).toBeTruthy();
   });
 
+  it('검색어·정렬·마감일을 query로 보낸다', async () => {
+    fetchMock.mockImplementation(async () => jsonResponse({ data: [project], meta: { page: 1, pageSize: 10, total: 1 } }));
+    renderWithToken(<LiveProjectList styles={{}} />);
+    await screen.findByText('예약 기능 개발');
+
+    fireEvent.change(await screen.findByLabelText('프로젝트 검색'), { target: { value: '예약' } });
+    fireEvent.change(await screen.findByLabelText('정렬'), { target: { value: 'DEADLINE_SOON' } });
+    fireEvent.change(await screen.findByLabelText('마감일 이전'), { target: { value: '2026-12-01' } });
+    fireEvent.click(await screen.findByRole('button', { name: '검색' }));
+
+    await waitFor(() => {
+      const urls = fetchMock.mock.calls.map(([url]) => String(url));
+      expect(urls.some((url) => url.includes('keyword=%EC%98%88%EC%95%BD')
+        && url.includes('sort=DEADLINE_SOON')
+        && url.includes('deadlineBefore=2026-12-01'))).toBe(true);
+    });
+  });
+
   it('shows the empty state when no project matches', async () => {
     fetchMock.mockResolvedValueOnce(jsonResponse({ data: [], meta: { page: 1, pageSize: 10, total: 0 } }));
     renderWithToken(<LiveProjectList styles={{}} />);

@@ -25,8 +25,12 @@ export function LiveProjectList({ styles }: { styles: Record<string, string> }) 
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState<'' | ApiProjectStatus>('');
+  const [keywordInput, setKeywordInput] = useState('');
+  const [keyword, setKeyword] = useState('');
   const [skillInput, setSkillInput] = useState('');
   const [skill, setSkill] = useState('');
+  const [sort, setSort] = useState<'LATEST' | 'DEADLINE_SOON' | 'BUDGET_HIGH'>('LATEST');
+  const [deadlineBefore, setDeadlineBefore] = useState('');
   const [retry, setRetry] = useState(0);
 
   useEffect(() => {
@@ -39,6 +43,9 @@ export function LiveProjectList({ styles }: { styles: Record<string, string> }) 
         page,
         ...(status ? { status } : {}),
         ...(skill ? { skill } : {}),
+        ...(keyword ? { keyword } : {}),
+        ...(deadlineBefore ? { deadlineBefore } : {}),
+        ...(sort === 'LATEST' ? {} : { sort }),
       },
     }).then((response) => {
       setItems(response.data);
@@ -50,7 +57,7 @@ export function LiveProjectList({ styles }: { styles: Record<string, string> }) 
       setState(error instanceof ApiRequestError && error.status === 401 ? 'auth-error' : 'error');
     });
     return () => controller.abort();
-  }, [apiAccessToken, page, status, skill, retry]);
+  }, [apiAccessToken, page, status, skill, keyword, deadlineBefore, sort, retry]);
 
   const pageSize = 10;
   const lastPage = Math.max(1, Math.ceil(total / pageSize));
@@ -82,9 +89,20 @@ export function LiveProjectList({ styles }: { styles: Record<string, string> }) 
         onSubmit={(event) => {
           event.preventDefault();
           setPage(1);
+          setKeyword(keywordInput.trim());
           setSkill(skillInput.trim());
         }}
       >
+        <div className={s.qbox}>
+          <input
+            className={s.inp}
+            type="search"
+            aria-label="프로젝트 검색"
+            placeholder="프로젝트·기능 검색 (예: 예약)"
+            value={keywordInput}
+            onChange={(event) => setKeywordInput(event.target.value)}
+          />
+        </div>
         <div className={s.qbox}>
           <input
             className={s.inp}
@@ -114,6 +132,33 @@ export function LiveProjectList({ styles }: { styles: Record<string, string> }) 
               <option key={option.value} value={option.value}>{option.label}</option>
             ))}
           </select>
+        </label>
+        <label>
+          정렬{' '}
+          <select
+            aria-label="정렬"
+            value={sort}
+            onChange={(event) => {
+              setSort(event.target.value as 'LATEST' | 'DEADLINE_SOON' | 'BUDGET_HIGH');
+              setPage(1);
+            }}
+          >
+            <option value="LATEST">최신순</option>
+            <option value="DEADLINE_SOON">마감임박순</option>
+            <option value="BUDGET_HIGH">예산 높은순</option>
+          </select>
+        </label>
+        <label>
+          마감일{' '}
+          <input
+            type="date"
+            aria-label="마감일 이전"
+            value={deadlineBefore}
+            onChange={(event) => {
+              setDeadlineBefore(event.target.value);
+              setPage(1);
+            }}
+          />
         </label>
       </div>
 
