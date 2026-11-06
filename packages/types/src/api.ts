@@ -594,6 +594,26 @@ export interface ResolveReportResultDto {
   warningReviewRecommended: boolean;
 }
 
+export interface ReportPartyDto {
+  id: string;
+  role: 'CLIENT' | 'SUPPLIER' | 'ADMIN';
+  displayName: string | null;
+}
+
+export interface ReportMessageContextDto {
+  body: string;
+  createdAt: IsoDate;
+  projectId: string;
+  projectTitle: string;
+}
+
+/** 관리자 목록(`GET /admin/reports`) 전용. 운영자 판단에 필요한 표시명·문맥을 포함한다. */
+export interface AdminReportDto extends ReportDto {
+  reporter: ReportPartyDto;
+  target: ReportPartyDto;
+  message: ReportMessageContextDto;
+}
+
 export interface InquiryAttachmentDto {
   /** Server-relative path: ^/(?!/)[A-Za-z0-9/_:.-]+$ */
   url: string;
@@ -852,7 +872,7 @@ export interface BApiResponses {
   readAllNotifications: DataEnvelope<UpdatedCountDto>;
   submitReport: DataEnvelope<ReportDto>;
   listMyReports: DataEnvelope<ReportDto[]>;
-  listReports: DataEnvelope<ReportDto[]>;
+  listReports: DataEnvelope<AdminReportDto[]>;
   resolveReport: DataEnvelope<ResolveReportResultDto>;
   createInquiry: DataEnvelope<InquiryDto>;
   listMyInquiries: DataEnvelope<InquiryDto[]>;

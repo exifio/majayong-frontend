@@ -6,11 +6,6 @@ import { renderAt } from './render';
 const NOTICE = /시연 상태/;
 
 describe('운영자 후처리 ?mock 완료 상태', () => {
-  it('신고 처리 완료는 저장된 결과가 아님을 알린다', () => {
-    renderAt(`/admin/reports?mock=${encodeURIComponent('처리 완료')}`, 'admin');
-    expect(screen.getByText(NOTICE)).toBeTruthy();
-  });
-
   it('이견 판정 완료는 저장된 결과가 아님을 알린다', () => {
     renderAt(`/admin/disputes?mock=${encodeURIComponent('판정 완료')}`, 'admin');
     expect(screen.getByText(NOTICE)).toBeTruthy();

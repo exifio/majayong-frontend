@@ -1,48 +1,137 @@
-/* 신고 처리 Admin-Reports — F-24 */
-import { describe, expect, it } from 'vitest';
-import { fireEvent, screen, within } from '@testing-library/react';
+/* 신고 처리 Admin-Reports — 실제 /admin/reports */
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import type { AdminReportDto } from '@majayong/types/api';
 import { findDesignViolations } from '@/app/devChecks';
-import { DEMO } from '@/pages/admin/Admin-Reports.data';
-import { location, renderAt } from './render';
+import { location, renderAt } from '@/test/render';
+
+const jsonResponse = (body: unknown, status = 200) =>
+  new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
+
+const report = (over: Partial<AdminReportDto> = {}): AdminReportDto => ({
+  id: 'report-1',
+  messageId: 'msg-1',
+  reporterId: 'client-1',
+  targetUserId: 'supplier-1',
+  reason: 'CONTACT_OR_OFFSITE',
+  detail: '계약 전에는 여기서만 이야기한다고 알고 있습니다.',
+  status: 'OPEN',
+  action: null,
+  actionNote: null,
+  resolvedById: null,
+  resolvedAt: null,
+  createdAt: '2026-11-02T06:40:00.000Z',
+  reporter: { id: 'client-1', role: 'CLIENT', displayName: '오후 세시' },
+  target: { id: 'supplier-1', role: 'SUPPLIER', displayName: '강태오' },
+  message: {
+    body: '카톡으로 따로 얘기해요',
+    createdAt: '2026-11-02T06:31:00.000Z',
+    projectId: 'project-1',
+    projectTitle: '음료 사전 주문',
+  },
+  ...over,
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 describe('Admin-Reports — 신고 처리', () => {
-  it('처리 대기 · ?id= · MaskedText · primary 하나', () => {
-    const { container } = renderAt('/admin/reports?id=rp-1', 'admin');
+  it('실제 목록과 선택한 신고의 문맥을 보여 준다', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn<typeof fetch>().mockImplementation(async () => jsonResponse({ data: [report()] })),
+    );
+    const { container } = renderAt('/admin/reports', 'admin', undefined, 'test-token');
     const root = container.querySelector('[data-screen="Admin-Reports"]') as HTMLElement;
-    expect(screen.getByRole('heading', { name: DEMO.title })).toBeTruthy();
-    expect(within(root).getAllByText('연락처 가림').length).toBeGreaterThan(0);
-    expect(within(root).getAllByText(/공급자 강태오/).length).toBeGreaterThan(0);
-    expect(root.querySelectorAll('[data-btn="primary"]').length).toBe(1);
+
+    expect(await within(root).findByRole('heading', { level: 2, name: /오후 세시/ })).toBeTruthy();
+    expect(within(root).getAllByText('연락처 · 외부 거래 유도').length).toBeGreaterThan(0);
+    expect(within(root).getByText('카톡으로 따로 얘기해요')).toBeTruthy();
+    expect(within(root).getByText('음료 사전 주문')).toBeTruthy();
     expect(findDesignViolations(container)).toEqual([]);
   });
 
-  it('조치 작성 · 사유 필수', () => {
-    const { container } = renderAt(
-      `/admin/reports?mock=${encodeURIComponent('조치 작성')}&id=rp-1`,
-      'admin',
-    );
+  it('조치와 사유를 저장하면 처리 완료로 바뀐다', async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockImplementation(async (input, init) => {
+      if (String(input).endsWith('/resolve') && init?.method === 'POST') {
+        return jsonResponse({
+          data: {
+            report: report({
+              status: 'RESOLVED',
+              action: 'WARNING',
+              actionNote: '첫 위반이라 경고합니다.',
+              resolvedAt: '2026-11-03T01:12:00.000Z',
+            }),
+            warningReviewRecommended: false,
+          },
+        });
+      }
+      return jsonResponse({ data: [report()] });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const { container } = renderAt('/admin/reports', 'admin', undefined, 'test-token');
     const root = container.querySelector('[data-screen="Admin-Reports"]') as HTMLElement;
-    expect(within(root).getByRole('radio', { name: /경고/ })).toBeTruthy();
-    fireEvent.change(within(root).getByLabelText(/조치 사유/), { target: { value: '' } });
-    expect(within(root).getByRole('button', { name: DEMO.confirm }).hasAttribute('disabled')).toBe(
-      true,
-    );
-    expect(within(root).getByText(DEMO.eventNote)).toBeTruthy();
+
+    fireEvent.click(await within(root).findByRole('radio', { name: /경고/ }));
+    fireEvent.change(within(root).getByLabelText(/조치 사유/), {
+      target: { value: '첫 위반이라 경고합니다.' },
+    });
+    fireEvent.click(within(root).getByRole('button', { name: '조치 확정' }));
+
+    expect(await within(root).findByText(/처리 완료/)).toBeTruthy();
+    expect(within(root).getByText(/첫 위반이라 경고합니다/)).toBeTruthy();
+    const call = fetchMock.mock.calls.find(([path]) => String(path).endsWith('/resolve'));
+    expect(call).toBeTruthy();
+    expect(JSON.parse(String(call![1]?.body))).toEqual({
+      action: 'WARNING',
+      actionNote: '첫 위반이라 경고합니다.',
+    });
   });
 
-  it('계정 정지 선택 · ConfirmDialog danger', () => {
-    renderAt(`/admin/reports?mock=${encodeURIComponent('계정 정지 선택')}&id=rp-1`, 'admin');
-    const dialog = screen.getByRole('dialog', { name: DEMO.banTitle });
+  it('사유가 비어 있으면 전송하지 않고 안내한다', async () => {
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockImplementation(async () => jsonResponse({ data: [report()] }));
+    vi.stubGlobal('fetch', fetchMock);
+    const { container } = renderAt('/admin/reports', 'admin', undefined, 'test-token');
+    const root = container.querySelector('[data-screen="Admin-Reports"]') as HTMLElement;
+
+    fireEvent.click(await within(root).findByRole('radio', { name: /경고/ }));
+    fireEvent.click(within(root).getByRole('button', { name: '조치 확정' }));
+
+    expect(await within(root).findByText('사유를 적어 주세요')).toBeTruthy();
+    expect(fetchMock.mock.calls.some(([path]) => String(path).endsWith('/resolve'))).toBe(false);
+  });
+
+  it('계정 정지는 확인 대화상자를 거친다', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn<typeof fetch>().mockImplementation(async () => jsonResponse({ data: [report()] })),
+    );
+    renderAt('/admin/reports', 'admin', undefined, 'test-token');
+
+    fireEvent.click(await screen.findByRole('radio', { name: /계정 정지/ }));
+    fireEvent.change(screen.getByLabelText(/조치 사유/), { target: { value: '외부 거래 유도' } });
+    fireEvent.click(screen.getByRole('button', { name: '계정 정지 확정' }));
+
+    const dialog = screen.getByRole('dialog', { name: '계정을 정지할까요?' });
     expect(dialog.getAttribute('data-danger')).toBe('true');
-    expect(within(dialog).queryAllByRole('button', { name: /./ }).every((b) => b.getAttribute('data-btn') !== 'primary')).toBe(
-      true,
-    );
-    expect(within(dialog).getByText(DEMO.eventNote)).toBeTruthy();
-    expect(location.current).toContain(encodeURIComponent('계정 정지 선택'));
+    expect(within(dialog).getByText(/로그인할 수 없고 공개 프로필이 숨겨집니다/)).toBeTruthy();
   });
 
-  it('처리 완료 · teal 띠', () => {
-    renderAt(`/admin/reports?mock=${encodeURIComponent('처리 완료')}&id=rp-done`, 'admin');
-    expect(screen.getByText(/경고를 보냈습니다/)).toBeTruthy();
+  it('신고가 없으면 빈 상태를 보여 준다', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn<typeof fetch>().mockImplementation(async () => jsonResponse({ data: [] })),
+    );
+    renderAt('/admin/reports', 'admin', undefined, 'test-token');
+
+    expect(await screen.findByText('신고가 없습니다')).toBeTruthy();
+  });
+
+  it('운영자가 아니면 역할 홈으로 보낸다', () => {
+    renderAt('/admin/reports', 'client', undefined, 'test-token');
+    expect(location.current).toBe('/c');
   });
 });
