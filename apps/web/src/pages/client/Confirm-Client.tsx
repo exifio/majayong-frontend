@@ -40,7 +40,6 @@ const PUBLISH_ERROR_MESSAGES: Partial<Record<string, string>> = {
   DISCLOSURE_CONSENT_UNAVAILABLE: '공개 범위 동의를 확인할 수 없습니다. 잠시 후 다시 시도해 주세요.',
   INVALID_DISCLOSURE_SCOPE: '공개 범위를 다시 선택한 뒤 시도해 주세요.',
   NO_SELECTED_BLOCKS: '확정할 명세 항목이 없습니다. 초안으로 돌아가 기능을 추가해 주세요.',
-  BLOCK_INDUSTRY_MISMATCH: '서로 다른 업종의 기능이 포함되어 있습니다. 초안에서 항목을 확인해 주세요.',
 };
 
 export default function ConfirmClient() {

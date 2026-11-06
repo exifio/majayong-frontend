@@ -120,7 +120,7 @@ describe('Confirm-Client 명세 확정', () => {
       }
       if (String(input) === '/api/v1/drafts/d-1/publish') {
         return jsonResponse({
-          error: { code: 'UNMAPPED_PUBLISH_ERROR', message: '요청을 확인해 주세요.', requestId: 'req-4' },
+          error: { code: 'BLOCK_INDUSTRY_MISMATCH', message: '요청을 확인해 주세요.', requestId: 'req-4' },
         }, 409);
       }
       return jsonResponse({ error: { code: 'NOT_FOUND', message: '요청을 확인해 주세요.', requestId: 'req-5' } }, 404);
@@ -134,6 +134,6 @@ describe('Confirm-Client 명세 확정', () => {
     fireEvent.click(screen.getByRole('checkbox'));
     fireEvent.click(screen.getByRole('button', { name: '확정하고 공급자 모집 시작' }));
 
-    expect((await screen.findByRole('alert')).textContent).toMatch(/UNMAPPED_PUBLISH_ERROR/);
+    expect((await screen.findByRole('alert')).textContent).toMatch(/BLOCK_INDUSTRY_MISMATCH/);
   });
 });
