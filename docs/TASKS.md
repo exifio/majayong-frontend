@@ -5,7 +5,7 @@
 
 > **이 파일은 통합 방식입니다.** 아래 표는 FE/BE/Integration 작업을 **담당 영역 별도로 표기하되** 한곳에서 의존관계를 보고 조율하는 용도입니다. 개인 개발 AI에 작업을 넘길 때는 `tasks_split/FRONTEND_TASKS.md` 또는 `tasks_split/BACKEND_TASKS.md`를 사용합니다.
 >
-> 모든 상태의 기준은 아래 **진행 현황 체크리스트**이며, 완료는 수용 기준의 실제 증거가 있을 때만 표시합니다. 문서 버전 v0.7.6 (2026-11-06). G0~G5 및 API v1.0.1 준수.
+> 모든 상태의 기준은 아래 **진행 현황 체크리스트**이며, 완료는 수용 기준의 실제 증거가 있을 때만 표시합니다. 문서 버전 v0.7.6 (2026-11-07 FE-19 상태 추가). G0~G5 및 API v1.0.1 준수.
 
 ## 진행 현황 체크리스트
 
@@ -32,9 +32,10 @@
 - [x] **FE-07** 문의 답변 알림 링크 — 실제 답변 알림·상세 이동 PASS; `tab=my` 처리 수정 `70cbcbc`
 - [x] **FE-09** 운영자 후처리 상태 — 세 관리자 화면 실제 API 저장 연결(staging reports/blocks 확인, disputes 빈 목록)
 - [x] **FE-13** NDA·지원·채팅·합의·서명 회귀 — staging 1~7 PASS, 보호 코드 무변경
+- [ ] **FE-19** 명세 확정 선행조건 차단·오류 안내 로컬 테스트/typecheck/build PASS; 실제 게시 거절 코드·성공 흐름은 미검증
 
 **현재 FE 실행 가능 상태 (2026-11-06)**
-- FE-17·FE-18·FE-12·FE-04/07/13·INT-02·FE-09는 완료됐습니다. INT-03은 staging GO·production NO-GO로 판정했습니다. 남은 작업은 자동 복구 scheduler와 production 전환 준비입니다.
+- FE-17·FE-18·FE-12·FE-04/07/13·INT-02·FE-09는 완료됐습니다. INT-03은 staging GO·production NO-GO로 판정했습니다. 자동 복구 scheduler도 Vercel Cron으로 연결했습니다. 남은 작업은 production 전환 준비입니다.
 - FE-12는 INT-02 sandbox 승인 E2E(가상계좌)까지 확인했고, production은 `VITE_ENABLE_DEPOSIT=false`를 유지합니다. 웹훅·복구는 INT-02 잔여 항목입니다.
 - FE-02의 실제 메일 발송은 사용자 결정으로 보류, FE-15는 계약 결정 전 보류입니다. 외부 선행 조건 전에는 API·fixture·DB 쓰기를 추가하지 않습니다.
 
@@ -60,7 +61,7 @@
 - [ ] **BE-12 (보류)** 메일 발송 안전 게이트·비밀번호 재설정 staging 실메일 검증 — 실제 발송은 사용자 결정으로 현재 단계에서 제외; 재개 전 allowlist·production 승인·테스트 완료 필요
 - [ ] **INT-00** FE/BE/디자인 SHA·계약 고정 — Vercel의 staging 명명 프로젝트가 Ready/Production; DB ref·운영 분리, 승인 계정, FE 배포 SHA·API v1.0.1 미확인
 - [ ] **INT-01** 로그인 후 실제 사용자 흐름 재현
-- [x] **INT-02** 결제 승인·복구 계약·PAY-01~06 — 승인 E2E·서명 웹훅·ADMIN 수동 배치 복구 PASS; 자동 scheduler는 별도
+- [x] **INT-02** 결제 승인·복구 계약·PAY-01~06 — 승인 E2E·서명 웹훅·수동·Vercel Cron 자동 복구 PASS
 - [ ] **INT-03** 57보드/배포 go-no-go — staging demo GO, production NO-GO(테스트 키·플래그 OFF·복구 worker·웹훅 등록·문안·메일·ADMIN)
 
 ## 사용법
@@ -97,6 +98,7 @@
 | FE-16 | FE | P1 | Next | 변경 영역별 가벼운 QA와 57보드 비교 마감 | FE-13, FE-03 | 하 | **완료** / 57보드 렌더·변경 14화면 대조, 468/468·overflow 0 |
 | FE-17 | FE | P1 | Next | 리뷰 작성·받은 리뷰 실제 API 연결 | BE-05, FE-11 | 상 | **완료** / 2026-11-06 staging 리뷰 201·받은 리뷰 1건, production `fgtpf2s80` |
 | FE-18 | FE | P2 | Next | 계약 완료 배너·공급자 정산 라벨 정리 | FE-11 | 하 | **완료** / 완료 문구·세후 받을 금액, production `lh28yr0l2` |
+| FE-19 | FE | P1 | Now | 명세 확정 선행조건 차단 및 오류 안내 | 없음 | 하 | **부분완료** / 로컬 테스트 2/2·typecheck·build 통과, 인증 게시 응답 미검증 |
 | BE-00 | BE | P0 | Now | API 기준선과 스테이징 환경 검증 | INT-00 | 하 | 대기 / 실호출 미검증 |
 | BE-01 | BE | P0 | Now | auth/register/reset/Google/role 계약 및 실제 호출 검증 | BE-00 | 중 | 대기 / 로컬 register·login·reset confirm 200 |
 | BE-02 | BE | P1 | Now | 고객센터 문의 5개 API·DTO·권한 검증 | BE-00 | 중 | 대기 / 로컬 GET·POST·상세 200, 비관리자 403 |
@@ -112,7 +114,7 @@
 | BE-12 | BE | 미정 | 미정 | 메일 발송 안전 게이트·비밀번호 재설정 staging 검증 | BE-01 | 미정 | **보류** / 사용자 결정으로 실제 메일 발송 defer; 재개 전 safety gate·staging test 필요 |
 | INT-00 | Integration | P0 | Now | FE/BE/디자인 SHA·계약 고정 | 없음 | 하 | **진행** / Vercel staging 명명 프로젝트는 Ready/Production; DB ref/격리 미확인, FE 배포 SHA·승인 계정·공식 계약 미완 |
 | INT-01 | Integration | P1 | Next | 로그인 후 실제 사용자 흐름 재현 | FE-01, FE-13, BE-04 | 중 | 대기 / 실호출 미검증 |
-| INT-02 | Integration | P0 | Now | 결제 승인·복구 FE/BE 계약 승인 및 PAY-01~06 | BE-00 | 상 | **완료** / 승인 E2E·서명 웹훅·ADMIN 수동 배치 복구 PASS; 자동 scheduler는 별도 |
+| INT-02 | Integration | P0 | Now | 결제 승인·복구 FE/BE 계약 승인 및 PAY-01~06 | BE-00 | 상 | **완료** / 승인 E2E·서명 웹훅·수동·Vercel Cron 자동 복구 PASS |
 | INT-03 | Integration | P1 | Next | 설계 통합 57보드/배포 go-no-go | FE-16, BE-11, INT-01, INT-02 | 중 | **PARTIAL** / staging demo GO, production NO-GO(7개 차단 항목) |
 
 ## 공동 병렬화 규칙
