@@ -285,16 +285,16 @@
 
 ## FE-15 — 선택 검색/취소 철회 UI 확장 보류 관리
 
-- **상태/난이도:** 대기 / 확인 완료, 계약 결정 전 보류 / 하 · **우선순위:** P2 · **단계:** Later.
+- **상태/난이도:** 완료 / 검색 확장·취소 철회 staging E2E / 하 · **우선순위:** P2 · **단계:** Later.
 - **선행:** BE-09, BE-10.
 - **대상:** `supplier/Find-Supplier.tsx; client/Cancel-Client.tsx; supplier/Cancel-Supplier.tsx`.
-- **목표/범위:** 현재 존재하는 필터/취소 UI만 기능 설명, 미지원 검색·철회 확장 비활성.
+- **목표/범위:** 공급자 프로젝트 검색의 keyword·정렬·마감일 필터와 취소 요청자 본인의 철회 버튼을 실제 API에 연결.
 - **보존:** 기존 지원/취소 흐름.
-- **API 계약:** GET /projects 현재 6파라미터; 취소 철회 API 없음.
+- **API 계약:** `GET /projects`의 `keyword`·`sort`·`deadlineBefore`; `POST /contracts/{id}/cancellation/withdraw`.
 - **실행:** 승인되지 않은 신규 query/path 임의 추가 금지.
 - **완료 조건:** 화면·문구에 미지원 동작 없음.
 - **최소 QA:** 해당 화면 확인만, UI 변경 시 인접 1~2개.
-- **확인 결과(2026-11-06 KST):** 코드 변경 없음. `Find-Supplier`의 정렬·마감 필터는 기존 화면 범위이고, 취소 화면에 철회 버튼/문구는 없다. 신규 query·path를 추가하지 않아 미지원 동작이 노출되지 않는다.
+- **확인 결과(2026-11-07 KST):** staging에서 `GET /projects?keyword=예약&sort=DEADLINE_SOON&deadlineBefore=2026-12-31` **200**(1건), 계약 취소 요청 **201** → 철회 **200** → 계약 `ACTIVE` 복귀를 확인했다. 브라우저에서 공급자 목록의 검색어·정렬·마감일 입력과 계약 상세의 "취소 요청 철회" 버튼·확인 대화상자·성공 상태를 확인했다. BE `f49e702`, FE `679644c`·`cd317cc`; 관련 FE 테스트 12/12, 취소 서비스 19/19, typecheck·build PASS.
 - **보고 형식:** 기준 SHA·변경 파일·통과/미검증·실제 요청·남은 위험을 5줄 이내로 보고. 범위 확대가 필요하면 작업을 멈추고 별도 제안.
 
 ## FE-16 — 변경 영역별 가벼운 QA와 57보드 비교 마감
@@ -351,7 +351,8 @@
 - **완료 조건:** 대기 기능이 있으면 게시 POST가 전송되지 않고, 확인된 게시 검증 오류가 구체적인 한국어 사유를 표시한다.
 - **최소 QA:** 인접 `Confirm-Client.test.tsx` RED→GREEN, 해당 테스트, `pnpm typecheck`, `pnpm build`.
 - **확인 결과(2026-11-07 KST):** 새 테스트 3건 RED→GREEN, 전체 484/484·typecheck·build 통과. staging 실제 API로 **상호 미등록 의뢰인 게시 201** → 공급자 상세 `client.name/businessName/industryField/storeAddress/bio/websiteUrl` 모두 `null` 반환을 확인했다. 반영 대기 기능이 있는 초안은 **409 `DRAFT_FEATURES_PENDING`**으로 차단되고 게시되지 않는다. BE `5f40443`에서 D-33 게시 게이트를 제거·상세 필드 은닉을 배포했다.
-- **후속 수정(2026-11-07 KST):** D-33에 따라 상호가 없어도 게시할 수 있도록 BE 필수 검사를 제거했다. 미완성 의뢰인 프로필 정보는 공급자 상세에 노출하지 않고, FE `businessName: null`은 `상호 미등록`으로 표시한다. 가입 안내의 상호 필수 문구와 폐기된 `CLIENT_PROFILE_INCOMPLETE` 고객센터 매핑도 바로잡았다. FE 게시 이동·공급자 상세 테스트 10/10, typecheck PASS; BE source typecheck/build PASS. BE 전용 PostgreSQL 테스트 및 실제 게시 확인은 전용 DB 미설정으로 미실행.
+- **후속 수정(2026-11-07 KST):** D-33에 따라 상호가 없어도 게시할 수 있도록 BE 필수 검사를 제거했다. 미완성 의뢰인 프로필 정보는 공급자 상세에 노출하지 않고, FE `businessName: null`은 `상호 미등록`으로 표시한다. 가입 안내의 상호 필수 문구와 폐기된 `CLIENT_PROFILE_INCOMPLETE` 고객센터 매핑도 바로잡았다.
+- **추가 수정:** D-34에 따라 블록 업종 코드 불일치 게시 차단과 FE 오류 매핑을 제거한다. 프로젝트 분류는 첫 선택 블록의 업종 코드로 유지하며, 교차 업종 지원을 새로 추가하지 않는다. 업종 불일치 게시 회귀 테스트를 추가했으며 BE 전용 PostgreSQL DB 미설정으로 미실행.
 
 ## 공통 개발 준수 사항
 

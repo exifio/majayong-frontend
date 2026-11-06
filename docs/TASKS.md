@@ -37,10 +37,10 @@
 **현재 FE 실행 가능 상태 (2026-11-06)**
 - FE-17·FE-18·FE-12·FE-04/07/13·INT-02·FE-09는 완료됐습니다. INT-03은 staging GO·production NO-GO로 판정했습니다. 자동 복구 scheduler도 Vercel Cron으로 연결했습니다. 남은 작업은 production 전환 준비입니다.
 - FE-12는 샌드박스 승인 E2E·실제 웹훅 200·자동 Cron 복구까지 확인했고, 테스트 키와 `VITE_ENABLE_DEPOSIT=true`로 배포했습니다. live 결제는 범위에서 제외합니다.
-- FE-02의 실제 메일 발송은 사용자 결정으로 보류, FE-15는 계약 결정 전 보류입니다. 외부 선행 조건 전에는 API·fixture·DB 쓰기를 추가하지 않습니다.
+- FE-02의 실제 메일은 샌드박스 no-op로 처리했고, FE-15 검색·취소 철회 확장은 staging에서 닫았습니다.
 
 **대기 (Next/Later)**
-- [ ] **FE-15** 검색/취소 철회 확장 보류 — 미지원 UI 없음 확인, 계약 결정 전
+- [x] **FE-15** 검색·취소 철회 확장 — staging search 200·cancel 201·withdraw 200·ACTIVE 복귀 확인
 
 **차단 (외부 계약·증거 필요)**
 - [x] **FE-12** Toss 예치 SDK 연결 — 샌드박스 승인 E2E PASS(가상계좌), 테스트 client key·`VITE_ENABLE_DEPOSIT=true` 배포
@@ -94,7 +94,7 @@
 | FE-12 | FE | P0 | Now | Toss 예치 UI 사실표시·승인 연결 게이트 | BE-06, BE-07, INT-02 | 상 | **완료** / INT-02 sandbox 승인 E2E PASS(가상계좌), production OFF 유지 |
 | FE-13 | FE | P1 | Next | 기존 NDA·지원·채팅·합의·서명 보호 회귀 | BE-04, INT-00 | 중 | **완료** / staging 1~7 PASS, 보호 코드 무변경 |
 | FE-14 | FE | P1 | Now | ChatIndex 고정 데모 링크 제거 | BE-04, FE-00 | 하 | **완료** / 2026-11-06 배포 확인 |
-| FE-15 | FE | P2 | Later | 선택 검색/취소 철회 UI 확장 보류 관리 | BE-09, BE-10 | 하 | 대기 / 확인 완료·계약 결정 전 보류 |
+| FE-15 | FE | P2 | Later | 선택 검색/취소 철회 UI 확장 보류 관리 | BE-09, BE-10 | 하 | **완료** / 검색 query·취소 철회 staging E2E PASS |
 | FE-16 | FE | P1 | Next | 변경 영역별 가벼운 QA와 57보드 비교 마감 | FE-13, FE-03 | 하 | **완료** / 57보드 렌더·변경 14화면 대조, 468/468·overflow 0 |
 | FE-17 | FE | P1 | Next | 리뷰 작성·받은 리뷰 실제 API 연결 | BE-05, FE-11 | 상 | **완료** / 2026-11-06 staging 리뷰 201·받은 리뷰 1건, production `fgtpf2s80` |
 | FE-18 | FE | P2 | Next | 계약 완료 배너·공급자 정산 라벨 정리 | FE-11 | 하 | **완료** / 완료 문구·세후 받을 금액, production `lh28yr0l2` |
