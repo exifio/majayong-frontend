@@ -18,6 +18,8 @@ import {
   summaryOf,
   type SummaryState,
 } from './Profile-Supplier.data';
+import { LiveReceivedReviews } from '@/components/review/LiveReceivedReviews';
+import { useSession } from '@/app/session';
 import s from './Profile-Supplier.module.css';
 
 function SummaryChip({ state }: { state: SummaryState }) {
@@ -28,6 +30,11 @@ function SummaryChip({ state }: { state: SummaryState }) {
 }
 
 export default function ProfileSupplier() {
+  const { apiAccessToken, authUser } = useSession();
+  const live = apiAccessToken.trim().length > 0;
+  const displayName = live
+    ? (authUser?.name?.trim() || authUser?.email?.split('@')[0] || DEMO.name)
+    : DEMO.name;
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const mock = resolveProfileMock(params.get('mock'), params.get('tab'));
@@ -59,12 +66,14 @@ export default function ProfileSupplier() {
     <div className={s.page} data-screen="Profile-Supplier">
       <header className={s.phead}>
         <span className={s.ava} aria-hidden="true">
-          {DEMO.initial}
+          {displayName.slice(0, 1)}
         </span>
         <div>
-          <h1 className={s.name}>{DEMO.name}</h1>
+          <h1 className={s.name}>{displayName}</h1>
           <p className={s.meta}>
-            {DEMO.roleMeta} · <span className={s.star}>{DEMO.ratingLine}</span>
+            {live ? '공급자' : (
+              <>{DEMO.roleMeta} · <span className={s.star}>{DEMO.ratingLine}</span></>
+            )}
           </p>
         </div>
       </header>
@@ -75,7 +84,7 @@ export default function ProfileSupplier() {
         value={isReviews ? 'reviews' : 'basic'}
         items={[
           { key: 'basic', label: DEMO.tabs[0].label },
-          { key: 'reviews', label: `${DEMO.tabs[1].label} 12` },
+          { key: 'reviews', label: apiAccessToken.trim() ? DEMO.tabs[1].label : `${DEMO.tabs[1].label} 12` },
         ]}
         onChange={setTab}
       />
@@ -188,6 +197,8 @@ export default function ProfileSupplier() {
           </div>
           {saved ? <p className={s.saved}>저장했습니다</p> : null}
         </section>
+      ) : apiAccessToken.trim() ? (
+        <LiveReceivedReviews side="SUPPLIER" styles={s} />
       ) : (
         <section className={s.section} aria-label="받은 리뷰">
           <div className={s.summaryCard}>

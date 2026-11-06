@@ -344,6 +344,30 @@ export interface ContractRecordDto {
   items: ContractItemDto[];
 }
 
+export type ReviewerRole = 'CLIENT' | 'SUPPLIER';
+
+export interface PublicReviewDto {
+  id: string;
+  rating: number;
+  comment: string | null;
+  tags: string[];
+  reviewerRole: ReviewerRole;
+  reviewerDisplayName: string;
+  createdAt: IsoDate;
+}
+
+export interface ReviewDto {
+  id: string;
+  contractId: string;
+  reviewerId: string;
+  revieweeId: string;
+  reviewerRole: ReviewerRole;
+  rating: number;
+  comment: string | null;
+  tags: string[];
+  createdAt: IsoDate;
+}
+
 export type ApiInstallmentStatus = 'PENDING' | 'DELIVERED' | 'REWORK_REQUESTED' | 'APPROVED' | 'RELEASED' | 'REFUNDED';
 
 export interface PaymentInstallmentDto {
@@ -673,6 +697,11 @@ export interface BApiRequestBodies {
     conditionKey?: string;
     note?: string;
   };
+  createReview: {
+    rating: number;
+    comment?: string;
+    tags?: string[];
+  };
   withdrawApplication: EmptyJsonObjectDto;
   rejectApplication: EmptyJsonObjectDto;
   submitApplication: SubmitApplicationRequestDto;
@@ -779,6 +808,10 @@ export interface BApiResponses {
   getContract: DataEnvelope<ContractRecordDto>;
   getContractDocument: DataEnvelope<ContractDocumentDto>;
   signContract: DataEnvelope<SignContractResultDto>;
+  createReview: DataEnvelope<ReviewDto>;
+  listContractReviews: DataEnvelope<PublicReviewDto[]>;
+  listSupplierReviews: DataEnvelope<PublicReviewDto[]>;
+  listClientReviews: DataEnvelope<PublicReviewDto[]>;
   declineContract: DataEnvelope<BreakContractResultDto>;
   cancelProvisionalContract: DataEnvelope<BreakContractResultDto>;
   listNotifications: NotificationListEnvelopeDto;

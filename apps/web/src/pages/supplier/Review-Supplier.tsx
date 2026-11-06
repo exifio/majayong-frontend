@@ -1,12 +1,23 @@
 /* 공급자 리뷰 작성 — 보드 Review-Supplier · /s/contracts/:cid/review · M6
  * 상태: 작성 중 / 제출함. F-14. Review-Client와 같은 구조, 상대는 의뢰인. */
 import { useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Band, Button, StatusChip, TextAreaField } from '@/components/ui';
+import { LiveReview } from '@/components/review/LiveReview';
+import { useSession } from '@/app/session';
 import { DEMO, resolveReviewMock } from './Review-Supplier.data';
 import s from './Review-Supplier.module.css';
 
 export default function ReviewSupplier() {
+  const { apiAccessToken } = useSession();
+  const { cid = '' } = useParams();
+  if (apiAccessToken.trim()) {
+    return <LiveReview cid={cid} side="SUPPLIER" copy={DEMO} styles={s} />;
+  }
+  return <ReviewSupplierDemo />;
+}
+
+function ReviewSupplierDemo() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const mock = resolveReviewMock(params.get('mock'));
