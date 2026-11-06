@@ -60,7 +60,7 @@
 - [ ] **BE-12 (보류)** 메일 발송 안전 게이트·비밀번호 재설정 staging 실메일 검증 — 실제 발송은 사용자 결정으로 현재 단계에서 제외; 재개 전 allowlist·production 승인·테스트 완료 필요
 - [ ] **INT-00** FE/BE/디자인 SHA·계약 고정 — Vercel의 staging 명명 프로젝트가 Ready/Production; DB ref·운영 분리, 승인 계정, FE 배포 SHA·API v1.0.1 미확인
 - [ ] **INT-01** 로그인 후 실제 사용자 흐름 재현
-- [ ] **INT-02** 결제 승인·복구 계약·PAY-01~06
+- [ ] **INT-02** 결제 승인·복구 계약·PAY-01~06 — FE-12 연결·로컬 Toss 창 확인; 실카드/리다이렉트 브라우저 E2E·staging 웹훅 미실행
 - [ ] **INT-03** 57보드/배포 go-no-go
 
 ## 사용법
