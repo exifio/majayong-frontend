@@ -213,7 +213,7 @@ export function LiveEscrow({
           <Band tone="wait" title="예치 대기">
             {paymentReady
               ? '예치 금액을 확인한 뒤 결제창에서 승인을 완료해 주세요.'
-              : '예치 금액을 확인한 뒤 예치해 주세요. 결제 요청은 sandbox·webhook 검증 후 활성화됩니다.'}
+              : '예치 금액을 확인한 뒤 예치해 주세요.'}
           </Band>
         </div>
       )}
@@ -323,7 +323,7 @@ export function LiveEscrow({
                 disabled={!paymentReady || !waiting || paying || confirming}
                 disabledReason={
                   !depositEnabled
-                    ? 'Toss sandbox·webhook 검증 완료 후 예치를 활성화합니다.'
+                    ? '지금은 예치를 시작할 수 없습니다.'
                     : !tossClientKey.trim()
                       ? '결제 설정이 준비되지 않았습니다.'
                       : !waiting

@@ -35,7 +35,7 @@
 - [x] **FE-19** 명세 확정 선행조건 차단·오류 안내 — staging 상호 미등록 게시 201·대기 기능 409·상세 필드 은닉 확인
 
 **현재 FE 실행 가능 상태 (2026-11-06)**
-- FE-17·FE-18·FE-12·FE-04/07/13·INT-02·FE-09는 완료됐습니다. INT-03은 staging GO·production NO-GO로 판정했습니다. 자동 복구 scheduler도 Vercel Cron으로 연결했습니다. 남은 작업은 production 전환 준비입니다.
+- FE-17·FE-18·FE-12·FE-04/07/13·INT-02·FE-09·FE-15는 완료됐습니다. INT-03은 staging GO·production demo-complete로 판정했습니다. Toss·메일·계좌 인증은 샌드박스 성공으로 닫았고, 남은 것은 production 프로젝트/DB 분리·법률 문안·공식 ADMIN 절차입니다.
 - FE-12는 샌드박스 승인 E2E·실제 웹훅 200·자동 Cron 복구까지 확인했고, 테스트 키와 `VITE_ENABLE_DEPOSIT=true`로 배포했습니다. live 결제는 범위에서 제외합니다.
 - FE-02의 실제 메일은 샌드박스 no-op로 처리했고, FE-15 검색·취소 철회 확장은 staging에서 닫았습니다.
 
