@@ -26,6 +26,7 @@ import {
   type CondRow,
   type FeatureItem,
 } from './Deliver-Supplier.data';
+import { LiveDelivery } from '@/components/contract/LiveDelivery';
 import s from './Deliver-Supplier.module.css';
 
 export default function DeliverSupplier() {
@@ -61,6 +62,8 @@ export default function DeliverSupplier() {
   const onSubmit = () => {
     navigate(`?mock=${encodeURIComponent('제출함 · 검수 대기')}`);
   };
+
+  if (!params.get('mock')) return <LiveDelivery cid={cid} />;
 
   return (
     <div className={s.page} data-screen="Deliver-Supplier">

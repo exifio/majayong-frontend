@@ -10,7 +10,7 @@ const PATH = '/c/contracts/c-ondo/inspect';
 
 describe('Inspect-Client — 검수', () => {
   it('검수 대기: 구간 금액 · Deadline · 납품물 · primary 승인하기', () => {
-    const { container } = renderAt(PATH, 'client');
+    const { container } = renderAt(`${PATH}?mock=${encodeURIComponent('검수 대기')}`, 'client');
     const root = container.querySelector('[data-screen="Inspect-Client"]') as HTMLElement;
     expect(screen.getByRole('heading', { level: 1, name: DEMO.pageTitle })).toBeTruthy();
     expect(within(root).getAllByText(formatWon(DEMO.stageAmount)).length).toBeGreaterThan(0);

@@ -1,0 +1,14 @@
+.page { word-break: keep-all; }
+.crumb { font-size: 14px; color: var(--slate-600); margin: 0 0 8px; }
+.crumb a { color: var(--slate-600); }
+.title { margin: 0 0 6px; font-size: var(--fs-page); font-weight: 600; color: var(--slate-900); }
+.sub { margin: 0 0 20px; font-size: var(--fs-body); color: var(--slate-600); line-height: var(--lh-body); }
+.state { padding: 24px 0; color: var(--slate-600); }
+.stageLine { margin: 0 0 14px; font-weight: 600; color: var(--slate-900); }
+.items { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 16px; }
+.item { border: 1px solid var(--slate-200); border-radius: var(--radius-card); background: #fff; padding: 18px 20px; }
+.itemTitle { margin: 0; font-size: 17px; font-weight: 600; }
+.itemDesc { margin: 6px 0 12px; color: var(--slate-600); font-size: 14px; }
+.actions { display: flex; justify-content: flex-end; margin-top: 18px; }
+.error { margin: 12px 0 0; color: var(--red-600); font-size: 14px; }
+.done { border: 1px solid var(--slate-200); border-radius: var(--radius-card); background: #fff; padding: 24px; display: flex; flex-direction: column; gap: 16px; align-items: flex-start; }

@@ -311,6 +311,7 @@ export interface AgreementPreviewDto {
 }
 
 export interface ContractItemDto {
+  id: string;
   blockId: string;
   title: string;
   description: string;
@@ -410,6 +411,49 @@ export interface PayoutAccountResultDto {
   accountMasked: string | null;
   holder: string;
   verifiedAt: IsoDate | null;
+}
+
+export interface ContractInstallmentDto {
+  id: string;
+  stage: ApiInstallmentStage;
+  ratio: number;
+  amount: number;
+  status: ApiInstallmentStatus;
+  approvedAt: IsoDate | null;
+  releasedAt: IsoDate | null;
+  holdReason: string | null;
+}
+
+export interface ContractInstallmentsDto {
+  simulated: true;
+  transferNote: string;
+  installments: ContractInstallmentDto[];
+}
+
+export interface DeliveryFileDto {
+  fileId: string;
+  name: string;
+  size: number;
+  mimeType: string;
+}
+
+export interface DeliveryItemDto {
+  contractItemId: string;
+  links: string[];
+  files: DeliveryFileDto[];
+  howToCheck: string;
+}
+
+export interface DeliveryDto {
+  id: string;
+  installmentId: string;
+  attemptNo: number;
+  items: DeliveryItemDto[];
+  summary: string | null;
+  status: string;
+  submittedAt: IsoDate;
+  inspectionDueAt: IsoDate;
+  reviewedAt: IsoDate | null;
 }
 
 export interface ProvisionalContractPlanDto {
@@ -621,6 +665,14 @@ export interface BApiRequestBodies {
   };
   updatePayoutAccount: { bank: string; accountNo: string; holder: string };
   verifyPayoutAccount: { code: string };
+  submitDelivery: { items: DeliveryItemDto[]; summary?: string };
+  approveContractItem: { deliveryId: string };
+  requestRework: {
+    deliveryId: string;
+    reason: 'CONDITION_MISMATCH' | 'NOT_WORKING' | 'MISSING_PART' | 'OTHER';
+    conditionKey?: string;
+    note?: string;
+  };
   withdrawApplication: EmptyJsonObjectDto;
   rejectApplication: EmptyJsonObjectDto;
   submitApplication: SubmitApplicationRequestDto;
@@ -710,6 +762,11 @@ export interface BApiResponses {
   updateSupplierTaxInfo: DataEnvelope<TaxInfoResultDto>;
   updatePayoutAccount: DataEnvelope<PayoutAccountResultDto>;
   verifyPayoutAccount: DataEnvelope<{ verified: true; verifiedAt: IsoDate }>;
+  listContractInstallments: DataEnvelope<ContractInstallmentsDto>;
+  listDeliveries: DataEnvelope<DeliveryDto[]>;
+  submitDelivery: DataEnvelope<DeliveryDto>;
+  approveContractItem: DataEnvelope<{ id: string; approvedAt: IsoDate | null; autoApproved: boolean }>;
+  requestRework: DataEnvelope<{ id: string; status: string }>;
   listChatRooms: DataEnvelope<ChatRoomSummaryDto[]>;
   openChat: DataEnvelope<OpenChatResultDto>;
   listMessages: DataEnvelope<ConversationViewDto>;

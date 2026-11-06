@@ -24,6 +24,7 @@ import {
   type InspectMock,
   type Item,
 } from './Inspect-Client.data';
+import { LiveInspection } from '@/components/contract/LiveInspection';
 import s from './Inspect-Client.module.css';
 
 function itemChip(item: Item) {
@@ -71,6 +72,8 @@ export default function InspectClient() {
   const canSendFix = fixItem.trim().length > 0 && fixReason.trim().length > 0;
   const waitItems = demo.items.filter((i) => i.status === 'wait' || i.status === 'fix');
   const showPrimaryApprove = !demo.midDone && !showFix && waitItems.length > 0;
+
+  if (!params.get('mock')) return <LiveInspection cid={cid} />;
 
   return (
     <div className={s.page} data-screen="Inspect-Client">

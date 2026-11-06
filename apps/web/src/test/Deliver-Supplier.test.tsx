@@ -9,7 +9,7 @@ const PATH = '/s/contracts/c-ondo/deliver';
 
 describe('Deliver-Supplier — 납품', () => {
   it('중간 납품: 작업 마감 · 체크 · 링크 · primary 납품 제출', () => {
-    const { container } = renderAt(PATH, 'supplier');
+    const { container } = renderAt(`${PATH}?mock=${encodeURIComponent('중간 납품')}`, 'supplier');
     expect(screen.getByRole('heading', { name: DEMO.pageTitle })).toBeTruthy();
     expect(screen.getByText(/작업 마감.*12월 16일/)).toBeTruthy();
     expect(screen.getByText(/중간 납품/)).toBeTruthy();
@@ -29,7 +29,7 @@ describe('Deliver-Supplier — 납품', () => {
   });
 
   it('중간 납품: 체크 후 제출 → 검수 대기', () => {
-    renderAt(PATH, 'supplier');
+    renderAt(`${PATH}?mock=${encodeURIComponent('중간 납품')}`, 'supplier');
     const checks = screen.getAllByRole('checkbox');
     checks.forEach((c) => fireEvent.click(c));
     fireEvent.click(screen.getByRole('button', { name: '납품 제출' }));
