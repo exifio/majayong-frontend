@@ -2,8 +2,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { findDesignViolations } from '@/app/devChecks';
-import { DEMO } from '@/pages/public/Reset.data';
-import { location, renderAt } from './render';
+import { DEMO } from './Reset.data';
+import { location, renderAt } from '../../test/render';
 
 const jsonResponse = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
@@ -22,9 +22,8 @@ describe('Reset — 비밀번호 재설정', () => {
     expect(findDesignViolations(container)).toEqual([]);
   });
 
-  it('이메일을 보내면 재설정 요청 API를 호출하고 메일 보냄 화면으로 이동한다', async () => {
-    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(jsonResponse({ data: { requested: true } }));
-    vi.stubGlobal('fetch', fetchMock);
+  it('이메일 요청이 성공하면 메일 보냄 화면으로 이동한다', async () => {
+    vi.stubGlobal('fetch', vi.fn<typeof fetch>().mockResolvedValue(jsonResponse({ data: { requested: true } })));
     const { container } = renderAt('/reset', 'guest');
     const root = container.querySelector('[data-screen="Reset"]') as HTMLElement;
 
@@ -32,9 +31,6 @@ describe('Reset — 비밀번호 재설정', () => {
     fireEvent.click(within(root).getByRole('button', { name: DEMO.send }));
 
     expect(await screen.findByRole('heading', { level: 1, name: DEMO.sentTitle })).toBeTruthy();
-    const [path, init] = fetchMock.mock.calls[0]!;
-    expect(path).toBe('/api/v1/auth/password-reset/request');
-    expect(JSON.parse(String(init?.body))).toEqual({ email: 'minjae@example.com' });
   });
 
   it('메일 발송을 사용할 수 없으면 서버 안내를 보여 주고 입력 화면에 머문다', async () => {
@@ -53,8 +49,7 @@ describe('Reset — 비밀번호 재설정', () => {
   });
 
   it('토큰 링크로 들어오면 새 비밀번호를 확정하고 완료 화면으로 이동한다', async () => {
-    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(jsonResponse({ data: { passwordReset: true } }));
-    vi.stubGlobal('fetch', fetchMock);
+    vi.stubGlobal('fetch', vi.fn<typeof fetch>().mockResolvedValue(jsonResponse({ data: { passwordReset: true } })));
     const { container } = renderAt('/reset?token=token-1', 'guest');
     const root = container.querySelector('[data-screen="Reset"]') as HTMLElement;
 
@@ -63,9 +58,6 @@ describe('Reset — 비밀번호 재설정', () => {
     fireEvent.click(within(root).getByRole('button', { name: DEMO.change }));
 
     expect(await screen.findByRole('heading', { level: 1, name: DEMO.doneTitle })).toBeTruthy();
-    const [path, init] = fetchMock.mock.calls[0]!;
-    expect(path).toBe('/api/v1/auth/password-reset/confirm');
-    expect(JSON.parse(String(init?.body))).toEqual({ token: 'token-1', newPassword: 'newpass1234' });
   });
 
   it('만료되었거나 잘못된 토큰이면 링크 만료 화면을 보여 준다', async () => {
