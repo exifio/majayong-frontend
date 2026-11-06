@@ -89,7 +89,7 @@ describe('Confirm-Client 명세 확정', () => {
     expect(fetchMock.mock.calls.some(([url, init]) => String(url) === '/api/v1/drafts/d-1/publish' && init?.method === 'POST')).toBe(true);
   });
 
-  it('미등록 상호로 거절되면 보완 사유를 안내한다', async () => {
+  it('구버전 서버의 상호 오류는 고객센터 안내 대신 코드를 보여준다', async () => {
     const fetchMock = vi.fn<typeof fetch>().mockImplementation(async (input, init) => {
       if (String(input) === '/api/v1/drafts/d-1' && init?.method !== 'POST') {
         return jsonResponse({ data: draft([]) });
@@ -110,7 +110,7 @@ describe('Confirm-Client 명세 확정', () => {
     fireEvent.click(screen.getByRole('checkbox'));
     fireEvent.click(screen.getByRole('button', { name: '확정하고 공급자 모집 시작' }));
 
-    expect((await screen.findByRole('alert')).textContent).toMatch(/상호 정보/);
+    expect((await screen.findByRole('alert')).textContent).toMatch(/CLIENT_PROFILE_INCOMPLETE/);
   });
 
   it('처리되지 않은 게시 오류는 오류 코드를 안내한다', async () => {

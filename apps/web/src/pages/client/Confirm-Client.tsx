@@ -33,7 +33,6 @@ const PUBLISH_ERROR_MESSAGES: Partial<Record<string, string>> = {
   DRAFT_NOT_FOUND: '초안을 찾을 수 없습니다. 초안 목록에서 다시 열어 주세요.',
   DRAFT_ALREADY_CONFIRMED: '이미 확정된 명세입니다. 내 프로젝트에서 확인해 주세요.',
   DRAFT_NOT_IN_PROGRESS: '이 초안은 더 이상 확정할 수 없습니다. 초안 목록을 새로고침해 주세요.',
-  CLIENT_PROFILE_INCOMPLETE: '의뢰인 상호 정보가 누락되어 확정할 수 없습니다. 고객센터에 문의해 주세요.',
   DRAFT_FEATURES_PENDING: '아직 반영하지 못한 기능이 있습니다. 초안으로 돌아가 다시 시도해 주세요.',
   INVALID_RECRUITMENT_PERIOD: '모집 시작일과 마감일을 확인해 주세요. 마감일은 시작일 이후이고 오늘 이후여야 합니다.',
   DISCLOSURE_CONSENT_REQUIRED: '공개 범위 동의가 필요합니다. 동의 항목을 확인해 주세요.',
