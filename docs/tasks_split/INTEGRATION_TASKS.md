@@ -16,15 +16,15 @@
 
 ## INT-00 — FE/BE/디자인 SHA·계약 고정
 
-- **상태/난이도:** 대기 / 실호출 미검증 / 하 · **우선순위:** P0 · **단계:** Now.
+- **상태/난이도:** 진행 / 3개 저장소 SHA 확인; Vercel의 staging 명명 프로젝트는 Ready/Production; **DB ref·운영 DB 격리 및 승인 계정/절차 미확인**; 공식 계약 대조 미완 / 하 · **우선순위:** P0 · **단계:** Now.
 - **선행:** 없음.
 - **대상:** `FE routes/API proxy; BE openapi/vercel; 디자인 boards/decision docs`.
 - **목표/범위:** 현재 세 SHA와 API PDF v1.0.1의 구버전 FE SHA 차이를 기록.
 - **보존:** API 119개·역할·DB 스키마 불변.
-- **API 계약:** 현재 FE main=f9427a9, BE main=a188fb2, 디자인=4360783.
-- **실행:** 배포 SHA·환경 확인 전 결함 또는 정상 단정 금지.
-- **완료 조건:** 원본 및 변경 기준 로그, 테스트 승인 환경 식별.
-- **최소 QA:** 보안 변수 노출 없이 health/API 401 확인.
+- **기준선(2026-11-06):** FE `main` `84af24bcf7bfdabde5c65d8bae18d9e4b8b011bc` (로컬 HEAD와 GitHub main 일치); BE `main` `3601095b5d96b28eda0810bf3dd9682b12a0ec21`; 디자인 저장소 `main` `1f76f5b10f46b3c69987ab7b0f981b6ce5d1863d`. 문서의 디자인 기준 `claude-front` 커밋 `4360783ff52ba5f55d45bcbb9ff2b3b6d5efc829`는 현재 브랜치 목록에는 없고, 디자인 저장소 `main`은 별도 기준으로 확인했다.
+- **API 계약 근거:** API v1.0.1 PDF와 ERD는 FE 작업본에 없음. BE main의 [`openapi/openapi.yaml`](https://github.com/exifio/majayong-backend/blob/3601095b5d96b28eda0810bf3dd9682b12a0ec21/openapi/openapi.yaml)은 OpenAPI 3.1.0, `info.version: 0.7.0`, B API 문서다. 공식 v1.0.1과 동등하다고 간주하지 않는다.
+- **완료 조건:** FE 배포 SHA, staging DB/project 식별·격리 근거, 승인된 테스트 계정/역할·접근 절차, 공식 API v1.0.1 대조 근거가 필요하다. 현재 확인된 상태 응답만으로 DB 격리나 계정 승인을 입증할 수 없어 미완료.
+- **최소 QA/결과:** 2026-11-06 프로덕션 FE 무토큰 `GET /api/v1/me/notifications`에서 `401` 확인. 사용자 재확인: Vercel [`majayong-backend-staging`](https://vercel.com/exifio-4593s-projects/majayong-backend-staging)은 Ready/Production `main@3601095`; env settings의 `DATABASE_URL`·`SUPABASE_URL`은 Production scope Secret이고 project ref는 확인되지 않으며 Supabase integration도 없다. 조회된 `health-record-restore` (`wwkuktblvadeynufjllk`, INACTIVE/테이블 접근 불가)·`health` (`jleboocxejidigclepxt`, ACTIVE_HEALTHY/다른 서비스 schema)는 연결 근거가 아니다. 사용자 보고 `/health` 200·무인증 `/api/v1/me` 401은 DB 격리를 증명하지 않는다. FE-04 `FE-04-STAGING-20261106`은 BLOCKED: 공식 ADMIN bootstrap/승인 담당자와 작성자 계정 절차를 찾지 못함; staging 계정·문의 생성 및 API/DB 쓰기는 하지 않았다. 공식 API v1.0.1 미확인.
 - **보고 형식:** 기준 SHA·변경 파일·통과/미검증·실제 요청·남은 위험을 5줄 이내로 보고. 범위 확대가 필요하면 작업을 멈추고 별도 제안.
 
 ## INT-01 — 로그인 후 실제 사용자 흐름 재현

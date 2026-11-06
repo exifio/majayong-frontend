@@ -5,6 +5,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import type { ApiInquiryStatus, InquiryDto } from '@majayong/types/api';
 import { Band, Button, Chip, EmptyState, Tabs, TextAreaField } from '@/components/ui';
 import { useSession } from '@/app/session';
+import { useSetAdminInquiryCount } from '@/components/layout/Shell';
 import { ApiRequestError, apiRequest } from '@/lib/api';
 import { formatDateTime } from '@/lib/format';
 import { CATEGORY_LABEL, STATUS_LABEL } from '@/pages/public/Help-Inquiry.data';
@@ -33,6 +34,7 @@ export default function AdminInquiries() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const { apiAccessToken } = useSession();
+  const setAdminInquiryCount = useSetAdminInquiryCount();
   const [state, setState] = useState<LoadState>('loading');
   const [rows, setRows] = useState<InquiryDto[]>([]);
   const [filter, setFilter] = useState<Filter>('ALL');
@@ -45,20 +47,23 @@ export default function AdminInquiries() {
   useEffect(() => {
     const controller = new AbortController();
     setState('loading');
+    setAdminInquiryCount?.(null);
     apiRequest('listAdminInquiries', '/admin/support/inquiries', {
       accessToken: apiAccessToken,
       signal: controller.signal,
     })
       .then((response) => {
         setRows(response.data);
+        setAdminInquiryCount?.(response.data.filter((row) => row.status === 'WAITING').length);
         setState('ready');
       })
       .catch((caught: unknown) => {
         if (caught instanceof Error && caught.name === 'AbortError') return;
+        setAdminInquiryCount?.(null);
         setState('error');
       });
     return () => controller.abort();
-  }, [apiAccessToken]);
+  }, [apiAccessToken, setAdminInquiryCount]);
 
   const shown = useMemo(
     () => (filter === 'ALL' ? rows : rows.filter((row) => row.status === filter)),
@@ -86,7 +91,9 @@ export default function AdminInquiries() {
         accessToken: apiAccessToken,
         jsonBody: { answer: answer.trim() },
       });
-      setRows((prev) => prev.map((row) => (row.id === response.data.id ? response.data : row)));
+      const updatedRows = rows.map((row) => (row.id === response.data.id ? response.data : row));
+      setRows(updatedRows);
+      setAdminInquiryCount?.(updatedRows.filter((row) => row.status === 'WAITING').length);
       setAnswer('');
       setNotice(PAGE.done);
     } catch (caught) {
