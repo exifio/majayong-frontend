@@ -59,7 +59,7 @@
 - [x] **BE-10** 취소 철회/1원 인증 계약
 - [x] **BE-11** API 문서/권한/최종 스모크
 - [x] **BE-12 (샌드박스)** 메일 no-op adapter — `PASSWORD_RESET_SANDBOX=true`에서 request 200; production은 env OFF로 503 유지
-- [ ] **INT-00** FE/BE/디자인 SHA·계약 고정 — 배포 BE `f49e702`·FE `73088c44` 확인; v1.0.1 120 op vs 코드 124 op 대조 완료(승인 추가 5건·`/health` 별도). 남은 것: production 프로젝트/도메인/DB 분리, 디자인 저장소 SHA
+- [x] **INT-00** production 분리·계약 고정 — BE `majayong-backend-production`·FE `majayong-frontend-production`, DB schema `majayong_production`·bucket `majayong-production`, v1.0.1 120 op vs 코드 124 op 대조. 남은 것: 디자인 저장소 SHA·참조 partial DTO 문안(문서 전용)
 - [x] **INT-01** 로그인 후 실제 사용자 흐름 재현 — staging API 01~10·FE 13 1~7 PASS; FE 08~10 화면은 FE-04/07/10/13에서 확인
 - [x] **INT-02** 결제 승인·복구 계약·PAY-01~06 — 승인 E2E·서명 웹훅·수동·Vercel Cron 자동 복구 PASS
 - [x] **INT-03** 57보드/배포 go-no-go — 샌드박스 GO(테스트 키·웹훅 200·Cron 복구·FE 예치 ON), production live는 범위 제외
