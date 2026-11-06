@@ -1,26 +1,54 @@
-/* 의뢰인 예치 — 계약(B) 데이터만 표시한다. C 예치 요청은 D-21·sandbox/webhook 검증 전까지 호출하지 않는다. */
-import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import type { ContractDocumentDto, ContractRecordDto } from '@majayong/types/api';
+/* 의뢰인 예치 — 계약(B) 데이터와 C 예치 API를 표시한다.
+ * 결제창은 DEPOSIT_ENABLED와 공개 클라이언트 키가 있을 때만 열고, 승인은 서버 confirm으로만 확정한다. */
+import { useEffect, useRef, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import type { ContractDocumentDto, ContractRecordDto, EscrowDepositDto } from '@majayong/types/api';
 import { Band, Button, Deadline, Money, StatusChip } from '@/components/ui';
 import { useSession } from '@/app/session';
 import { ApiRequestError, apiRequest } from '@/lib/api';
+import { createDeposit, confirmDeposit, listDeposits } from '@/lib/deposit-api';
 import { contractDisplayLabel } from '@/lib/contract-status';
-import { DEPOSIT_ENABLED } from '@/lib/feature-flags';
+import { DEPOSIT_ENABLED, TOSS_CLIENT_KEY } from '@/lib/feature-flags';
 import { formatDateTime, formatWon } from '@/lib/format';
 import { paymentStatusLabel } from '@/lib/payment-status';
 import { supplierProfile, type SupplierProfileSummary } from '@/lib/supplier-profile';
+import { requestCardPayment } from '@/lib/toss-payment';
 
 type State = 'loading' | 'success' | 'auth-error' | 'error';
 
-export function LiveEscrow({ cid, styles }: { cid?: string; styles: Record<string, string> }) {
+const DEPOSIT_LABEL: Record<EscrowDepositDto['status'], string> = {
+  PENDING: '결제 대기',
+  HELD: '확인 필요',
+  COMPLETED: '예치 완료',
+  FAILED: '결제 실패',
+};
+
+export function LiveEscrow({
+  cid,
+  styles,
+  depositEnabled = DEPOSIT_ENABLED,
+  tossClientKey = TOSS_CLIENT_KEY,
+}: {
+  cid?: string;
+  styles: Record<string, string>;
+  depositEnabled?: boolean;
+  tossClientKey?: string;
+}) {
   const s = styles;
-  const { apiAccessToken } = useSession();
+  const { apiAccessToken, authUser } = useSession();
   const [state, setState] = useState<State>('loading');
   const [contract, setContract] = useState<ContractRecordDto | null>(null);
   const [document, setDocument] = useState<ContractDocumentDto | null>(null);
   const [supplier, setSupplier] = useState<SupplierProfileSummary | null>(null);
+  const [deposits, setDeposits] = useState<EscrowDepositDto[]>([]);
   const [retry, setRetry] = useState(0);
+  const [paying, setPaying] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [paymentNotice, setPaymentNotice] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const confirmedKey = useRef<string | null>(null);
 
   useEffect(() => {
     if (!cid) return;
@@ -40,6 +68,50 @@ export function LiveEscrow({ cid, styles }: { cid?: string; styles: Record<strin
     });
     return () => controller.abort();
   }, [cid, apiAccessToken, retry]);
+
+  useEffect(() => {
+    if (!depositEnabled || !cid || !apiAccessToken.trim()) return;
+    let active = true;
+    listDeposits(apiAccessToken, cid)
+      .then((rows) => { if (active) setDeposits(rows); })
+      .catch((error: unknown) => {
+        if (!active) return;
+        setPaymentError(error instanceof ApiRequestError ? error.message : '결제 내역을 불러오지 못했습니다.');
+      });
+    return () => { active = false; };
+  }, [depositEnabled, cid, apiAccessToken, retry]);
+
+  useEffect(() => {
+    if (!depositEnabled || !cid || !apiAccessToken.trim() || state !== 'success') return;
+    const payment = params.get('payment');
+    const paymentKey = params.get('paymentKey');
+    if (payment === 'fail' || (!paymentKey && (params.get('code') || params.get('message')))) {
+      setPaymentError(params.get('message') || '결제가 취소되었습니다.');
+      return;
+    }
+    const orderId = params.get('orderId');
+    const amount = Number(params.get('amount'));
+    if (!paymentKey || !orderId || !Number.isSafeInteger(amount) || amount <= 0) return;
+    if (confirmedKey.current === paymentKey) return;
+    confirmedKey.current = paymentKey;
+    let active = true;
+    setConfirming(true);
+    setPaymentError(null);
+    confirmDeposit(apiAccessToken, cid, orderId, paymentKey, amount)
+      .then((result) => {
+        if (!active) return;
+        setContract(result.contract);
+        setPaymentNotice('예치가 완료되었습니다.');
+        navigate(`/c/contracts/${encodeURIComponent(cid)}/escrow`, { replace: true });
+        setRetry((count) => count + 1);
+      })
+      .catch((error: unknown) => {
+        if (!active) return;
+        setPaymentError(error instanceof ApiRequestError ? error.message : '결제 승인을 확인하지 못했습니다.');
+      })
+      .finally(() => { if (active) setConfirming(false); });
+    return () => { active = false; };
+  }, [depositEnabled, cid, apiAccessToken, state, params, navigate]);
 
   if (!cid) return <div className={s.page}><p role="alert" style={{ padding: 24 }}>계약을 찾을 수 없습니다.</p></div>;
 
@@ -62,6 +134,45 @@ export function LiveEscrow({ cid, styles }: { cid?: string; styles: Record<strin
   const waiting = active && contract.paymentStatus === 'PENDING';
   const deposited = contract.paymentStatus !== 'PENDING';
   const remaining = Math.max(0, document.depositAmount - contract.totalDeposited);
+  const depositAmount = document.depositAmount;
+  const pendingDeposit = deposits.find((deposit) => deposit.status === 'PENDING') ?? null;
+  const paymentReady = depositEnabled && tossClientKey.trim().length > 0;
+
+  async function startPayment() {
+    if (!cid || !paymentReady || !waiting || paying || confirming) return;
+    setPaying(true);
+    setPaymentError(null);
+    setPaymentNotice(null);
+    try {
+      let target = pendingDeposit;
+      if (!target) {
+        const created = await createDeposit(apiAccessToken, cid, depositAmount);
+        target = created.deposit;
+        setDeposits((rows) => [created.deposit, ...rows]);
+      }
+      if (!target) throw new Error('DEPOSIT_NOT_CREATED');
+      const base = `${window.location.origin}/c/contracts/${encodeURIComponent(cid)}/escrow`;
+      await requestCardPayment({
+        clientKey: tossClientKey,
+        amount: target.amount,
+        orderId: target.id,
+        orderName: `마자용 예치 ${cid.slice(0, 8)}`,
+        ...(authUser?.email ? { customerEmail: authUser.email } : {}),
+        successUrl: `${base}?payment=success`,
+        failUrl: `${base}?payment=fail`,
+      });
+    } catch (error) {
+      setPaymentError(
+        error instanceof ApiRequestError
+          ? error.message
+          : error instanceof Error && error.message === 'TOSS_CLIENT_KEY_MISSING'
+            ? '결제 설정이 준비되지 않았습니다.'
+            : '결제창을 열지 못했습니다. 잠시 후 다시 시도해 주세요.',
+      );
+    } finally {
+      setPaying(false);
+    }
+  }
 
   return (
     <div className={s.page} data-screen="Escrow-Client-Live">
@@ -100,8 +211,20 @@ export function LiveEscrow({ cid, styles }: { cid?: string; styles: Record<strin
       {waiting && (
         <div className={s.bandGap}>
           <Band tone="wait" title="예치 대기">
-            예치 금액을 확인한 뒤 예치해 주세요. 결제 요청은 sandbox·webhook 검증 후 활성화됩니다.
+            {paymentReady
+              ? '예치 금액을 확인한 뒤 결제창에서 승인을 완료해 주세요.'
+              : '예치 금액을 확인한 뒤 예치해 주세요. 결제 요청은 sandbox·webhook 검증 후 활성화됩니다.'}
           </Band>
+        </div>
+      )}
+      {paymentError && (
+        <div className={s.bandGap}>
+          <Band tone="warn" title="결제 확인 필요">{paymentError}</Band>
+        </div>
+      )}
+      {paymentNotice && !deposited && (
+        <div className={s.bandGap}>
+          <Band tone="done" title="예치 완료">{paymentNotice}</Band>
         </div>
       )}
       {deposited && (
@@ -162,9 +285,18 @@ export function LiveEscrow({ cid, styles }: { cid?: string; styles: Record<strin
 
           <section className={s.card} aria-labelledby="live-escrow-history">
             <h2 className={s.ct} id="live-escrow-history">결제 내역</h2>
-            <p className={s.hint}>
-              결제 내역은 백엔드 C API 응답 봉투(D-21)가 확정된 뒤 표시합니다. 지금은 계약에 기록된 예치 상태만 보여 드립니다.
-            </p>
+            {deposits.length === 0 ? (
+              <p className={s.hint}>결제를 시작하면 이곳에 예치 요청과 상태가 표시됩니다.</p>
+            ) : (
+              <div className={s.kv}>
+                {deposits.map((row) => (
+                  <div key={row.id}>
+                    <div className={s.k}>{DEPOSIT_LABEL[row.status]}</div>
+                    <div className={s.v}>{formatWon(row.amount)}</div>
+                  </div>
+                ))}
+              </div>
+            )}
           </section>
         </div>
 
@@ -186,21 +318,37 @@ export function LiveEscrow({ cid, styles }: { cid?: string; styles: Record<strin
               <Button
                 variant="primary"
                 full
-                disabled={!DEPOSIT_ENABLED || !waiting}
+                type="button"
+                onClick={() => void startPayment()}
+                disabled={!paymentReady || !waiting || paying || confirming}
                 disabledReason={
-                  !DEPOSIT_ENABLED
+                  !depositEnabled
                     ? 'Toss sandbox·webhook 검증 완료 후 예치를 활성화합니다.'
-                    : !waiting
-                      ? '지금은 예치할 수 있는 상태가 아닙니다.'
-                      : undefined
+                    : !tossClientKey.trim()
+                      ? '결제 설정이 준비되지 않았습니다.'
+                      : !waiting
+                        ? '지금은 예치할 수 있는 상태가 아닙니다.'
+                        : paying || confirming
+                          ? '결제 처리 중입니다.'
+                          : undefined
                 }
               >
-                예치하기
+                {paying ? '결제창 여는 중…' : confirming ? '승인 확인 중…' : '예치하기'}
               </Button>
             </div>
-            {!DEPOSIT_ENABLED && (
+            {!depositEnabled && (
               <p className={s.hint} role="status">
                 결제 요청은 아직 전송되지 않습니다. 화면의 금액은 실제 계약 데이터입니다.
+              </p>
+            )}
+            {depositEnabled && !tossClientKey.trim() && (
+              <p className={s.hint} role="status">
+                결제 클라이언트 키가 설정되지 않아 예치를 시작할 수 없습니다.
+              </p>
+            )}
+            {depositEnabled && tossClientKey.trim() && pendingDeposit && (
+              <p className={s.hint} role="status">
+                결제를 마치면 서버 승인 확인 후 예치가 완료됩니다.
               </p>
             )}
           </section>

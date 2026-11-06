@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SessionProvider, DEV_SESSIONS, useSession } from '@/app/session';
@@ -54,12 +54,17 @@ function WithToken({ children }: { children: React.ReactNode }) {
   return ready ? children : null;
 }
 
-function renderEscrow() {
+function renderEscrow(options: { path?: string; depositEnabled?: boolean; tossClientKey?: string } = {}) {
   return render(
-    <MemoryRouter>
+    <MemoryRouter initialEntries={[options.path ?? '/c/contracts/contract-1/escrow']}>
       <SessionProvider initial={DEV_SESSIONS.client}>
         <WithToken>
-          <LiveEscrow cid="contract-1" styles={{}} />
+          <LiveEscrow
+            cid="contract-1"
+            styles={{}}
+            depositEnabled={options.depositEnabled}
+            tossClientKey={options.tossClientKey}
+          />
         </WithToken>
       </SessionProvider>
     </MemoryRouter>,
@@ -132,5 +137,100 @@ describe('LiveEscrow', () => {
     }, 401));
     renderEscrow();
     expect(await screen.findByRole('alert')).toBeTruthy();
+  });
+
+  function mockDepositFlow() {
+    let deposited = false;
+    const deposit = {
+      id: 'deposit-1',
+      contractId: 'contract-1',
+      principal: 2_800_000,
+      clientFee: 140_000,
+      amount: 2_940_000,
+      method: 'CARD',
+      status: 'PENDING',
+      idempotencyKey: 'key-1',
+      pgKey: null,
+      depositedAt: null,
+      createdAt: '2026-11-07T00:00:00.000Z',
+      heldReason: null,
+    };
+    const requestPayment = vi.fn().mockResolvedValue(undefined);
+    window.TossPayments = () => ({ requestPayment });
+    fetchMock.mockImplementation(async (input, init) => {
+      const url = String(input);
+      if (url === '/api/v1/contracts/contract-1') {
+        return jsonResponse({
+          data: deposited
+            ? { ...contract, paymentStatus: 'DEPOSITED', totalDeposited: 2_940_000 }
+            : contract,
+        });
+      }
+      if (url === '/api/v1/contracts/contract-1/document') return jsonResponse({ data: document });
+      if (url.startsWith('/api/v1/profiles/suppliers/')) {
+        return jsonResponse({ data: { supplierId: 'supplier-user-1', displayName: '최준우', profileImageUrl: null } });
+      }
+      if (url === '/api/v1/contracts/contract-1/deposits' && init?.method === 'POST') {
+        return jsonResponse({ data: { deposit, isNew: true } }, 201);
+      }
+      if (url === '/api/v1/contracts/contract-1/deposits') {
+        return jsonResponse({ data: deposited ? [{ ...deposit, status: 'COMPLETED' }] : [] });
+      }
+      if (url === '/api/v1/contracts/contract-1/deposits/deposit-1/confirm' && init?.method === 'POST') {
+        deposited = true;
+        return jsonResponse({
+          data: {
+            deposit: { ...deposit, status: 'COMPLETED' },
+            contract: { ...contract, paymentStatus: 'DEPOSITED', totalDeposited: 2_940_000 },
+            installments: [],
+          },
+        });
+      }
+      return jsonResponse({ error: { code: 'NOT_FOUND', message: 'not found', requestId: 'r' } }, 404);
+    });
+    return { requestPayment, deposit };
+  }
+
+  it('플래그가 켜지면 예치를 만들고 Toss 카드 결제창을 연다', async () => {
+    const { requestPayment, deposit } = mockDepositFlow();
+    renderEscrow({ depositEnabled: true, tossClientKey: 'test_ck_example' });
+
+    const button = await screen.findByRole('button', { name: '예치하기' });
+    expect(button).toHaveProperty('disabled', false);
+    fireEvent.click(button);
+
+    await waitFor(() => expect(requestPayment).toHaveBeenCalledTimes(1));
+    const [method, params] = requestPayment.mock.calls[0] as [string, { orderId: string; amount: number }];
+    expect(method).toBe('카드');
+    expect(params.orderId).toBe(deposit.id);
+    expect(params.amount).toBe(deposit.amount);
+    expect(fetchMock.mock.calls.some(([url, init]) =>
+      String(url) === '/api/v1/contracts/contract-1/deposits' && init?.method === 'POST')).toBe(true);
+    expect(screen.getByText('결제를 마치면 서버 승인 확인 후 예치가 완료됩니다.')).toBeTruthy();
+  });
+
+  it('결제 성공 리다이렉트는 서버 confirm 후에만 예치 완료로 바뀐다', async () => {
+    mockDepositFlow();
+    renderEscrow({
+      path: '/c/contracts/contract-1/escrow?payment=success&paymentKey=pk-1&orderId=deposit-1&amount=2940000',
+      depositEnabled: true,
+      tossClientKey: 'test_ck_example',
+    });
+
+    expect((await screen.findAllByText('예치 완료')).length).toBeGreaterThan(0);
+    expect(fetchMock.mock.calls.some(([url, init]) =>
+      String(url) === '/api/v1/contracts/contract-1/deposits/deposit-1/confirm' && init?.method === 'POST')).toBe(true);
+  });
+
+  it('결제 실패 리다이렉트는 오류를 보여 주고 완료로 표시하지 않는다', async () => {
+    mockDepositFlow();
+    renderEscrow({
+      path: '/c/contracts/contract-1/escrow?payment=fail&message=카드%20승인%20실패',
+      depositEnabled: true,
+      tossClientKey: 'test_ck_example',
+    });
+
+    expect(await screen.findByText('카드 승인 실패')).toBeTruthy();
+    expect(screen.queryByText('예치된 금액은 서버가 확인한 상태입니다. 추가 결제는 필요하지 않습니다.')).toBeNull();
   });
 });

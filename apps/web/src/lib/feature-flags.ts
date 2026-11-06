@@ -10,3 +10,6 @@ export const CONTRACT_SIGN_ENABLED = import.meta.env.DEV || on(import.meta.env.V
 
 /** Deposit stays off until Toss sandbox and webhook verification are complete. */
 export const DEPOSIT_ENABLED = on(import.meta.env.VITE_ENABLE_DEPOSIT);
+
+/** Public Toss client key (API 개별 연동). Never put the secret key in the frontend. */
+export const TOSS_CLIENT_KEY = (import.meta.env.VITE_TOSS_CLIENT_KEY ?? '').trim();

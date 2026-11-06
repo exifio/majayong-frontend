@@ -344,6 +344,34 @@ export interface ContractRecordDto {
   items: ContractItemDto[];
 }
 
+export type ApiDepositStatus = 'PENDING' | 'HELD' | 'COMPLETED' | 'FAILED';
+
+export interface EscrowDepositDto {
+  id: string;
+  contractId: string;
+  principal: number;
+  clientFee: number;
+  amount: number;
+  method: string;
+  status: ApiDepositStatus;
+  idempotencyKey: string;
+  pgKey: string | null;
+  depositedAt: IsoDate | null;
+  createdAt: IsoDate;
+  heldReason: string | null;
+}
+
+export interface CreateDepositResultDto {
+  deposit: EscrowDepositDto;
+  isNew: boolean;
+}
+
+export interface ConfirmDepositResultDto {
+  deposit: EscrowDepositDto;
+  contract: ContractRecordDto;
+  installments: PaymentInstallmentDto[];
+}
+
 export type ReviewerRole = 'CLIENT' | 'SUPPLIER';
 
 export interface PublicReviewDto {
@@ -710,6 +738,8 @@ export interface BApiRequestBodies {
   sendMessage: SendMessageRequestDto;
   readMessages: EmptyJsonObjectDto;
   confirmAgreement: EmptyJsonObjectDto;
+  createDeposit: { amount: number; method: string; idempotencyKey: string };
+  confirmDeposit: { paymentKey: string; amount: number };
   signContract: SignContractRequestDto;
   declineContract: EmptyJsonObjectDto;
   cancelProvisionalContract: EmptyJsonObjectDto;
@@ -807,6 +837,9 @@ export interface BApiResponses {
   listPaymentStatements: DataEnvelope<PaymentStatementsDto>;
   getContract: DataEnvelope<ContractRecordDto>;
   getContractDocument: DataEnvelope<ContractDocumentDto>;
+  createDeposit: DataEnvelope<CreateDepositResultDto>;
+  listDeposits: DataEnvelope<EscrowDepositDto[]>;
+  confirmDeposit: DataEnvelope<ConfirmDepositResultDto>;
   signContract: DataEnvelope<SignContractResultDto>;
   createReview: DataEnvelope<ReviewDto>;
   listContractReviews: DataEnvelope<PublicReviewDto[]>;
