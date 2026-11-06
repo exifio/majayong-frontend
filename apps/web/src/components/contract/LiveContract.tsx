@@ -207,7 +207,6 @@ export function LiveContract({ cid, styles }: { cid?: string; styles: Record<str
               {cancellation.cancelNote ?? '상대방이 취소를 요청했습니다.'}
               {cancellation.cancelEscalatedAt ? ' · 운영자 판정 대기 중입니다.' : ''}
             </p>
-            {withdrawNotice ? <p role="status">{withdrawNotice}</p> : null}
             {withdrawError ? <p role="alert">{withdrawError}</p> : null}
             {canWithdraw ? (
               <Button variant="ghost" type="button" disabled={withdrawing} onClick={() => setWithdrawOpen(true)}>
@@ -217,6 +216,8 @@ export function LiveContract({ cid, styles }: { cid?: string; styles: Record<str
           </div>
         </div>
       ) : null}
+
+      {withdrawNotice ? <p role="status">{withdrawNotice}</p> : null}
 
       <div className={s.lay}>
         <div>
