@@ -79,8 +79,8 @@
 
 ## FE-02 — 비밀번호 재설정 실제 API·초기값 정리
 
-- **상태/난이도:** 진행 / FE 연결·confirm 실HTTP 완료, request 503 (`DELIVERY_UNAVAILABLE`; 발송 함수 미주입) · 중 · **우선순위:** P1 · **단계:** Now.
-- **선행:** BE-01, FE-00. 메일 provider 구현은 BE-01 범위 밖이며, 새 BE-EXT 티켓이 필요함(소유자·일정 미정).
+- **상태/난이도:** 진행 / FE 연결·confirm 실HTTP 완료; BE-12 PARTIAL (Resend adapter·`sendPasswordReset` 주입은 미커밋, 안전 게이트·검증 미완) · 중 · **우선순위:** P1 · **단계:** Now.
+- **선행:** BE-01, FE-00. staging 메일 발송·request 200 검증은 BE-12 안전 게이트 완료 후.
 - **대상:** `public/Reset.tsx; Reset.data.ts`.
 - **목표/범위:** DEMO.emailValue 초기값과 ?mock 성공 전환 제거, 요청/확정 2단계.
 - **보존:** 현재 Reset UI와 폼 디자인.
@@ -88,7 +88,7 @@
 - **실행:** request 성공 시 메일 수신을 단정하지 않음; token 없을 때 실패 처리, 예시 값 입력 금지.
 - **완료 조건:** 빈 이메일로 시작, request/confirm 200 처리, 만료/오류 화면 정상.
 - **최소 QA:** Reset.test.tsx 인접; 초기값/성공/만료 3개 검증.
-- **확인 결과(2026-11-06 KST):** `?mock`·`DEMO.emailValue`·`pwValue` 제거. `/reset`은 빈 이메일로 시작하고, `?token=`이 있으면 확정 단계로 바로 진입한다. 요청 성공 시 메일 수신을 단정하지 않고 마스킹된 주소만 표시한다. `POST /auth/password-reset/confirm`은 실제 토큰으로 **200** + 새 비밀번호 로그인 **200** 확인. 잘못된 토큰은 401 `RESET_TOKEN_INVALID` → 링크 만료 화면. BE-01은 계약·권한·토큰 로직 검증이며 mail provider 구현은 범위 밖. `sendPasswordReset` 미주입 시 request는 body 검증 전 의도적으로 **503 `DELIVERY_UNAVAILABLE`**을 반환한다. 메일 어댑터와 `server-app.ts` 주입은 별도 **BE-EXT** 티켓 필요(소유자·일정 미정); staging 실제 발송 검증 후 FE request 200 확인, production 발송은 별도 승인 필요. `Reset.test.tsx`를 구현 파일 옆으로 옮겨 6/6 통과; 전체 Vitest 461/461, typecheck/build 통과(빌드 청크 크기 경고).
+- **확인 결과(2026-11-06 KST):** `?mock`·`DEMO.emailValue`·`pwValue` 제거. `/reset`은 빈 이메일로 시작하고, `?token=`이 있으면 확정 단계로 바로 진입한다. `POST /auth/password-reset/confirm`은 실제 토큰으로 **200** + 새 비밀번호 로그인 **200** 확인; 잘못된 토큰은 401 `RESET_TOKEN_INVALID` → 만료 화면. 백엔드 작업자 제공 정보 기준 BE-12 작업본에는 Resend adapter와 `sendPasswordReset` 주입이 이미 있으나 미커밋이며, 수신 허용목록·production 승인 게이트는 미구현이다. 계획된 게이트는 `MAIL_RECIPIENT_ALLOWLIST`와 `MAIL_PRODUCTION_APPROVED`를 사용하며 `NODE_ENV`로 환경을 판정하지 않는다; 자격증명·게이트가 없으면 mailer를 만들지 않고 503을 유지한다. 이메일 변경은 FE 경로가 없어 `sendEmailChange` 503 유지, URL을 만들지 않는다. BE-12 미완료 QA: 게이트 3케이스, 잘못된 body 400, 발송 실패에도 동일한 일반 응답, reset 후 이전 비밀번호 로그인 401. staging 실메일/request 200은 아직 미검증; production 발송은 별도 승인 필요. 인접 `Reset.test.tsx` 6/6, 전체 Vitest 461/461, typecheck/build 통과(빌드 청크 크기 경고).
 - **보고 형식:** 기준 SHA·변경 파일·통과/미검증·실제 요청·남은 위험을 5줄 이내로 보고. 범위 확대가 필요하면 작업을 멈추고 별도 제안.
 
 ## FE-03 — 고객센터 FAQ 분리 및 신규 1:1 문의 화면

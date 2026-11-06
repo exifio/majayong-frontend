@@ -25,7 +25,7 @@
 - [x] **FE-14** ChatIndex 고정 데모 링크 제거 — `GET /me/chats` 기반, 프로덕션 번들에 빈 상태·API 반영 확인
 
 **진행 중**
-- [ ] **FE-02** 비밀번호 재설정 — FE 연동 완료, request는 `sendPasswordReset` 미주입으로 503; 메일 어댑터는 신규 BE-EXT 필요(소유자·일정 미정)
+- [ ] **FE-02** 비밀번호 재설정 — FE 연결 완료; BE-12 PARTIAL(Resend·request 주입 존재, 안전 게이트·staging 실HTTP 미검증)
 - [ ] **FE-04** 운영자 1:1 문의 — 로컬 API·권한·답변 완료, staging 미검증
 - [ ] **FE-07** 문의 답변 알림 링크 — targetUrl·문구 테스트·배포 완료, 실제 알림 미검증
 - [ ] **FE-09** 운영자 후처리 상태 — 시연 고지 완료, 실제 저장은 관리자 목록 실데이터 전환 후
@@ -39,7 +39,7 @@
 
 **BE · Integration (이 저장소 밖)**
 - [x] **BE-00** API 기준선·staging 검증
-- [x] **BE-01** auth/register/reset/Google/role 검증 — reset 로직 확인, request 503은 sender 미주입; 메일 발송은 BE-01 범위 밖
+- [x] **BE-01** auth/register/reset/Google/role 검증 — mail provider는 범위 밖; 발송 안전 게이트·staging 메일 검증은 BE-12
 - [x] **BE-02** 고객센터 문의 5개 API — 로컬 GET/POST/상세 200, 비관리자 403 확인
 - [x] **BE-03** 문의 답변 알림 targetUrl
 - [x] **BE-04** NDA/specItemId/지원·채팅·합의·서명 회귀
@@ -50,6 +50,7 @@
 - [x] **BE-09** 검색 keyword/sort/deadlineBefore
 - [x] **BE-10** 취소 철회/1원 인증 계약
 - [x] **BE-11** API 문서/권한/최종 스모크
+- [ ] **BE-12 (PARTIAL)** Resend 메일 발송 안전 게이트·비밀번호 재설정 staging 검증 — allowlist, production 승인, 관련 테스트 미완료
 - [x] **INT-00** FE/BE/디자인 SHA·계약 고정
 - [ ] **INT-01** 로그인 후 실제 사용자 흐름 재현
 - [ ] **INT-02** 결제 승인·복구 계약·PAY-01~06
@@ -72,7 +73,7 @@
 |---|---|:---:|:---:|---|---|:---:|---|
 | FE-00 | FE | P0 | Now | 실제 배포 FE 기준선·UI 경로 확인 | INT-00 | 하 | **완료** / 2026-11-06 프로덕션 확인 |
 | FE-01 | FE | P0 | Now | 이메일 회원가입 3단계 실제 API 연결 | BE-01, FE-00 | 상 | **완료** / 2026-11-06 프로덕션 실백엔드 201·NDA PATCH 200·ndaAgreedAt·/s 확인 |
-| FE-02 | FE | P1 | Now | 비밀번호 재설정 실제 API·초기값 정리 | BE-01, FE-00 | 중 | **진행** / request 503; mail adapter는 BE-01 범위 밖, BE-EXT 미할당 |
+| FE-02 | FE | P1 | Now | 비밀번호 재설정 실제 API·초기값 정리 | BE-01, FE-00, BE-12 | 중 | **진행** / BE-12 PARTIAL; staging request 200 미검증 |
 | FE-03 | FE | P1 | Now | 고객센터 FAQ 분리 및 신규 1:1 문의 화면 | BE-02, FE-05 | 중 | **완료** / 2026-11-06 FAQ 14개·빠른 검색·1:1 문의, 468/468; 첨부는 업로드 계약 후속 |
 | FE-04 | FE | P1 | Next | 운영자 1:1 문의 페이지 신규 구현 | BE-02, FE-05 | 중 | **진행** / 로컬 API·권한·답변 완료, staging 미검증 |
 | FE-05 | FE | P1 | Now | 푸터·메뉴·약관 셸 공통 수정 | FE-00 | 중 | **완료** / 2026-11-06 기능·1440/390 확인 |
@@ -99,6 +100,7 @@
 | BE-09 | BE | P2 | Later | 검색 keyword/sort/deadlineBefore 선택적 확장 | BE-00 | 중 | 대기 / 실호출 미검증 |
 | BE-10 | BE | P2 | Later | 취소 요청 철회/1원 인증 발송은 계약 결정 후 | BE-00 | 중 | 대기 / 실호출 미검증 |
 | BE-11 | BE | P1 | Next | API 문서/권한/최종 시연 스모크 | BE-02, BE-04, BE-05, BE-08 | 중 | 대기 / 실호출 미검증 |
+| BE-12 | BE | 미정 | 미정 | 메일 발송 안전 게이트·비밀번호 재설정 staging 검증 | BE-01 | 미정 | **진행** / Resend·reset 주입 존재(미커밋), allowlist·production 승인·테스트 미완 |
 | INT-00 | Integration | P0 | Now | FE/BE/디자인 SHA·계약 고정 | 없음 | 하 | 대기 / 실호출 미검증 |
 | INT-01 | Integration | P1 | Next | 로그인 후 실제 사용자 흐름 재현 | FE-01, FE-13, BE-04 | 중 | 대기 / 실호출 미검증 |
 | INT-02 | Integration | P0 | Now | 결제 승인·복구 FE/BE 계약 승인 및 PAY-01~06 | BE-00 | 상 | 대기 / 실호출 미검증 |

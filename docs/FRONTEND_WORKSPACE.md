@@ -34,7 +34,7 @@ FE 상세 티켓의 상태·증거를 갱신하면 통합 TASKS의 동일 ID도 
 |---|---|---|
 | FE-01 이메일 가입 | 기준 이후 `44ab993`, `d402bbf`에서 변경. `app/auth.ts`의 `registerWithPassword`가 `/auth/register`를 호출하고, `app/session.tsx`와 `Signup-Client.tsx`·`Signup-Supplier.tsx`에서 사용 | 새로 연결하기 전에 현재 구현을 검토. 실제 가입·역할·프로필 저장·새로고침, 약관 버전, 가입 중 비밀번호 보관·삭제를 수용 기준에 따라 확인 |
 | FE-01 관련 기존 테스트 | `apps/web/src/test/Signup-{Role,Client,Supplier}.test.tsx`, `email-signup-flow.test.tsx`가 존재 | 이번에는 실행하지 않음. 후속 변경 테스트는 구현 옆에 추가하고 기존 테스트는 보존 |
-| FE-02 재설정 | `/reset`은 빈 이메일로 시작하고 `?token=`으로 confirm 단계에 진입; request/confirm은 `/api/v1/auth/password-reset/{request,confirm}` 연결, 인접 `Reset.test.tsx` 보유 | sender 미주입 시 request는 body 검증 전 503; BE-01은 auth/reset 로직 검증만 포함. 메일 어댑터·`server-app.ts` 주입은 별도 BE-EXT 티켓 필요(소유자·일정 미정) |
+| FE-02 재설정 | `/reset`은 빈 이메일로 시작하고 `?token=`으로 confirm 단계에 진입; request/confirm은 `/api/v1/auth/password-reset/{request,confirm}` 연결, 인접 `Reset.test.tsx` 보유 | 백엔드 작업자 제공 정보 기준 BE-12 작업본에 Resend·`sendPasswordReset` 주입 존재(미커밋); allowlist·production 승인 게이트와 staging 실HTTP 검증은 미완 |
 | FE-03/04 문의 | `app/App.tsx`의 `/help/inquiry`는 인증 가드 안에서 기존 `Help`를 렌더. 전용 `Help-Inquiry.tsx`·`Admin-Inquiries.tsx` 없음 | BE-02와 FE-05 선행조건, 비로그인 안내 요구와 현재 가드 차이 확인 |
 | FE-14 채팅 진입 | `app/App.tsx`의 `ChatIndex`에 `p-ondo` 기반 고정 이동이 남아 있음 | BE-04 확인 후 사용자 채팅 목록/빈 상태로 전환 |
 | FE-12 예치 | `.env.example`의 `VITE_ENABLE_DEPOSIT=false`, `lib/feature-flags.ts`는 명시적 `true`만 활성화 | 현재 실행·배포 환경값과 PAY-01~06 증거는 별도 확인. 정리 작업에서 플래그를 변경하지 않음 |
