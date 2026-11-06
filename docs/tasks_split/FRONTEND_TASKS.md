@@ -111,7 +111,7 @@
 
 ## FE-03 — 고객센터 FAQ 분리 및 신규 1:1 문의 화면
 
-- **상태/난이도:** 완료 / 수용 기준 5개 충족(2026-11-06), 첨부 3개는 BE-02 업로드 계약 후속 / 중 · **우선순위:** P1 · **단계:** Now.
+- **상태/난이도:** 완료 / 수용 기준 5개 + 첨부 3개 staging 업로드·다운로드 확인 / 중 · **우선순위:** P1 · **단계:** Now.
 - **선행:** BE-02, FE-05.
 - **대상:** `public/Help.tsx; 신규 Help-Inquiry.tsx/.data.ts/.module.css; app/routes.ts`.
 - **목표/범위:** Help의 FAQ/공지와 Help-Inquiry의 작성/내 문의/보낸 뒤 상태 분리. 빠른 검색 불일치 수정.
@@ -121,7 +121,7 @@
 - **완료 조건:** FAQ 14개 확인, ?q= 검색, ?tab=notice, 문의 작성→내 문의 이동, 자기 문의만 조회.
 - **최소 QA:** Help.test.tsx/Help-Inquiry.test.tsx 인접; 검색/guest/전송/응답 확인.
 - **확인 결과(2026-11-06 KST):** `Help-Inquiry` 화면을 신설해 비로그인 안내, 문의 작성, 내 문의 목록, 상세(답변)를 분리했다. `GET/POST /support/inquiries`, `GET /support/inquiries/{id}`만 사용하고, 실호출로 **POST 201 → 목록 200(1건) → 상세 200**을 확인했다. Help는 `?q=` 검색과 `?tab=notice`(공지 우선)를 유지한다. 1:1 문의 라우트 가드는 `none`으로 바꿔 비로그인은 안내만 본다.
-- **추가 확인(2026-11-06 KST):** 디자인 보드 `Help.dc.html`의 FAQ 14개를 `Help.data.ts`에 그대로 반영했다(기존 8개 → 14개, 보드 표시 순서 유지). 빠른 주제를 보드와 같은 6개로 맞추고, `'환불 · 취소'` 같은 주제어를 `·`·공백 토큰으로 나눠 검색하도록 고쳐 AUD-06의 빈 결과 불일치를 없앴다. 인접 테스트 `Help.data.test.ts`(14개·빠른 주제 전부 결과 있음), `Help.test.tsx`(14개 렌더·빠른 주제 검색), `Help-Inquiry.test.tsx`를 `pages/public/`으로 옮겨 12/12 통과, 전체 Vitest 468/468·typecheck·build 통과. **첨부 3개 UI는 현행 FE 타입에 파일 업로드 operation이 없어(`CreateInquiryRequestDto.attachments`는 메타데이터만) 구현하지 않았다** — 업로드 API 계약(BE-02)과 실HTTP/staging 확인이 남았다.
+- **추가 확인(2026-11-06 KST):** 디자인 보드 `Help.dc.html`의 FAQ 14개를 `Help.data.ts`에 그대로 반영했다(기존 8개 → 14개, 보드 표시 순서 유지). 빠른 주제를 보드와 같은 6개로 맞추고, `'환불 · 취소'` 같은 주제어를 `·`·공백 토큰으로 나눠 검색하도록 고쳐 AUD-06의 빈 결과 불일치를 없앴다. 인접 테스트 `Help.data.test.ts`(14개·빠른 주제 전부 결과 있음), `Help.test.tsx`(14개 렌더·빠른 주제 검색), `Help-Inquiry.test.tsx`를 `pages/public/`으로 옮겨 12/12 통과, 전체 Vitest 468/468·typecheck·build 통과. **첨부 3개는 2026-11-07에 presign(`POST /uploads/presign`) → Supabase PUT → 문의 생성 `attachments[{fileId,name,size}]` → 작성자·운영자 다운로드까지 staging에서 확인했다.** 파일은 최대 3개·개당 10MB·허용 확장자로 제한하고, 실패 시 문의를 만들지 않는다.
 - **보고 형식:** 기준 SHA·변경 파일·통과/미검증·실제 요청·남은 위험을 5줄 이내로 보고. 범위 확대가 필요하면 작업을 멈추고 별도 제안.
 
 ## FE-04 — 운영자 1:1 문의 페이지 신규 구현
@@ -311,7 +311,7 @@
 - **확인 결과(2026-11-06 KST):** 변경 영역 Vitest 전체 **468/468**(FE-03 보완 포함), `pnpm typecheck`, `pnpm build` 통과. 화면별 접근성 label·빈/오류 상태는 각 인접 테스트로 확인. QA 중 `/c/settlements` 390에서 3px 가로 overflow를 발견해 구간 행 그리드를 480px 이하 2열로 수정했다.
 - **57보드 대조(2026-11-06 KST):** 디자인 원본 `claude-front 4360783`을 로컬 디자인 서버로 띄워 React dev와 동시에 렌더했다. 보드 57개와 `routes.ts`의 board 이름이 **57/57 1:1 대응**하고, React는 페이지 52개 + 모달·드롭다운 5개(Login·Quote·Report·Notify 2종)를 **1440/390에서 모두 렌더**, 가로 overflow **0**을 확인했다. 보드 자체는 Supplier-Landing 26px·Terms 44px·Settle-Client 20px·Inspect/Deliver 10px의 390 overflow가 있어 복제하지 않았다. 변경 14화면의 h1/h2·계산 스타일 대조로 Help h1 28→32px, 두 랜딩 h1 32→40px를 보드에 맞췄고(모바일 28px 유지, overflow 0), FAQ 14개·빠른 주제 6개·공지 순서 일치를 확인했다. 랜딩 섹션 문구는 PRD 문안 차이로 유지했다. **한계:** 픽셀 전수 diff가 아니라 heading·계산 스타일·overflow 비교이고, Inspect/Deliver 실데이터는 토큰이 없어 인접 테스트로 대체했다.
 
-**누락 리스트(2026-11-06):** ① ~~57보드 원본·픽셀 비교~~ → 보드 렌더·57/57 라우트·변경 14화면 대조 완료(픽셀 전수 diff는 아님) ② ~~FAQ 14개 중 8개만 제공~~ → 14개 반영, 첨부 3개 UI는 업로드 계약 대기 ③ staging 실호출(가입·문의·계약·검수 1~7) ④ FE-09 관리자 실제 저장 ⑤ FE-12 결제 OFF(INT-02/BE-06/07) ⑥ 문의 답변 알림 실이벤트(BE-03) ⑦ 1원 계좌 인증 미지원 ⑧ 계약 픽스처는 로컬 DB에만 존재.
+**누락 리스트(2026-11-06):** ① ~~57보드 원본·픽셀 비교~~ → 보드 렌더·57/57 라우트·변경 14화면 대조 완료(픽셀 전수 diff는 아님) ② ~~FAQ 14개 중 8개만 제공~~ → 14개 반영, ~~첨부 3개~~ → presign·업로드·다운로드 staging PASS ③ staging 실호출(가입·문의·계약·검수 1~7) ④ FE-09 관리자 실제 저장 ⑤ FE-12 결제 OFF(INT-02/BE-06/07) ⑥ 문의 답변 알림 실이벤트(BE-03) ⑦ 1원 계좌 인증 미지원 ⑧ 계약 픽스처는 로컬 DB에만 존재.
 - **보고 형식:** 기준 SHA·변경 파일·통과/미검증·실제 요청·남은 위험을 5줄 이내로 보고. 범위 확대가 필요하면 작업을 멈추고 별도 제안.
 
 ## FE-17 — 리뷰 작성·받은 리뷰 실제 API 연결
