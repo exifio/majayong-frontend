@@ -60,7 +60,7 @@
 - [ ] **BE-12 (보류)** 메일 발송 안전 게이트·비밀번호 재설정 staging 실메일 검증 — 실제 발송은 사용자 결정으로 현재 단계에서 제외; 재개 전 allowlist·production 승인·테스트 완료 필요
 - [ ] **INT-00** FE/BE/디자인 SHA·계약 고정 — Vercel의 staging 명명 프로젝트가 Ready/Production; DB ref·운영 분리, 승인 계정, FE 배포 SHA·API v1.0.1 미확인
 - [ ] **INT-01** 로그인 후 실제 사용자 흐름 재현
-- [ ] **INT-02** 결제 승인·복구 계약·PAY-01~06 — FE-BE 승인 E2E PASS(가상계좌, confirm 200); staging 웹훅·복구 미검증
+- [ ] **INT-02** 결제 승인·복구 계약·PAY-01~06 — 승인 E2E·서명 웹훅 PASS(200/401/멱등); 복구 worker는 스케줄러 OFF로 BLOCKED
 - [ ] **INT-03** 57보드/배포 go-no-go
 
 ## 사용법
@@ -112,7 +112,7 @@
 | BE-12 | BE | 미정 | 미정 | 메일 발송 안전 게이트·비밀번호 재설정 staging 검증 | BE-01 | 미정 | **보류** / 사용자 결정으로 실제 메일 발송 defer; 재개 전 safety gate·staging test 필요 |
 | INT-00 | Integration | P0 | Now | FE/BE/디자인 SHA·계약 고정 | 없음 | 하 | **진행** / Vercel staging 명명 프로젝트는 Ready/Production; DB ref/격리 미확인, FE 배포 SHA·승인 계정·공식 계약 미완 |
 | INT-01 | Integration | P1 | Next | 로그인 후 실제 사용자 흐름 재현 | FE-01, FE-13, BE-04 | 중 | 대기 / 실호출 미검증 |
-| INT-02 | Integration | P0 | Now | 결제 승인·복구 FE/BE 계약 승인 및 PAY-01~06 | BE-00 | 상 | **진행** / 승인 E2E PASS(가상계좌, confirm 200); 웹훅·복구 미검증 |
+| INT-02 | Integration | P0 | Now | 결제 승인·복구 FE/BE 계약 승인 및 PAY-01~06 | BE-00 | 상 | **진행** / 승인 E2E·서명 웹훅 PASS; 복구 worker는 스케줄러 OFF로 BLOCKED |
 | INT-03 | Integration | P1 | Next | 설계 통합 57보드/배포 go-no-go | FE-16, BE-11, INT-01, INT-02 | 중 | 대기 / 실호출 미검증 |
 
 ## 공동 병렬화 규칙
