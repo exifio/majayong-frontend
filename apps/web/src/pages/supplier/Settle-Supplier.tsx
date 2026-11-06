@@ -6,7 +6,7 @@ import s from './Settle-Supplier.module.css';
 
 const PAGE = {
   title: '정산 내역',
-  sub: '계약별로 받은 금액과 받을 예정 금액을 봅니다. 실제 이체가 아닌 시뮬레이션 기록은 서버 고지를 그대로 표시합니다.',
+  sub: '계약별로 받은 금액과 세후 받을 금액을 봅니다. 실제 이체가 아닌 시뮬레이션 기록은 서버 고지를 그대로 표시합니다.',
   contractsLabel: '내 계약으로',
   contractsHref: '/s/contracts',
 };

@@ -71,7 +71,7 @@ describe('LiveSettlements — 정산 내역', () => {
     expect(screen.getByText(/시뮬레이션\/수동 처리 기록/)).toBeTruthy();
   });
 
-  it('공급자: 받은 금액·받을 예정·원천징수를 보여 준다', async () => {
+  it('공급자: 받은 금액·세후 받을 금액·원천징수를 보여 준다', async () => {
     vi.stubGlobal('fetch', vi.fn<typeof fetch>().mockImplementation(async () => statements([supplierStatement])));
     renderAt('/s/settlements', 'supplier', undefined, 'test-token');
 

@@ -188,4 +188,20 @@ describe('LiveContract', () => {
     renderContract();
     expect(await screen.findByRole('alert')).toBeTruthy();
   });
+
+  it('완료 계약은 진행 중 문구 대신 완료 문구를 보여 준다', async () => {
+    mockContract({
+      contract: {
+        ...contract,
+        status: 'COMPLETED',
+        paymentStatus: 'RELEASED',
+        clientSignedAt: '2026-11-06T00:00:00.000Z',
+        supplierSignedAt: '2026-11-06T00:00:00.000Z',
+      },
+    });
+    renderContract();
+
+    expect(await screen.findByText('거래와 정산이 모두 완료되었습니다.')).toBeTruthy();
+    expect(screen.queryByText('예치가 완료되어 거래가 진행 중입니다.')).toBeNull();
+  });
 });
