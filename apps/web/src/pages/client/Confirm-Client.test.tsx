@@ -89,4 +89,28 @@ describe('Confirm-Client 명세 확정', () => {
 
     expect((await screen.findByRole('alert')).textContent).toMatch(/상호 정보/);
   });
+
+  it('처리되지 않은 게시 오류는 오류 코드를 안내한다', async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockImplementation(async (input, init) => {
+      if (String(input) === '/api/v1/drafts/d-1' && init?.method !== 'POST') {
+        return jsonResponse({ data: draft([]) });
+      }
+      if (String(input) === '/api/v1/drafts/d-1/publish') {
+        return jsonResponse({
+          error: { code: 'UNMAPPED_PUBLISH_ERROR', message: '요청을 확인해 주세요.', requestId: 'req-4' },
+        }, 409);
+      }
+      return jsonResponse({ error: { code: 'NOT_FOUND', message: '요청을 확인해 주세요.', requestId: 'req-5' } }, 404);
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    renderAt('/c/drafts/d-1/confirm', 'client', undefined, 'test-token');
+
+    fireEvent.change(await screen.findByLabelText('모집 시작'), { target: { value: '2099-01-01' } });
+    fireEvent.change(screen.getByLabelText('모집 마감'), { target: { value: '2099-01-14' } });
+    fireEvent.click(screen.getByRole('checkbox'));
+    fireEvent.click(screen.getByRole('button', { name: '확정하고 공급자 모집 시작' }));
+
+    expect((await screen.findByRole('alert')).textContent).toMatch(/UNMAPPED_PUBLISH_ERROR/);
+  });
 });

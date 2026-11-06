@@ -154,7 +154,7 @@ function LiveConfirm() {
       navigate(`/c/projects/${encodeURIComponent(response.data.projectId)}`);
     } catch (caught) {
       setSubmitError(caught instanceof ApiRequestError
-        ? PUBLISH_ERROR_MESSAGES[caught.code] ?? caught.message
+        ? PUBLISH_ERROR_MESSAGES[caught.code] ?? `${caught.message} (오류 코드: ${caught.code})`
         : '프로젝트를 게시하지 못했습니다. 다시 시도해 주세요.');
     } finally {
       setSubmitting(false);
