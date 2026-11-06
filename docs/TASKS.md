@@ -68,6 +68,7 @@
   - **OAuth:** Google Cloud OAuth 클라이언트에 production 콜백·JS 원본 등록, FE `googleOAuthRedirectUri`가 production 도메인 자기 origin 사용. BE `GOOGLE_REDIRECT_URI` 교체·재배포 후 production 브라우저 Google 로그인 **PASS** — `/signup/role` 도달, `POST /auth/google/exchange` **200**(Vercel 로그), 오류 코드 없음, onboardingRequired라 신규 user row 없음.
   - **Toss:** 테스트 키·`VITE_ENABLE_DEPOSIT=true`로 결제창·`실제 결제가 안되는 테스트입니다` 배너 확인. 카드 완료는 신한/토스뱅크 발급사 앱·SMS 인증 요구로 **BLOCKED**(가상계좌 미노출). 납품·검수·정산·리뷰는 예치 완료 의존으로 미실행.
   - **관찰:** 초안 AI `recommendations` 1회 5xx(재시도 200, 7초). 빠른 연속 페이지 이동 시 refresh rotation 경합 로그아웃 재현(BE 동시 요청 200+401 `REFRESH_TOKEN_REUSED`) → access token을 sessionStorage에 저장하고 유효하면 마운트 refresh를 생략하도록 FE 수정, 491 tests PASS. 명세 확정 화면 `초안으로 돌아가기`가 `/c/drafts/d-1` 고정이던 FE 버그 수정.
+  - **SUPPLIER 화면(2026-11-07):** `/s`·프로젝트 찾기·내 지원·내 계약·계약서·정산·프로필을 1440/390에서 확인, 로그인 튕김·오류 문구 없음. `Home-Supplier`는 문서상 데모 화면이라 이름이 `최준호`로 고정된다. 계약서 모바일은 콘텐츠 표시까지 약 14초 걸렸다(API 지연).
   - **테스트 계정 정리:** A가 위 CLIENT/SUPPLIER 계정과 프로젝트·지원·계약·예치·초안(`5638a63c-b924-49ef-be74-d281cafd661a`, `001a3420-c483-45fa-9ac8-681968a364c0`)을 삭제한다.
 
 ## 사용법
