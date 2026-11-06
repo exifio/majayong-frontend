@@ -61,7 +61,7 @@
 - [ ] **INT-00** FE/BE/디자인 SHA·계약 고정 — Vercel의 staging 명명 프로젝트가 Ready/Production; DB ref·운영 분리, 승인 계정, FE 배포 SHA·API v1.0.1 미확인
 - [ ] **INT-01** 로그인 후 실제 사용자 흐름 재현
 - [x] **INT-02** 결제 승인·복구 계약·PAY-01~06 — 승인 E2E·서명 웹훅·ADMIN 수동 배치 복구 PASS; 자동 scheduler는 별도
-- [ ] **INT-03** 57보드/배포 go-no-go
+- [ ] **INT-03** 57보드/배포 go-no-go — staging demo GO, production NO-GO(테스트 키·플래그 OFF·복구 worker·웹훅 등록·문안·메일·ADMIN)
 
 ## 사용법
 
