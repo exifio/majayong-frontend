@@ -3,7 +3,7 @@
  * AI 금액 없음. 확정 CTA → 명세 보기(모집 시작됨). */
 import { useEffect, useId, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Attr, Button, ConfirmCheck } from '@/components/ui';
+import { LoadingState, Attr, Button, ConfirmCheck } from '@/components/ui';
 import { PageHeader } from '@/components/layout/Chrome';
 import { formatWon } from '@/lib/format';
 import { useSession } from '@/app/session';
@@ -89,8 +89,8 @@ function LiveConfirm() {
   if (loading) {
     return (
       <div className={s.page} data-screen="Confirm-Client">
-        <PageHeader title="확정하기 전에 확인해 주세요" description="저장된 명세를 불러오고 있습니다." />
-        <p role="status" style={{ padding: 24 }}>명세를 불러오는 중입니다.</p>
+        <PageHeader title={DEMO.pageTitle} description={DEMO.pageLead} />
+        <LoadingState label="명세를 불러오는 중입니다." />
       </div>
     );
   }

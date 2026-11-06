@@ -4,6 +4,7 @@
 import { useEffect, useId, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
+  LoadingState,
   Band,
   Button,
   Chip,
@@ -63,7 +64,7 @@ function LiveSpec({ pid }: { pid: string }) {
   if (loading) {
     return (
       <div className={s.page} data-screen="Spec-Client">
-        <p role="status" style={{ padding: 24 }}>프로젝트를 불러오는 중입니다.</p>
+        <LoadingState label="프로젝트를 불러오는 중입니다." />
       </div>
     );
   }

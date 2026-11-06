@@ -1,7 +1,7 @@
 /* A 공급자 프로젝트 목록 — GET /projects가 주는 공개 필드만 표시한다. */
 import { useEffect, useState } from 'react';
 import type { ApiProjectStatus, PublicProjectListItemDto } from '@majayong/types/api';
-import { Attr, Button, Chip, StatusChip } from '@/components/ui';
+import { LoadingState, Attr, Button, Chip, StatusChip } from '@/components/ui';
 import { useSession } from '@/app/session';
 import { ApiRequestError, apiRequest } from '@/lib/api';
 import { formatDate } from '@/lib/format';
@@ -65,7 +65,7 @@ export function LiveProjectList({ styles }: { styles: Record<string, string> }) 
   if (state !== 'success') {
     return (
       <div className={s.page}>
-        {state === 'loading' && <p role="status" style={{ padding: 24 }}>프로젝트를 불러오는 중입니다.</p>}
+        {state === 'loading' && <LoadingState title="프로젝트" label="프로젝트를 불러오는 중입니다." />}
         {state === 'auth-error' && <p role="alert" style={{ padding: 24 }}>API 토큰 인증에 실패했습니다. 토큰을 확인해 주세요.</p>}
         {state === 'error' && (
           <p role="alert" style={{ padding: 24 }}>

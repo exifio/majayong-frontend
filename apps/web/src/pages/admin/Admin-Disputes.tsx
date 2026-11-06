@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import type { AdminEscalatedInspectionDto, ApiDisputeDecision } from '@majayong/types/api';
 import {
+  LoadingState,
   Band,
   Button,
   Chip,
@@ -177,7 +178,7 @@ export default function AdminDisputes() {
         <p className={s.sub}>{PAGE.sub}</p>
       </header>
 
-      {state === 'loading' ? <p role="status" className={s.detailMeta}>이견 목록을 불러오는 중입니다.</p> : null}
+      {state === 'loading' ? <LoadingState label="이견 목록을 불러오는 중입니다." /> : null}
       {state === 'error' ? <p role="alert" className={s.detailMeta}>{PAGE.loadError}</p> : null}
       {state === 'ready' && rows.length === 0 ? (
         <EmptyState title={PAGE.empty}>{PAGE.emptyBody}</EmptyState>

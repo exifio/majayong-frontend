@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { Check, Plus } from 'lucide-react';
-import { Attr, Band, Button, Chip, Skeleton, Tabs } from '@/components/ui';
+import { LoadingState, Attr, Band, Button, Chip, Skeleton, Tabs } from '@/components/ui';
 import { PageHeader } from '@/components/layout/Chrome';
 import { formatWon } from '@/lib/format';
 import { useSession } from '@/app/session';
@@ -216,8 +216,8 @@ function LiveDraft({ did }: { did: string }) {
   if (loading) {
     return (
       <div className={s.page} data-screen="Draft-Client">
-        <PageHeader title="초안을 불러오는 중입니다" description="저장된 명세를 확인하고 있습니다." />
-        <p role="status" style={{ padding: 24 }}>초안을 불러오는 중입니다.</p>
+        <PageHeader title="틀린 곳을 고쳐주세요" description="채팅으로 바꾸고 싶은 점을 말씀해 주세요." />
+        <LoadingState label="초안을 불러오는 중입니다." />
       </div>
     );
   }

@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { ContractRecordDto } from '@majayong/types/api';
-import { Chip, EmptyState, Money, chipToneOf } from '@/components/ui';
+import { LoadingState, Chip, EmptyState, Money, chipToneOf } from '@/components/ui';
 import { useSession } from '@/app/session';
 import { apiRequest } from '@/lib/api';
 import { contractDisplayLabel } from '@/lib/contract-status';
@@ -33,7 +33,7 @@ export function LiveContractsList({ role }: { role: 'CLIENT' | 'SUPPLIER' }) {
     return () => controller.abort();
   }, [apiAccessToken]);
 
-  if (state === 'loading') return <p role="status" className={s.state}>계약을 불러오는 중입니다.</p>;
+  if (state === 'loading') return <LoadingState label="계약을 불러오는 중입니다." />;
   if (state === 'error') return <p role="alert" className={s.state}>계약을 불러오지 못했습니다. 다시 시도해 주세요.</p>;
   if (contracts.length === 0) {
     return (

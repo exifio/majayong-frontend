@@ -7,7 +7,7 @@ import { CLIENT_MENU, LANDING_MENU, SUPPLIER_MENU } from '@/app/menus';
 import { ROLE_HOME, useSession } from '@/app/session';
 import { ApiRequestError, apiRequest } from '@/lib/api';
 import { notificationToItem } from '@/lib/notification-adapter';
-import { Button, Tabs } from '@/components/ui';
+import { LoadingState, Button, Tabs } from '@/components/ui';
 import s from './layout.module.css';
 
 /* ── 로고 ── 로그인 후 → 역할 홈, 비로그인 → 의뢰인 랜딩 */
@@ -270,7 +270,7 @@ export function NotificationDropdown({
                 {import.meta.env.DEV ? '개발 세션 패널에 API 토큰을 입력해 주세요.' : '로그인 후 알림을 확인할 수 있습니다.'}
               </p></li>
             )}
-            {loadState === 'loading' && <li><p role="status" style={{ padding: '12px 16px' }}>알림을 불러오는 중입니다.</p></li>}
+            {loadState === 'loading' && <li><LoadingState label="알림을 불러오는 중입니다." compact /></li>}
             {loadState === 'auth-error' && (
               <li>
                 <p role="alert" style={{ padding: '12px 16px' }}>API 토큰 인증에 실패했습니다. 토큰을 확인해 주세요.</p>

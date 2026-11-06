@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import type { ApiInquiryStatus, InquiryDto } from '@majayong/types/api';
-import { Band, Button, Chip, EmptyState, Tabs, TextAreaField } from '@/components/ui';
+import { LoadingState, Band, Button, Chip, EmptyState, Tabs, TextAreaField } from '@/components/ui';
 import { useSession } from '@/app/session';
 import { useSetAdminInquiryCount } from '@/components/layout/Shell';
 import { ApiRequestError, apiRequest } from '@/lib/api';
@@ -123,7 +123,7 @@ export default function AdminInquiries() {
         onChange={(key) => setFilter(key as Filter)}
       />
 
-      {state === 'loading' ? <p role="status" className={s.state}>문의를 불러오는 중입니다.</p> : null}
+      {state === 'loading' ? <LoadingState label="문의를 불러오는 중입니다." /> : null}
       {state === 'error' ? <p role="alert" className={s.state}>{PAGE.error}</p> : null}
 
       {state === 'ready' && shown.length === 0 ? (

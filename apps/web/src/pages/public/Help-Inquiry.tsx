@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import type { ApiInquiryCategory, CreateInquiryAttachmentDto, InquiryDto, UpToThree } from '@majayong/types/api';
-import { Band, Button, Chip, EmptyState, Tabs, TextAreaField, TextField } from '@/components/ui';
+import { LoadingState, Band, Button, Chip, EmptyState, Tabs, TextAreaField, TextField } from '@/components/ui';
 import { useSession } from '@/app/session';
 import { ApiRequestError, apiRequest } from '@/lib/api';
 import { AttachmentLink } from '@/components/attachments/AttachmentLink';
@@ -281,7 +281,7 @@ export default function HelpInquiry() {
           {detail ? (
             <InquiryDetail inquiry={detail} accessToken={apiAccessToken} />
           ) : listState === 'loading' ? (
-            <p role="status" className={s.state}>문의를 불러오는 중입니다.</p>
+            <LoadingState label="문의를 불러오는 중입니다." />
           ) : listState === 'error' ? (
             <p role="alert" className={s.state}>{PAGE.error}</p>
           ) : inquiries.length === 0 ? (

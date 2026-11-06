@@ -3,7 +3,7 @@
  * F-18. 파란 버튼은 '지금 할 일' 카드 하나뿐. */
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Button, StatusChip } from '@/components/ui';
+import { LoadingState, Button, StatusChip } from '@/components/ui';
 import { useSession } from '@/app/session';
 import { ApiRequestError, apiRequest } from '@/lib/api';
 import { projectStatusLabel } from '@/lib/project-adapter';
@@ -42,7 +42,7 @@ function LiveHome() {
     return (
       <div className={s.page} data-screen="Home-Client">
         <div className={s.hello}><h1>안녕하세요, {name}님</h1></div>
-        <p role="status" style={{ padding: 24 }}>프로젝트를 불러오는 중입니다.</p>
+        <LoadingState label="프로젝트를 불러오는 중입니다." />
       </div>
     );
   }

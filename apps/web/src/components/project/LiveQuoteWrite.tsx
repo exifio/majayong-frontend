@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { ApplicationRevisionDto, SubmitApplicationRequestDto } from '@majayong/types/api';
 import type { SupplierProjectDetail } from '@majayong/types';
-import { Button, MaskedText } from '@/components/ui';
+import { LoadingState, Button, MaskedText } from '@/components/ui';
 import { useSession } from '@/app/session';
 import { ApiRequestError, apiRequest } from '@/lib/api';
 import { fee, formatWon } from '@/lib/format';
@@ -128,7 +128,7 @@ export function LiveQuoteWrite({ pid, styles }: { pid?: string; styles: Record<s
   if (state !== 'success' || detail === null) {
     return (
       <div className={s.page}>
-        {state === 'loading' && <p role="status" style={{ padding: 24 }}>프로젝트를 불러오는 중입니다.</p>}
+        {state === 'loading' && <LoadingState title="견적 작성" label="프로젝트를 불러오는 중입니다." />}
         {state === 'nda' && (
           <p role="status" style={{ padding: 24 }}>
             명세 상세를 먼저 열람해야 지원할 수 있습니다.{' '}

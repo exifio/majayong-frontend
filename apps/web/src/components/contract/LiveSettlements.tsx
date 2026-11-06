@@ -8,7 +8,7 @@ import type {
   PaymentStatementsDto,
   SupplierPaymentStatementDto,
 } from '@majayong/types/api';
-import { EmptyState, Money } from '@/components/ui';
+import { LoadingState, EmptyState, Money } from '@/components/ui';
 import { useSession } from '@/app/session';
 import { apiRequest } from '@/lib/api';
 import { formatDate } from '@/lib/format';
@@ -64,7 +64,7 @@ export function LiveSettlements({ role }: { role: 'CLIENT' | 'SUPPLIER' }) {
     return () => controller.abort();
   }, [apiAccessToken]);
 
-  if (state === 'loading') return <p role="status" className={s.state}>정산 내역을 불러오는 중입니다.</p>;
+  if (state === 'loading') return <LoadingState label="정산 내역을 불러오는 중입니다." />;
   if (state === 'error' || data === null) {
     return <p role="alert" className={s.state}>정산 내역을 불러오지 못했습니다. 다시 시도해 주세요.</p>;
   }

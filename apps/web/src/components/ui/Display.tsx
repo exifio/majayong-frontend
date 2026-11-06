@@ -85,6 +85,22 @@ export function Skeleton({ width = '100%', height = 16 }: { width?: number | str
   return <div className={s.skeleton} style={{ width, height }} aria-hidden="true" />;
 }
 
+export function LoadingState({ label, title, compact = false }: { label: string; title?: string; compact?: boolean }) {
+  return (
+    <div className={compact ? s.loadingCompact : s.loadingState}>
+      {title && <h1 className={s.loadingTitle}>{title}</h1>}
+      <div role="status">
+        <span className={s.loadingSrOnly}>{label}</span>
+        <div className={s.loadingLines} aria-hidden="true">
+          <Skeleton width="55%" height={16} />
+          <Skeleton width="85%" height={12} />
+          <Skeleton width="70%" height={12} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ── 연락처 가림 ── 서버가 가린 본문 속 토큰을 그리기만 한다 */
 export function MaskedText({ text }: { text: string }) {
   const parts = text.split(CONTACT_MASK_TOKEN);

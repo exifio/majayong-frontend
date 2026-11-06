@@ -11,7 +11,7 @@ import { ROLE_HOME, SessionProvider, useSession, type Session } from './session'
 import { useDevDesignChecks } from './devChecks';
 import { DevSessionPanel } from './DevSessionPanel';
 import { AppShell } from '@/components/layout/Shell';
-import { Modal, EmptyState } from '@/components/ui';
+import { LoadingState, Modal, EmptyState } from '@/components/ui';
 import { apiRequest } from '@/lib/api';
 import type { ChatRoomSummaryDto } from '@majayong/types/api';
 import NotFound from '@/pages/system/NotFound';
@@ -102,7 +102,7 @@ function ChatIndexRedirect({ space }: { space: 'client' | 'supplier' }) {
   }, [apiAccessToken]);
 
   if (state === 'loading') {
-    return <AppShell shell={shell}><p role="status" style={{ padding: 24 }}>대화를 불러오는 중입니다.</p></AppShell>;
+    return <AppShell shell={shell}><LoadingState title="채팅" label="대화를 불러오는 중입니다." /></AppShell>;
   }
   if (state === 'error') {
     return <AppShell shell={shell}><p role="alert" style={{ padding: 24 }}>대화 목록을 불러오지 못했습니다. 다시 시도해 주세요.</p></AppShell>;
@@ -147,7 +147,7 @@ export function AppRoutes() {
   useDevDesignChecks();
   const { authReady } = useSession();
   if (!authReady) {
-    return <p role="status" style={{ padding: 24 }}>세션을 확인하는 중입니다.</p>;
+    return <LoadingState label="세션을 확인하는 중입니다." />;
   }
   return (
     <>

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import type { AdminBlockAction, AdminBlockDto } from '@majayong/types/api';
 import {
+  LoadingState,
   Button,
   EmptyState,
   Modal,
@@ -180,7 +181,7 @@ export default function AdminBlocks() {
         <p className={s.sub}>{PAGE.sub}</p>
       </header>
 
-      {state === 'loading' ? <p role="status" className={s.rowMeta}>블록 목록을 불러오는 중입니다.</p> : null}
+      {state === 'loading' ? <LoadingState label="블록 목록을 불러오는 중입니다." /> : null}
       {state === 'error' ? <p role="alert" className={s.rowMeta}>{PAGE.loadError}</p> : null}
       {state === 'ready' && blocks.length === 0 ? (
         <EmptyState title={PAGE.empty}>{PAGE.emptyBody}</EmptyState>

@@ -4,6 +4,7 @@ import { useEffect, useId, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import {
+  LoadingState,
   Button,
   ConfirmDialog,
   Money,
@@ -219,7 +220,7 @@ function LiveInput() {
       </section>
 
       {loading ? (
-        <p role="status" style={{ padding: 24 }}>초안을 불러오는 중입니다.</p>
+        <LoadingState label="초안을 불러오는 중입니다." />
       ) : (
         (drafts.length > 0 || archived.length > 0) && (
           <section className={s.drafts} aria-labelledby="dh">

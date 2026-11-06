@@ -83,6 +83,23 @@ describe('LiveProjectDetail', () => {
     vi.stubGlobal('fetch', fetchMock);
   });
 
+  it('프로젝트 상세를 기다리는 동안 내 지원 목록도 함께 요청한다', async () => {
+    let finishDetail: ((response: Response) => void) | undefined;
+    fetchMock.mockImplementation(async (input) => {
+      if (String(input) === '/api/v1/projects/project-1') {
+        return new Promise<Response>((resolve) => { finishDetail = resolve; });
+      }
+      if (String(input) === '/api/v1/me/applications') return jsonResponse({ data: [application] });
+      return jsonResponse({ error: { code: 'NOT_FOUND', message: 'not found', requestId: 'r' } }, 404);
+    });
+
+    renderLive(<LiveProjectDetail pid="project-1" styles={{}} />);
+    await waitFor(() => expect(fetchMock.mock.calls.some(([url]) => String(url) === '/api/v1/me/applications')).toBe(true));
+    if (finishDetail === undefined) throw new Error('프로젝트 상세 요청이 시작되지 않았습니다.');
+    finishDetail(jsonResponse({ data: detail }));
+    expect(await screen.findByText('지원함')).toBeTruthy();
+  });
+
   it('renders the real detail with specItemIds and the quote link', async () => {
     fetchMock.mockResolvedValueOnce(jsonResponse({ data: detail }));
     const { container } = renderLive(<LiveProjectDetail pid="project-1" styles={{}} />);
@@ -130,10 +147,19 @@ describe('LiveProjectDetail', () => {
   });
 
   it('asks for NDA consent on 403 and reloads after consent', async () => {
-    fetchMock
-      .mockResolvedValueOnce(jsonResponse({ error: { code: 'SUPPLIER_NDA_REQUIRED', message: 'NDA 필요', requestId: 'r1' } }, 403))
-      .mockResolvedValueOnce(jsonResponse({ data: { displayName: '공급자 테스트' } }))
-      .mockResolvedValueOnce(jsonResponse({ data: detail }));
+    let detailRequests = 0;
+    fetchMock.mockImplementation(async (input) => {
+      const url = String(input);
+      if (url === '/api/v1/projects/project-1') {
+        detailRequests += 1;
+        return detailRequests === 1
+          ? jsonResponse({ error: { code: 'SUPPLIER_NDA_REQUIRED', message: 'NDA 필요', requestId: 'r1' } }, 403)
+          : jsonResponse({ data: detail });
+      }
+      if (url === '/api/v1/me/applications') return jsonResponse({ data: [] });
+      if (url === '/api/v1/me/supplier-profile') return jsonResponse({ data: { displayName: '공급자 테스트' } });
+      return jsonResponse({ error: { code: 'NOT_FOUND', message: 'not found', requestId: 'r' } }, 404);
+    });
     renderLive(<LiveProjectDetail pid="project-1" styles={{}} />);
 
     fireEvent.click(await screen.findByRole('button', { name: 'NDA 동의하고 상세 열람' }));

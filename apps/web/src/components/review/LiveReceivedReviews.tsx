@@ -1,5 +1,5 @@
 /* 프로필 받은 리뷰 실제 API 섹션 — 완료 계약의 상대 리뷰만 모아 보여준다. */
-import { Button } from '@/components/ui';
+import { LoadingState, Button } from '@/components/ui';
 import { formatDate } from '@/lib/format';
 import { useReceivedReviews, type ReviewSide } from './useLiveReviews';
 
@@ -15,7 +15,7 @@ export function LiveReceivedReviews({
   if (state.status === 'loading') {
     return (
       <section className={styles.section} aria-label="받은 리뷰">
-        <p role="status">받은 리뷰를 불러오는 중입니다.</p>
+        <LoadingState label="받은 리뷰를 불러오는 중입니다." compact />
       </section>
     );
   }

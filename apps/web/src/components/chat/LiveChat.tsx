@@ -289,7 +289,7 @@ export function LiveChat({ pid, sid, styles }: { pid?: string; sid?: string; sty
                     void send();
                   }
                 }}
-                placeholder={messageState !== 'success' ? '대화를 불러오는 중입니다.' : canReply ? '메시지 입력' : '의뢰인의 첫 메시지 이후 답장할 수 있습니다'}
+                placeholder={messageState !== 'success' || canReply ? '메시지 입력' : '의뢰인의 첫 메시지 이후 답장할 수 있습니다'}
                 aria-label="메시지 입력"
                 disabled={sending || messageState !== 'success' || !canReply}
               />
@@ -297,7 +297,7 @@ export function LiveChat({ pid, sid, styles }: { pid?: string; sid?: string; sty
                 variant="tint"
                 onClick={() => void send()}
                 disabled={sending || messageState !== 'success' || !canReply || !draft.trim()}
-                disabledReason={messageState !== 'success' ? '대화를 불러오는 중입니다.' : !canReply ? '의뢰인의 첫 메시지 이후 답장할 수 있습니다.' : '메시지를 입력해 주세요.'}
+                disabledReason={messageState !== 'success' ? '대화를 준비 중입니다.' : !canReply ? '의뢰인의 첫 메시지 이후 답장할 수 있습니다.' : '메시지를 입력해 주세요.'}
               >
                 {sending ? '보내는 중' : '보내기'}
               </Button>

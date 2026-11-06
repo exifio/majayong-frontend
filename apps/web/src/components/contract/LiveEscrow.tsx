@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import type { ContractDocumentDto, ContractRecordDto, EscrowDepositDto } from '@majayong/types/api';
-import { Band, Button, Deadline, Money, StatusChip } from '@/components/ui';
+import { LoadingState, Band, Button, Deadline, Money, StatusChip } from '@/components/ui';
 import { useSession } from '@/app/session';
 import { ApiRequestError, apiRequest } from '@/lib/api';
 import { createDeposit, confirmDeposit, listDeposits } from '@/lib/deposit-api';
@@ -118,7 +118,7 @@ export function LiveEscrow({
   if (state !== 'success' || contract === null || document === null) {
     return (
       <div className={s.page}>
-        {state === 'loading' && <p role="status" style={{ padding: 24 }}>예치 정보를 불러오는 중입니다.</p>}
+        {state === 'loading' && <LoadingState title="예치" label="예치 정보를 불러오는 중입니다." />}
         {state === 'auth-error' && <p role="alert" style={{ padding: 24 }}>API 토큰 인증에 실패했습니다. 토큰을 확인해 주세요.</p>}
         {state === 'error' && (
           <p role="alert" style={{ padding: 24 }}>

@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import type { ContractInstallmentDto, ContractRecordDto, DeliveryDto } from '@majayong/types/api';
 import { ApiRequestError, apiRequest } from '@/lib/api';
 import { useSession } from '@/app/session';
-import { Button, TextField } from '@/components/ui';
+import { LoadingState, Button, TextField } from '@/components/ui';
 import s from './LiveDelivery.module.css';
 
 type LoadState = 'loading' | 'ready' | 'error';
@@ -76,7 +76,7 @@ export function LiveDelivery({ cid }: { cid: string }) {
   };
 
   if (state === 'loading') {
-    return <div data-screen="Deliver-Supplier"><p role="status" className={s.state}>계약을 불러오는 중입니다.</p></div>;
+    return <div data-screen="Deliver-Supplier"><LoadingState title="납품" label="계약을 불러오는 중입니다." /></div>;
   }
   if (state === 'error' || !contract) {
     return <div data-screen="Deliver-Supplier"><p role="alert" className={s.state}>계약을 불러오지 못했습니다. 다시 시도해 주세요.</p></div>;

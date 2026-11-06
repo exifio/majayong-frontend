@@ -3,7 +3,7 @@
  * F-03 · 결정메모 #9. 명세 확정 후 AI 금액 없음. */
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Button, Deadline, EmptyState, Money, StatusChip } from '@/components/ui';
+import { LoadingState, Button, Deadline, EmptyState, Money, StatusChip } from '@/components/ui';
 import { useSession } from '@/app/session';
 import { ApiRequestError, apiRequest } from '@/lib/api';
 import { projectStatusLabel } from '@/lib/project-adapter';
@@ -51,7 +51,7 @@ function LiveMy() {
         ) : null}
       </div>
 
-      {loading && <p role="status" style={{ padding: 24 }}>프로젝트를 불러오는 중입니다.</p>}
+      {loading && <LoadingState label="프로젝트를 불러오는 중입니다." />}
       {error && <p role="alert" style={{ padding: 24 }}>{error}</p>}
 
       {!loading && !error && projects.length === 0 && (

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import type { AgreementPreviewDto, ApplicationRevisionDto } from '@majayong/types/api';
-import { Button, Chip, ConfirmDialog } from '@/components/ui';
+import { LoadingState, Button, Chip, ConfirmDialog } from '@/components/ui';
 import { useSession } from '@/app/session';
 import { ApiRequestError, apiRequest } from '@/lib/api';
 import { applicationStatusLabel } from '@/lib/application-status';
@@ -132,7 +132,7 @@ export function LiveAgreement({ styles }: { styles: Record<string, string> }) {
   if (!applicationId || state !== 'success' || application === null || preview === null) {
     return (
       <div className={s.page}>
-        {state === 'loading' && <p role="status" style={{ padding: 24 }}>합의 내용을 불러오는 중입니다.</p>}
+        {state === 'loading' && <LoadingState title="합의 내용" label="합의 내용을 불러오는 중입니다." />}
         {state === 'auth-error' && <p role="alert" style={{ padding: 24 }}>API 토큰 인증에 실패했습니다. 토큰을 확인해 주세요.</p>}
         {state === 'error' && (
           <p role="alert" style={{ padding: 24 }}>

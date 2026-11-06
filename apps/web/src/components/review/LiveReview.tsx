@@ -1,6 +1,6 @@
 /* 리뷰 작성 실제 API 화면 — 의뢰인·공급자가 같은 구조를 쓴다. */
 import { useState } from 'react';
-import { Band, Button, StatusChip, TextAreaField } from '@/components/ui';
+import { LoadingState, Band, Button, StatusChip, TextAreaField } from '@/components/ui';
 import { formatDate } from '@/lib/format';
 import { useLiveReview, type ReviewSide } from './useLiveReviews';
 
@@ -48,7 +48,7 @@ export function LiveReview({
   const [text, setText] = useState('');
 
   if (state.status === 'loading') {
-    return <p role="status">리뷰를 불러오는 중입니다.</p>;
+    return <LoadingState label="리뷰를 불러오는 중입니다." compact />;
   }
   if (state.status === 'auth') {
     return <p role="alert">로그인이 필요합니다.</p>;

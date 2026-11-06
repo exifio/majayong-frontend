@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { ApplicationRevisionDto } from '@majayong/types/api';
-import { Button, ConfirmDialog, MaskedText, Money, StatusChip } from '@/components/ui';
+import { LoadingState, Button, ConfirmDialog, MaskedText, Money, StatusChip } from '@/components/ui';
 import { useSession } from '@/app/session';
 import { ApiRequestError, apiRequest } from '@/lib/api';
 import { applicationStatusLabel } from '@/lib/application-status';
@@ -108,7 +108,7 @@ export function LiveApplicationDetail({
 
   return (
     <section className={`${s.card} ${s.applicationDetail}`} aria-label="지원서 상세" data-application-detail={applicationId}>
-      {state === 'loading' && <p role="status">지원서를 불러오는 중입니다.</p>}
+      {state === 'loading' && <LoadingState label="지원서를 불러오는 중입니다." compact />}
       {state === 'auth-error' && <p role="alert">API 토큰 인증에 실패했습니다. 토큰을 확인해 주세요.</p>}
       {state === 'error' && <p role="alert">지원서를 불러오지 못했습니다.</p>}
 

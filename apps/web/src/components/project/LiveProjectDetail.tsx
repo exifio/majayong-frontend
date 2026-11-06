@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { SupplierProjectDetail } from '@majayong/types';
 import type { ApplicationRecordDto } from '@majayong/types/api';
-import { Band, Button, Chip, Money, StatusChip } from '@/components/ui';
+import { LoadingState, Band, Button, Chip, Money, StatusChip } from '@/components/ui';
 import { useSession } from '@/app/session';
 import { ApiRequestError, apiRequest } from '@/lib/api';
 import { formatDate, formatWon } from '@/lib/format';
@@ -26,19 +26,13 @@ export function LiveProjectDetail({ pid, styles }: { pid?: string; styles: Recor
     if (!pid) return;
     const controller = new AbortController();
     setState('loading');
+    setMyApplication(null);
     apiRequest('getSupplierProjectDetail', `/projects/${encodeURIComponent(pid)}`, {
       accessToken: apiAccessToken,
       signal: controller.signal,
     }).then((response) => {
       setDetail(projectDetailToScreen(response.data));
       setState('success');
-      apiRequest('listMyApplications', '/me/applications', {
-        accessToken: apiAccessToken,
-        signal: controller.signal,
-      }).then((applications) => {
-        setMyApplication(applications.data.find((application) =>
-          application.projectId === pid && ['SUBMITTED', 'STALE', 'ACCEPTED'].includes(application.status)) ?? null);
-      }).catch(() => { /* 지원 상태는 상세 표시를 막지 않는다 */ });
     }).catch((error: unknown) => {
       if (error instanceof Error && error.name === 'AbortError') return;
       if (error instanceof ApiRequestError && error.status === 403 && error.code === 'SUPPLIER_NDA_REQUIRED') {
@@ -47,6 +41,14 @@ export function LiveProjectDetail({ pid, styles }: { pid?: string; styles: Recor
         setState(error instanceof ApiRequestError && error.status === 401 ? 'auth-error' : 'error');
       }
     });
+    apiRequest('listMyApplications', '/me/applications', {
+      accessToken: apiAccessToken,
+      signal: controller.signal,
+    }).then((applications) => {
+      if (controller.signal.aborted) return;
+      setMyApplication(applications.data.find((application) =>
+        application.projectId === pid && ['SUBMITTED', 'STALE', 'ACCEPTED'].includes(application.status)) ?? null);
+    }).catch(() => { /* 지원 상태는 상세 표시를 막지 않는다 */ });
     return () => controller.abort();
   }, [pid, apiAccessToken, retry]);
 
@@ -76,7 +78,7 @@ export function LiveProjectDetail({ pid, styles }: { pid?: string; styles: Recor
   if (state !== 'success' || detail === null) {
     return (
       <div className={s.page}>
-        {state === 'loading' && <p role="status" style={{ padding: 24 }}>프로젝트를 불러오는 중입니다.</p>}
+        {state === 'loading' && <LoadingState title="프로젝트" label="프로젝트를 불러오는 중입니다." />}
         {state === 'nda' && (
           <div style={{ padding: 24 }}>
             <p role="status">명세 상세를 보려면 비밀유지(NDA) 동의가 필요합니다.</p>

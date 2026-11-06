@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import type { AdminReportDto, ApiReportAction, ApiReportReason } from '@majayong/types/api';
 import {
+  LoadingState,
   Band,
   Button,
   Chip,
@@ -204,9 +205,7 @@ export default function AdminReports() {
       </header>
 
       {state === 'loading' ? (
-        <p role="status" className={s.rowMeta}>
-          신고 목록을 불러오는 중입니다.
-        </p>
+        <LoadingState label="신고 목록을 불러오는 중입니다." />
       ) : null}
       {state === 'error' ? (
         <p role="alert" className={s.rowMeta}>
