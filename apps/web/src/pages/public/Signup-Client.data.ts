@@ -2,14 +2,14 @@
 
 export const DEMO = {
   title: '의뢰인 프로필',
-  sub: '프로젝트를 등록할 때 공급자에게 보이는 정보입니다. 상호만 필수이고, 나머지는 나중에 채우셔도 됩니다.',
+  sub: '프로젝트를 등록할 때 공급자에게 공개할 정보입니다. 상호를 입력하면 공급자가 의뢰인을 알아보기 쉽습니다.',
   steps: [
     { n: 1, label: '계정 만들기' },
     { n: 2, label: '역할 선택' },
     { n: 3, label: '프로필' },
   ] as const,
   biz: '상호',
-  bizNeeded: '프로젝트 등록에 필요',
+  bizNeeded: '입력하면 공급자에게 공개',
   bizError: '상호를 입력해 주세요',
   bizPlaceholder: '상호를 입력해 주세요',
   industry: '업종',

@@ -154,7 +154,7 @@ export function LiveProjectDetail({ pid, styles }: { pid?: string; styles: Recor
           </div>
           <section className={s.fc} aria-label="의뢰인 정보">
             <div className={s.nmrow}>
-              <span className={s.nm}>{detail.client.businessName}</span>
+              <span className={s.nm}>{detail.client.businessName ?? '상호 미등록'}</span>
             </div>
             {detail.client.name && <p className={s.ds}>{detail.client.name}</p>}
             {detail.client.industryField && <p className={s.ds}>{detail.client.industryField}</p>}

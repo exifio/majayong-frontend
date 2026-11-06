@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SessionProvider, DEV_SESSIONS, useSession } from '@/app/session';
@@ -92,6 +92,28 @@ describe('LiveProjectDetail', () => {
     expect(container.querySelector('[data-spec-item-id="spec-item-1"]')).toBeTruthy();
     expect(screen.getByRole('link', { name: '견적 작성하기' }).getAttribute('href'))
       .toBe('/s/projects/project-1/quote');
+  });
+
+  it('상호 미등록 프로젝트도 공급자가 열람할 수 있다', async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse({ data: {
+      ...detail,
+      client: {
+        name: null,
+        businessName: null,
+        industryField: null,
+        storeAddress: null,
+        bio: null,
+        websiteUrl: null,
+        ratingAvg: null,
+        reviewCount: 0,
+      },
+    } }));
+
+    renderLive(<LiveProjectDetail pid="project-1" styles={{}} />);
+
+    expect(await screen.findByText('예약 기능 개발')).toBeTruthy();
+    expect(within(screen.getByLabelText('의뢰인 정보')).getByText('상호 미등록')).toBeTruthy();
+    expect(screen.getByRole('link', { name: '견적 작성하기' })).toBeTruthy();
   });
 
   it('shows the submitted application instead of the quote CTA', async () => {

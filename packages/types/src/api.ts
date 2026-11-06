@@ -108,7 +108,7 @@ export interface SupplierProjectItemDto {
 
 export interface SupplierProjectClientDto {
   name: string | null;
-  businessName: string;
+  businessName: string | null;
   industryField: string | null;
   storeAddress: string | null;
   bio: string | null;

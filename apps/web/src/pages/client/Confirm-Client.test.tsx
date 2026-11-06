@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, screen } from '@testing-library/react';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
 import type { DraftDto } from '@majayong/types/api';
-import { renderAt } from '@/test/render';
+import { location, renderAt } from '@/test/render';
 
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
@@ -64,6 +64,29 @@ describe('Confirm-Client 명세 확정', () => {
     const submit = screen.getByRole('button', { name: '확정하고 공급자 모집 시작' });
     expect((submit as HTMLButtonElement).disabled).toBe(true);
     expect(fetchMock.mock.calls.some(([url, init]) => String(url).endsWith('/publish') && init?.method === 'POST')).toBe(false);
+  });
+
+  it('상호가 없어도 게시 성공 응답 뒤 프로젝트 화면으로 이동한다', async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockImplementation(async (input, init) => {
+      if (String(input) === '/api/v1/drafts/d-1' && init?.method !== 'POST') {
+        return jsonResponse({ data: draft([]) });
+      }
+      if (String(input) === '/api/v1/drafts/d-1/publish') {
+        return jsonResponse({ data: { projectId: 'project-1' } }, 201);
+      }
+      return jsonResponse({ error: { code: 'NOT_FOUND', message: '요청을 확인해 주세요.', requestId: 'req-publish' } }, 404);
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    renderAt('/c/drafts/d-1/confirm', 'client', undefined, 'test-token');
+
+    fireEvent.change(await screen.findByLabelText('모집 시작'), { target: { value: '2099-01-01' } });
+    fireEvent.change(screen.getByLabelText('모집 마감'), { target: { value: '2099-01-14' } });
+    fireEvent.click(screen.getByRole('checkbox'));
+    fireEvent.click(screen.getByRole('button', { name: '확정하고 공급자 모집 시작' }));
+
+    await waitFor(() => expect(location.current).toBe('/c/projects/project-1'));
+    expect(fetchMock.mock.calls.some(([url, init]) => String(url) === '/api/v1/drafts/d-1/publish' && init?.method === 'POST')).toBe(true);
   });
 
   it('미등록 상호로 거절되면 보완 사유를 안내한다', async () => {

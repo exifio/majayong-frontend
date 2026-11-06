@@ -25,7 +25,7 @@ export interface SupplierProjectDetail extends SupplierProjectCard {
   hopeBudget: Won | null;
   /** Not provided by the A detail contract. */
   interimRatioGuide?: string;
-  client: { name: string | null; businessName: string; industryField: string | null; storeAddress: string | null; websiteUrl: string | null; bio: string | null };
+  client: { name: string | null; businessName: string | null; industryField: string | null; storeAddress: string | null; websiteUrl: string | null; bio: string | null };
   myApplication: { status: ApplicationDisplayStatus; totalAmount: Won; durationDays: number } | null;
 }
 

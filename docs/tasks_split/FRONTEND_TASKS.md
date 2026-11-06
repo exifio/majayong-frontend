@@ -28,6 +28,7 @@
 | FE-16 | P1 | Next | 변경 영역별 가벼운 QA와 57보드 비교 마감 | FE-13, FE-03 | 하 |
 | FE-17 | P1 | Next | 리뷰 작성·받은 리뷰 실제 API 연결 | BE-05, FE-11 | 상 |
 | FE-18 | P2 | Next | 계약 완료 배너·공급자 정산 라벨 정리 | FE-11 | 하 |
+| FE-19 | P1 | Now | 명세 확정 선행조건 차단 및 오류 안내 | 없음 | 하 |
 
 ## 현재 FE 실행 가능 상태 (2026-11-06)
 
@@ -338,6 +339,19 @@
 - **완료 조건:** 완료 화면에 진행 중 문구 없음, 라벨·금액 일치, 1440/390 확인.
 - **최소 QA:** `LiveSettlements.test.tsx` 라벨, `contract-live.test.tsx` 완료 배너, `pnpm typecheck`, `pnpm test` 474/474, `pnpm build`.
 - **확인 결과(2026-11-06 KST):** 커밋 `c435a4b`, 머지 `f2ad121`. staging 완료 계약에서 의뢰인·공급자 모두 "거래와 정산이 모두 완료되었습니다.", 공급자 정산 "세후 받을 금액 91,700원" 확인. production `lh28yr0l2` 번들에 두 문구 반영. **한계:** 문구 변경만, 실제 이체 없음.
+
+## FE-19 — 명세 확정 선행조건 차단 및 오류 안내
+
+- **상태/난이도:** 부분완료 / 2026-11-07 로컬 검증 / 하 · **우선순위:** P1 · **단계:** Now.
+- **기준 SHA:** `dde8f6eb3e3af9a43b21e76a3dd7513ac3eef3dc`.
+- **대상:** `apps/web/src/pages/client/Confirm-Client.tsx; apps/web/src/pages/client/Confirm-Client.test.tsx; apps/web/src/components/project/LiveProjectDetail.tsx; packages/types/src/api.ts; packages/types/src/supplier.ts; apps/web/src/pages/public/Signup-Client.data.ts`.
+- **목표/범위:** 반영 대기 기능이 남아 있으면 게시를 막고, 상호 없이 게시된 프로젝트를 상세에서 열 수 있게 하며 주요 검증 오류를 한국어로 안내한다.
+- **보존/계약:** 기존 `GET /drafts/{id}`, `POST /drafts/{id}/publish` 경로·요청 본문·동의 저장 동작을 유지한다. D-33 승인에 따라 공급자 상세 응답의 `client.businessName`은 nullable이며 DB 스키마는 바꾸지 않는다.
+- **실행:** `pendingCount`가 0이 아닐 때 확정 버튼을 비활성화하고 초안에서 재시도하도록 안내한다. `CLIENT_PROFILE_INCOMPLETE`, `DRAFT_FEATURES_PENDING` 등 게시 검증 코드는 사용자 안내로 변환하고 매핑되지 않은 오류는 기존 문구와 오류 코드를 함께 표시한다.
+- **완료 조건:** 대기 기능이 있으면 게시 POST가 전송되지 않고, 확인된 게시 검증 오류가 구체적인 한국어 사유를 표시한다.
+- **최소 QA:** 인접 `Confirm-Client.test.tsx` RED→GREEN, 해당 테스트, `pnpm typecheck`, `pnpm build`.
+- **확인 결과(2026-11-07 KST):** 새 테스트 3건을 기존 동작에서 먼저 실패하는 것을 확인한 뒤 수정 후 3/3 통과. `pnpm typecheck`, `pnpm build` 통과(번들 크기 경고 포함). **남은 확인:** 현재 인증 브라우저에서 실패 요청을 확인하지 못해 스크린샷의 실제 API 오류 코드와 운영 게시 성공은 미검증이다. 따라서 상태는 부분완료로 둔다.
+- **후속 수정(2026-11-07 KST):** D-33에 따라 상호가 없어도 게시할 수 있도록 BE 필수 검사를 제거했다. 미완성 의뢰인 프로필 정보는 공급자 상세에 노출하지 않고, FE `businessName: null`은 `상호 미등록`으로 표시한다. 가입 안내의 상호 필수 문구도 바로잡았다. FE 게시 이동·공급자 상세 테스트 10/10, typecheck PASS; BE source typecheck/build PASS. BE 전용 PostgreSQL 테스트 및 실제 게시 확인은 전용 DB 미설정으로 미실행.
 
 ## 공통 개발 준수 사항
 
