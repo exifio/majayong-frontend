@@ -63,13 +63,13 @@
 - [x] **INT-01** 로그인 후 실제 사용자 흐름 재현 — staging API 01~10·FE 13 1~7 PASS; FE 08~10 화면은 FE-04/07/10/13에서 확인. **production(2026-11-07):** 브라우저로 가입→로그인→프로필→초안→명세 확정→지원→채팅→합의→양측 서명 PASS, 예치 `PENDING` 생성 PASS, Toss 카드 완료는 발급사 인증 필요로 BLOCKED
 - [x] **INT-02** 결제 승인·복구 계약·PAY-01~06 — 승인 E2E·서명 웹훅·수동·Vercel Cron 자동 복구 PASS
 - [x] **INT-03** 57보드/배포 go-no-go — 샌드박스 GO(테스트 키·웹훅 200·Cron 복구·FE 예치 ON), production live는 범위 제외
-- [ ] **PROD-FE-E2E-20261107** production 브라우저 E2E·OAuth·문안 인벤토리 — **DONE/PARTIAL(2026-11-07 KST)**, FE `a28dc04` 기준
+- [x] **PROD-FE-E2E-20261107** production 브라우저 E2E·OAuth·문안 인벤토리 — **DONE(2026-11-07 KST)**, FE `a28dc04` 기준
   - **PASS:** CLIENT 가입·로그인(`a254fbbf-1473-4a1b-9c73-345072700cd5`)·프로필, 초안 생성·명세 확정(프로젝트 `df8a6c34-bb00-4c44-91b2-f7d7b7cc519f`), SUPPLIER(`0c32e429-785a-489e-b9ae-d01daaa00e8a`) 지원(`a3016166-6763-4cbf-ac91-be5e96fac2c5`), 채팅 양방향, 합의 확정·양측 서명(계약 `c6513769-d8ca-4f5b-9b2f-86fecd39b225` `ACTIVE`), 예치 `PENDING` 2,940,000원(`a4ed68a5-72b4-47a3-9578-cd4c5be4c816`) 생성, 1440·390 렌더, FE typecheck·488 tests·build PASS.
   - **OAuth:** Google Cloud OAuth 클라이언트에 production 콜백·JS 원본 등록, FE `googleOAuthRedirectUri`가 production 도메인 자기 origin 사용. BE `GOOGLE_REDIRECT_URI` 교체·재배포 후 production 브라우저 Google 로그인 **PASS** — `/signup/role` 도달, `POST /auth/google/exchange` **200**(Vercel 로그), 오류 코드 없음, onboardingRequired라 신규 user row 없음.
-  - **Toss:** 테스트 키·`VITE_ENABLE_DEPOSIT=true`로 결제창·`실제 결제가 안되는 테스트입니다` 배너 확인. 카드 완료는 신한/토스뱅크 발급사 앱·SMS 인증 요구로 **BLOCKED**(가상계좌 미노출). 납품·검수·정산·리뷰는 예치 완료 의존으로 미실행.
+  - **Toss·정산·리뷰:** 예치 `COMPLETED`·웹훅 반영 후 중간/최종 납품·검수 승인·구간 `RELEASED`·계약 `COMPLETED`·의뢰인/공급자 리뷰 2건(평점 5)까지 확인. 납품·승인·지급은 A가, 의뢰인 리뷰는 B가 브라우저로 완료.
   - **관찰:** 초안 AI `recommendations` 1회 5xx(재시도 200, 7초). 빠른 연속 페이지 이동 시 refresh rotation 경합 로그아웃 재현(BE 동시 요청 200+401 `REFRESH_TOKEN_REUSED`) → access token을 sessionStorage에 저장하고 유효하면 마운트 refresh를 생략하도록 FE 수정, 491 tests PASS. 명세 확정 화면 `초안으로 돌아가기`가 `/c/drafts/d-1` 고정이던 FE 버그 수정.
   - **SUPPLIER 화면(2026-11-07):** `/s`·프로젝트 찾기·내 지원·내 계약·계약서·정산·프로필을 1440/390에서 확인, 로그인 튕김·오류 문구 없음. `Home-Supplier`는 문서상 데모 화면이라 이름이 `최준호`로 고정된다. 계약서 모바일은 콘텐츠 표시까지 약 14초 걸렸다(API 지연).
-  - **테스트 계정 정리:** A가 위 CLIENT/SUPPLIER 계정과 프로젝트·지원·계약·예치·초안(`5638a63c-b924-49ef-be74-d281cafd661a`, `001a3420-c483-45fa-9ac8-681968a364c0`)을 삭제한다.
+  - **테스트 계정 정리:** A가 CLIENT/SUPPLIER와 A가 추가한 test-* 계정, 프로젝트·지원·계약·예치·초안·리뷰·AI 블록을 삭제하고 users 0·blocks 36을 복구한다.
 
 ## 사용법
 
