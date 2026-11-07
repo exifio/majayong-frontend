@@ -161,18 +161,17 @@ flowchart TD
   L --> M
 ```
 
-## 문안 입력 대기 (BLOCKED, 2026-11-07)
+## 사업자·고객센터 문안 상태 (2026-11-07)
 
-실제 값이 없어 창작하지 않는다. 아래 값을 받으면 해당 파일만 교체한다.
+- 상호명 `로켓단`은 사용자 결정으로 유지한다. 그 외 값은 창작하지 않는다.
+- 가짜 사업자번호·주소·전화 대신 Footer는 `대표자 정보 준비 중`·`사업자등록번호 준비 중`·`통신판매업 신고 준비 중`·`사업장 주소 준비 중`으로, 고객센터 연락처는 `문의 접수` 링크와 운영시간으로 표시한다.
+- 고객센터(`Help.data.ts`)는 `전화·이메일 문의 준비 중`으로 표시하고 이메일 줄은 숨긴다. 정지 계정 안내도 1:1 문의로 유도한다.
+- 약관(`Terms.data.ts`)은 `[초안 — 법률 검토 전]`과 임시 시행일을 유지한다. 법률 검토 완료 확인 전에는 초안 표시를 제거하지 않는다.
 
-| 위치 | 현재 예시값 | 필요한 입력 |
-|---|---|---|
-| `apps/web/src/components/layout/Footer.tsx:10` | 대표 홍길동(예시) | 대표자명 |
-| `apps/web/src/components/layout/Footer.tsx:11` | 사업자등록번호 000-00-00000(예시) | 사업자등록번호 |
-| `apps/web/src/components/layout/Footer.tsx:12` | 통신판매업 신고 제2026-서울-0000호(예시) | 통신판매업 신고번호 |
-| `apps/web/src/components/layout/Footer.tsx:13` | 서울특별시 예시구 예시로 00(예시) | 사업장 주소 |
-| `apps/web/src/pages/public/Help.data.ts:58` | 1600-0000 | 고객센터 전화 |
-| `apps/web/src/pages/public/Help.data.ts:60` | help@majayong.example | 고객센터 이메일 |
-| `apps/web/src/mocks/demo.ts:41` | 로켓단 / 1600-0000 / help@majayong.example | 운영 주체명·연락처(데모 전용 여부 결정) |
-
-추가 확인 필요: 상호(법인명), 개인정보 보호책임자, 통신판매업 신고일, 유료 서비스 약관·환불 정책의 최종 법률 검토본.
+| 교체 위치 | 필요한 입력 |
+|---|---|
+| `components/layout/Footer.tsx` BIZ | 대표자명·사업자등록번호·통신판매업 신고번호·사업장 주소 |
+| `components/layout/Footer.tsx` 연락처 | 고객센터 전화·이메일 |
+| `pages/public/Help.data.ts` | 고객센터 전화·이메일 |
+| `pages/public/Terms.data.ts` | 법률 검토본·시행일·개인정보 보호책임자 |
+| `mocks/demo.ts` operator | 데모 전용 유지 여부 결정 |

@@ -7,10 +7,10 @@ import s from './layout.module.css';
 
 const BIZ = {
   company: DEMO.operator.company,
-  ceo: '대표 홍길동(예시)',
-  regNo: '사업자등록번호 000-00-00000(예시)',
-  mailOrder: '통신판매업 신고 제2026-서울-0000호(예시)',
-  address: '서울특별시 예시구 예시로 00(예시)',
+  ceo: '대표자 정보 준비 중',
+  regNo: '사업자등록번호 준비 중',
+  mailOrder: '통신판매업 신고 준비 중',
+  address: '사업장 주소 준비 중',
 };
 
 export function Footer() {
@@ -52,8 +52,7 @@ export function Footer() {
             <div className={s.footCol}>
               <h3>고객센터 연락처</h3>
               <ul>
-                <li>{DEMO.operator.phone}</li>
-                <li>{DEMO.operator.email}</li>
+                <li><Link to="/help/inquiry">문의 접수</Link></li>
                 <li>평일 10:00–18:00</li>
               </ul>
             </div>

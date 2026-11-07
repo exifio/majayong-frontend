@@ -185,7 +185,7 @@ export default function Help() {
             <h3 className={s.asideTitle}>{DEMO.callTitle}</h3>
             <p className={s.tel}>{DEMO.phone}</p>
             <p className={s.asideBody}>{DEMO.hours}</p>
-            <p className={s.asideBody}>{DEMO.email}</p>
+            {DEMO.email ? <p className={s.asideBody}>{DEMO.email}</p> : null}
           </section>
           <section className={s.card}>
             <h3 className={s.asideTitle}>{DEMO.guideTitle}</h3>

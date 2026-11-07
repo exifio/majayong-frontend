@@ -55,9 +55,9 @@ export const DEMO = {
   asideAskTitle: '1:1 문의',
   asideAskBody: '답을 찾지 못했다면 운영자에게 직접 물어보세요. 평일 기준 하루 안에 답변 드립니다.',
   callTitle: '전화 · 이메일',
-  phone: '1600-0000',
+  phone: '전화·이메일 문의 준비 중',
   hours: '평일 10:00–18:00 (점심 12:00–13:00)\n주말 · 공휴일 휴무',
-  email: 'help@majayong.example',
+  email: '',
   guideTitle: '문제가 생겼다면',
   guides: [
     {

@@ -10,12 +10,13 @@ describe('Footer — 공통 푸터', () => {
     expect(screen.getByRole('link', { name: '1:1 문의' }).getAttribute('href')).toBe('/help/inquiry');
   });
 
-  it('사업자 예시 정보·중개자 고지·저작권을 보여 준다', () => {
+  it('사업자 정보 준비 중·중개자 고지·저작권을 보여 준다', () => {
     render(<MemoryRouter><Footer /></MemoryRouter>);
-    expect(screen.getByText(/대표 홍길동\(예시\)/)).toBeTruthy();
-    expect(screen.getByText(/사업자등록번호 000-00-00000\(예시\)/)).toBeTruthy();
+    expect(screen.getByText(/대표자 정보 준비 중/)).toBeTruthy();
+    expect(screen.getByText(/사업자등록번호 준비 중/)).toBeTruthy();
     expect(screen.getByText(/통신판매중개자로서 거래 당사자가 아니며/)).toBeTruthy();
     expect(screen.getByText(/© 2026 로켓단/)).toBeTruthy();
+    expect(screen.queryByText(/1600-0000|help@majayong\.example/)).toBeNull();
   });
 
   it('랜딩 구역 링크를 제공한다', () => {
