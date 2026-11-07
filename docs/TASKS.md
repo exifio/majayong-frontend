@@ -71,6 +71,7 @@
   - **SUPPLIER 화면(2026-11-07):** `/s`·프로젝트 찾기·내 지원·내 계약·계약서·정산·프로필을 1440/390에서 확인, 로그인 튕김·오류 문구 없음. `Home-Supplier`는 문서상 데모 화면이라 이름이 `최준호`로 고정된다. 계약서 모바일은 콘텐츠 표시까지 약 14초 걸렸다(API 지연).
   - **production 정적/보안(2026-11-07):** `robots.txt`·`sitemap.xml`이 SPA HTML로 응답하던 문제를 실제 정적 파일로 교체. `vercel.json`에 `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`, `Permissions-Policy` 추가. `index.html`에 설명·OG 메타 추가. 배포 후 content-type·헤더·메타 확인 PASS.
   - **재정리(2026-11-07):** A 정리 후 다시 생성된 `ADMIN@code.com`·`client@code.com`·`supplier@code.com`과 세션 7개를 삭제해 users 0·blocks 36·files 0 복구.
+  - **P0 차단(2026-11-07):** production `TOSS_SECRET_KEY`가 무효(`GET /v1/payments/orders/{unknown}` → **401 UNAUTHORIZED_KEY**, 11자)다. 예치 confirm이 실패하므로 FE production `VITE_ENABLE_DEPOSIT`를 **false로 내리고 재배포**했다. A가 유효한 `test_sk_`로 교체하고 confirm을 재검증한 뒤 다시 켠다.
 
 ## 사용법
 
