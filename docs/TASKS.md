@@ -69,7 +69,8 @@
   - **Toss·정산·리뷰:** 예치 `COMPLETED`·웹훅 반영 후 중간/최종 납품·검수 승인·구간 `RELEASED`·계약 `COMPLETED`·의뢰인/공급자 리뷰 2건(평점 5)까지 확인. 납품·승인·지급은 A가, 의뢰인 리뷰는 B가 브라우저로 완료.
   - **관찰:** 초안 AI `recommendations` 1회 5xx(재시도 200, 7초). 빠른 연속 페이지 이동 시 refresh rotation 경합 로그아웃 재현(BE 동시 요청 200+401 `REFRESH_TOKEN_REUSED`) → access token을 sessionStorage에 저장하고 유효하면 마운트 refresh를 생략하도록 FE 수정, 491 tests PASS. 명세 확정 화면 `초안으로 돌아가기`가 `/c/drafts/d-1` 고정이던 FE 버그 수정.
   - **SUPPLIER 화면(2026-11-07):** `/s`·프로젝트 찾기·내 지원·내 계약·계약서·정산·프로필을 1440/390에서 확인, 로그인 튕김·오류 문구 없음. `Home-Supplier`는 문서상 데모 화면이라 이름이 `최준호`로 고정된다. 계약서 모바일은 콘텐츠 표시까지 약 14초 걸렸다(API 지연).
-  - **테스트 계정 정리:** A가 CLIENT/SUPPLIER와 A가 추가한 test-* 계정, 프로젝트·지원·계약·예치·초안·리뷰·AI 블록을 삭제하고 users 0·blocks 36을 복구한다.
+  - **production 정적/보안(2026-11-07):** `robots.txt`·`sitemap.xml`이 SPA HTML로 응답하던 문제를 실제 정적 파일로 교체. `vercel.json`에 `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`, `Permissions-Policy` 추가. `index.html`에 설명·OG 메타 추가. 배포 후 content-type·헤더·메타 확인 PASS.
+  - **재정리(2026-11-07):** A 정리 후 다시 생성된 `ADMIN@code.com`·`client@code.com`·`supplier@code.com`과 세션 7개를 삭제해 users 0·blocks 36·files 0 복구.
 
 ## 사용법
 
