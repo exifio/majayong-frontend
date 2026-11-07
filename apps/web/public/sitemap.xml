@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://majayong-frontend-production.vercel.app/</loc></url>
+  <url><loc>https://majayong-frontend-production.vercel.app/supplier</loc></url>
+  <url><loc>https://majayong-frontend-production.vercel.app/help</loc></url>
+  <url><loc>https://majayong-frontend-production.vercel.app/terms/terms</loc></url>
+  <url><loc>https://majayong-frontend-production.vercel.app/terms/privacy</loc></url>
+  <url><loc>https://majayong-frontend-production.vercel.app/terms/nda</loc></url>
+  <url><loc>https://majayong-frontend-production.vercel.app/terms/broker</loc></url>
+</urlset>

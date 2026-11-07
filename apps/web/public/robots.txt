@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /c/
+Disallow: /s/
+Disallow: /admin/
+Disallow: /api/
+Disallow: /reset
+Disallow: /signup
+
+Sitemap: https://majayong-frontend-production.vercel.app/sitemap.xml
