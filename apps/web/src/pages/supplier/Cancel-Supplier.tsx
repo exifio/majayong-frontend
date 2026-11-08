@@ -13,6 +13,10 @@ import {
   TextAreaField,
 } from '@/components/ui';
 import { formatWon } from '@/lib/format';
+import { useSession } from '@/app/session';
+import { LiveCancellation } from '@/components/contract/LiveCancellation';
+import { AuthRequired } from '@/components/system/AuthRequired';
+import { DEMO_DATA_ENABLED } from '@/lib/feature-flags';
 import {
   CAUSE_OPTIONS,
   CHAT_HREF,
@@ -31,6 +35,7 @@ import s from './Cancel-Supplier.module.css';
 export default function CancelSupplier() {
   const { cid = DEFAULT_CID } = useParams();
   const [params] = useSearchParams();
+  const { apiAccessToken } = useSession();
   const navigate = useNavigate();
   const mock = resolveCancelSMock(params.get('mock'));
   const demo = cancelSDemoOf(mock);
@@ -56,6 +61,9 @@ export default function CancelSupplier() {
 
   const rateNum = Number(rate);
   const rateOk = Number.isFinite(rateNum) && rateNum >= 50;
+
+  if (apiAccessToken.trim()) return <LiveCancellation cid={cid} role="SUPPLIER" />;
+  if (!DEMO_DATA_ENABLED) return <AuthRequired />;
 
   void cid;
 

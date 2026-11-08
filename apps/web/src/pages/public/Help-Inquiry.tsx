@@ -6,6 +6,7 @@ import { LoadingState, Band, Button, Chip, EmptyState, Tabs, TextAreaField, Text
 import { useSession } from '@/app/session';
 import { ApiRequestError, apiRequest } from '@/lib/api';
 import { AttachmentLink } from '@/components/attachments/AttachmentLink';
+import { ALLOWED_UPLOAD_EXTENSION, uploadWithPresign } from '@/lib/attachments';
 import { CATEGORIES, CATEGORY_LABEL, PAGE, STATUS_LABEL } from './Help-Inquiry.data';
 import s from './Help-Inquiry.module.css';
 
@@ -14,24 +15,6 @@ type Tab = 'write' | 'mine';
 
 const MAX_FILES = 3;
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
-const ALLOWED_EXTENSION = /\.(png|jpe?g|webp|pdf|zip|mp4|txt)$/i;
-const MIME_BY_EXTENSION: Record<string, string> = {
-  png: 'image/png',
-  jpg: 'image/jpeg',
-  jpeg: 'image/jpeg',
-  webp: 'image/webp',
-  pdf: 'application/pdf',
-  zip: 'application/zip',
-  mp4: 'video/mp4',
-  txt: 'text/plain',
-};
-
-function mimeOf(file: File): string {
-  if (file.type.trim().length > 0) return file.type;
-  const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
-  return MIME_BY_EXTENSION[ext] ?? 'application/octet-stream';
-}
-
 function toAttachmentTuple(items: CreateInquiryAttachmentDto[]): UpToThree<CreateInquiryAttachmentDto> | undefined {
   const [first, second, third] = items;
   if (items.length === 0 || first === undefined) return undefined;
@@ -126,7 +109,7 @@ export default function HelpInquiry() {
         setFileError(PAGE.attachSize);
         return;
       }
-      if (!ALLOWED_EXTENSION.test(file.name)) {
+      if (!ALLOWED_UPLOAD_EXTENSION.test(file.name)) {
         setFileError(PAGE.attachType);
         return;
       }
@@ -142,18 +125,8 @@ export default function HelpInquiry() {
     try {
       const uploaded: CreateInquiryAttachmentDto[] = [];
       for (const file of files) {
-        const presign = await apiRequest('presignUpload', '/uploads/presign', {
-          method: 'POST',
-          accessToken: apiAccessToken,
-          jsonBody: { purpose: 'SUPPORT_INQUIRY', fileName: file.name, fileSize: file.size, mimeType: mimeOf(file) },
-        });
-        const upload = await fetch(presign.data.uploadUrl, {
-          method: 'PUT',
-          headers: { 'content-type': mimeOf(file) },
-          body: file,
-        });
-        if (!upload.ok) throw new Error('ATTACHMENT_UPLOAD_FAILED');
-        uploaded.push({ fileId: presign.data.fileId, name: file.name, size: file.size });
+        const done = await uploadWithPresign(file, { purpose: 'SUPPORT_INQUIRY' }, apiAccessToken);
+        uploaded.push({ fileId: done.fileId, name: done.name, size: done.size });
       }
       const attachments = toAttachmentTuple(uploaded);
       await apiRequest('createInquiry', '/support/inquiries', {

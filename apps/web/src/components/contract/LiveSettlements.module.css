@@ -82,6 +82,8 @@
 }
 
 .amount { min-width: 0; overflow-wrap: anywhere; }
+.tax { grid-column: 1 / -1; display: flex; justify-content: flex-end; font-size: 13px; color: var(--slate-600); }
+.error { margin: 10px 0 0; color: var(--red-600); font-size: 14px; }
 
 @media (max-width: 480px) {
   .installment { grid-template-columns: 44px minmax(0, 1fr); }

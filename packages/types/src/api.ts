@@ -390,6 +390,8 @@ export interface CancellationDto {
   cancelRequestedBy: string | null;
   cancelRequestedAt: IsoDate | null;
   cancelNote: string | null;
+  /** 요청 때 고른 근거 메시지. 근거 없이 요청하면 null. */
+  cancelEvidence: CancelEvidenceDto | null;
   objectionRate: number | null;
   objectionNote: string | null;
   cancelEscalatedAt: IsoDate | null;
@@ -399,7 +401,14 @@ export interface CancellationDto {
   refundAmount: number | null;
   settledAmount: number | null;
   clientFeeRefund: number | null;
+  refundReason: string | null;
+  refundedAt: IsoDate | null;
+  cancelPayoutAt: IsoDate | null;
   paused: boolean;
+}
+
+export interface CancelEvidenceDto {
+  messageIds: string[];
 }
 
 export type ApiDepositStatus = 'PENDING' | 'HELD' | 'COMPLETED' | 'FAILED';
@@ -1039,12 +1048,16 @@ export interface AnswerInquiryRequestDto {
   answer: string;
 }
 
-export interface PresignUploadRequestDto {
-  purpose: 'SUPPORT_INQUIRY';
+interface PresignUploadFileDto {
   fileName: string;
   fileSize: number;
   mimeType: string;
 }
+
+/** 문의 첨부는 계약 없이, 납품 파일은 담당 공급자의 contractId와 함께 요청한다. */
+export type PresignUploadRequestDto =
+  | (PresignUploadFileDto & { purpose: 'SUPPORT_INQUIRY'; inquiryId?: string })
+  | (PresignUploadFileDto & { purpose: 'DELIVERY'; contractId: string });
 
 export interface PresignUploadResponseDto {
   fileId: string;
@@ -1058,23 +1071,56 @@ export interface PresignDownloadResponseDto {
   expiresInSec: number;
 }
 
-export interface PresignUploadRequestDto {
-  purpose: 'SUPPORT_INQUIRY';
-  fileName: string;
-  fileSize: number;
-  mimeType: string;
+/* ── 계약 흐름 ── */
+export type ApiInspectionReason = 'CONDITION_MISMATCH' | 'NOT_WORKING' | 'MISSING_PART' | 'OTHER';
+export type ApiInspectionStatus = 'OPEN' | 'RESOLVED' | 'ESCALATED';
+
+/** GET/POST 보완 요청(`/contract-items/{id}/rework-requests`) 한 건. */
+export interface InspectionRequestDto {
+  id: string;
+  deliveryId: string;
+  contractItemId: string;
+  reason: ApiInspectionReason;
+  conditionKey: string | null;
+  note: string | null;
+  status: ApiInspectionStatus;
+  escalatedAt: IsoDate | null;
+  resolvedAt?: IsoDate | null;
+  createdAt: IsoDate;
 }
 
-export interface PresignUploadResponseDto {
-  fileId: string;
-  uploadUrl: string;
-  objectKey: string;
-  expiresInSec: number;
+export interface EscalateInspectionRequestDto {
+  reason: string;
+  what: string;
+  claims?: { client: string; supplier: string };
+  evidence?: unknown;
 }
 
-export interface PresignDownloadResponseDto {
-  downloadUrl: string;
-  expiresInSec: number;
+export interface RequestCancellationRequestDto {
+  cause: ApiCancelCause;
+  note: string;
+  /** 1개 이상일 때만 보낸다. 빈 목록은 서버가 거부한다. */
+  evidence?: CancelEvidenceDto;
+  /** MUTUAL일 때 필수, 0~100 정수. */
+  proposedCompensationRate?: number;
+}
+
+export interface ObjectCancellationRequestDto {
+  objectionRate: number;
+  note: string;
+}
+
+/** 취소 요청·동의·이의 응답. 서버는 계약의 취소 관련 필드를 그대로 돌려준다. */
+export type CancellationUpdateDto = Partial<CancellationDto> & {
+  id: string;
+  status: ApiContractStatus;
+};
+
+export interface TaxInvoiceIssuedResultDto {
+  id: string;
+  stage: ApiInstallmentStage;
+  status: ApiInstallmentStatus;
+  taxInvoiceIssuedAt: IsoDate | null;
 }
 
 /** These operations require JSON on the wire but accept no fields. */
@@ -1091,7 +1137,9 @@ export type BApiEmptyJsonBodyOperation =
   | 'readAllNotifications'
   | 'retryDraft'
   | 'restoreDraft'
-  | 'withdrawCancellation';
+  | 'withdrawCancellation'
+  | 'agreeCancellation'
+  | 'markTaxInvoiceIssued';
 
 /** Request bodies keyed by matching OpenAPI operationId. */
 export interface BApiRequestBodies {
@@ -1113,9 +1161,10 @@ export interface BApiRequestBodies {
   approveContractItem: { deliveryId: string };
   requestRework: {
     deliveryId: string;
-    reason: 'CONDITION_MISMATCH' | 'NOT_WORKING' | 'MISSING_PART' | 'OTHER';
+    reason: ApiInspectionReason;
+    /** CONDITION_MISMATCH이면 필수이며 DECIDED 조건 키여야 한다. */
     conditionKey?: string;
-    note?: string;
+    note: string;
   };
   createReview: {
     rating: number;
@@ -1136,6 +1185,12 @@ export interface BApiRequestBodies {
   declineContract: EmptyJsonObjectDto;
   cancelProvisionalContract: EmptyJsonObjectDto;
   withdrawCancellation: EmptyJsonObjectDto;
+  /* ── 계약 흐름 ── */
+  requestCancellation: RequestCancellationRequestDto;
+  agreeCancellation: EmptyJsonObjectDto;
+  objectCancellation: ObjectCancellationRequestDto;
+  escalateInspection: EscalateInspectionRequestDto;
+  markTaxInvoiceIssued: EmptyJsonObjectDto;
   readNotification: EmptyJsonObjectDto;
   readAllNotifications: EmptyJsonObjectDto;
   createDraft: { entryType: ApiDraftEntryType; text?: string };
@@ -1244,7 +1299,7 @@ export interface BApiResponses {
   listDeliveries: DataEnvelope<DeliveryDto[]>;
   submitDelivery: DataEnvelope<DeliveryDto>;
   approveContractItem: DataEnvelope<{ id: string; approvedAt: IsoDate | null; autoApproved: boolean }>;
-  requestRework: DataEnvelope<{ id: string; status: string }>;
+  requestRework: DataEnvelope<InspectionRequestDto>;
   listChatRooms: DataEnvelope<ChatRoomSummaryDto[]>;
   openChat: DataEnvelope<OpenChatResultDto>;
   listMessages: DataEnvelope<ConversationViewDto>;
@@ -1293,6 +1348,15 @@ export interface BApiResponses {
   decideCancellation: DataEnvelope<AdminCancellationContractDto>;
   markSettlementProcessed: DataEnvelope<AdminCancellationContractDto>;
   listEventLogs: DataEnvelope<AdminEventLogDto[]>;
+  /* ── 계약 흐름 ── */
+  getDelivery: DataEnvelope<DeliveryDto>;
+  listReworkRequests: DataEnvelope<InspectionRequestDto[]>;
+  escalateInspection: DataEnvelope<InspectionRequestDto>;
+  requestCancellation: DataEnvelope<CancellationUpdateDto>;
+  agreeCancellation: DataEnvelope<CancellationUpdateDto>;
+  objectCancellation: DataEnvelope<CancellationUpdateDto>;
+  getContractStatement: DataEnvelope<PaymentStatementDto>;
+  markTaxInvoiceIssued: DataEnvelope<TaxInvoiceIssuedResultDto>;
 }
 
 export type BApiOperationId = keyof BApiResponses;
