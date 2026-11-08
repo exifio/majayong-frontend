@@ -229,7 +229,7 @@
 }
 
 .bandNavy {
-  background: var(--navy-900);
+  background: var(--navy-700); /* 푸터 navy-900과 구분(디자인 보완 1104 Part 1-C) */
   color: var(--on-navy);
   text-align: center;
   padding: 56px 0;

@@ -1,14 +1,12 @@
 /* 셸 — 디자인 시스템 3 · 9절 */
 
-/* ── 로고 ── 막대 3개(4px, 높이 9 · 17 · 12, 셋째 55%) + '마자용' 21/600 */
-.logo { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; color: var(--navy-900); }
-.logoMark { display: inline-flex; align-items: flex-end; gap: 3px; height: 17px; }
-.logoMark span { width: 4px; background: currentColor; border-radius: 1px; }
-.logoMark span:nth-child(1) { height: 9px; }
-.logoMark span:nth-child(2) { height: 17px; }
-.logoMark span:nth-child(3) { height: 12px; opacity: .55; }
-.logoText { font-size: 21px; font-weight: 600; letter-spacing: -0.5px; }
-.onNavy .logo { color: var(--on-navy); }
+/* ── 로고 ── 캔버스 '마자용 로고 (8-2 확정)': 블록 마크(1.46em × 1.5em) + '마자용' 21/800, 자간 -0.02em
+ * 밝은 면: 마크 navy-900 · 포인트 blue-600 / navy 면(공급자 GNB · 푸터): 마크 흰색 · 포인트 #5B9BFF */
+.logo { display: inline-flex; align-items: center; text-decoration: none; color: var(--navy-900); font-size: 21px; font-weight: 800; letter-spacing: -0.02em; --logo-accent: var(--blue-600); }
+.logoMark { display: inline-block; width: 1.46em; height: 1.5em; margin-right: .4em; flex: none; overflow: visible; }
+.logoAccent { fill: var(--logo-accent, var(--blue-600)); }
+.logoText { font: inherit; }
+.onNavy .logo { color: var(--on-navy); --logo-accent: var(--on-navy-active); }
 
 /* ── 상단 바 공통 ── */
 .bar { background: #fff; border-bottom: 1px solid var(--slate-200); }
@@ -104,24 +102,37 @@
 .pageTitle { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 28px; font-weight: 600; letter-spacing: -0.6px; margin: 0; }
 .pageDesc { font-size: 15px; color: var(--slate-600); margin: 6px 0 0; }
 
-/* ── 푸터 ── navy-900 3줄 고지 */
-.footer { background: var(--navy-900); padding: 40px 0 36px; font-size: 14px; color: var(--on-navy-sub); }
-.footTop { display: flex; justify-content: space-between; gap: 48px; flex-wrap: wrap; }
-.footBrandLink { font-size: 19px; font-weight: 600; color: var(--on-navy); text-decoration: none; }
-.footBrand p { margin: 8px 0 0; }
-.footCols { display: flex; gap: 48px; flex-wrap: wrap; }
-.footCol h3 { font-size: 14px; font-weight: 600; color: var(--on-navy); margin: 0 0 10px; }
-.footCol ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
-.footCol a { color: var(--on-navy-sub); text-decoration: none; }
-.footCol a.strong { font-weight: 600; color: var(--on-navy); }
-.footBottom { border-top: 1px solid var(--on-navy-line); margin-top: 28px; padding-top: 20px; font-size: 13px; line-height: 1.75; }
+/* ── 푸터 ── 디자인 보완 1104 Part 1-C: navy-900 · 안쪽 34/30 · 3줄 (1280 폭 약 256px) */
+.footer { background: var(--navy-900); padding: 34px 0 30px; font-size: 14px; color: var(--on-navy-sub); word-break: keep-all; }
+.footTop { display: flex; justify-content: space-between; align-items: center; gap: 12px 32px; flex-wrap: wrap; }
+.footBrand { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; min-width: 0; }
+.footBrand p { margin: 0; }
+.footLogo { display: inline-flex; align-items: center; font-size: 19px; font-weight: 800; letter-spacing: -0.02em; color: var(--on-navy); text-decoration: none; --logo-accent: var(--on-navy-active); }
+.footCs { display: flex; align-items: baseline; gap: 4px 16px; flex-wrap: wrap; }
+.footCs b { color: var(--on-navy); font-weight: 600; font-size: 15px; }
+.footCs a { color: var(--on-navy-sub); text-decoration: none; }
+.footNav { display: flex; flex-wrap: wrap; gap: 10px 44px; margin: 18px 0 0; padding: 0 0 24px; border-bottom: 1px solid rgba(255, 255, 255, .14); }
+.footGroup { display: flex; align-items: baseline; gap: 18px; flex-wrap: wrap; }
+.footGroup h3 { font-size: 14px; font-weight: 600; color: var(--on-navy); margin: 0; }
+.footGroup ul { list-style: none; margin: 0; padding: 0; display: flex; gap: 6px 18px; flex-wrap: wrap; }
+.footGroup a { color: var(--on-navy-sub); text-decoration: none; }
+.footGroup a.strong { font-weight: 600; color: var(--on-navy); }
+.footBottom { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 24px; padding-top: 20px; font-size: 13px; line-height: 1.75; color: var(--on-navy-toggle); }
 .footBottom p { margin: 0; }
-.bizInfo span + span::before { content: ''; display: inline-block; width: 1px; height: 10px; background: var(--on-navy-line); margin: 0 8px; vertical-align: middle; }
-.copyright { color: var(--on-navy-sub); }
+.bizInfo span { display: inline-block; white-space: nowrap; }
+.bizInfo span + span::before { content: ''; display: inline-block; width: 1px; height: 10px; background: rgba(255, 255, 255, .28); margin: 0 9px; vertical-align: -1px; }
+.copyright { align-self: end; text-align: right; white-space: nowrap; }
+.brokerNote { grid-column: 1 / -1; margin-top: 8px !important; }
+@media (max-width: 767.98px) {
+  .footBottom { grid-template-columns: minmax(0, 1fr); }
+  .copyright { text-align: left; margin-top: 8px !important; }
+}
 
 /* ── 운영자 셸 ── 푸터 없음 */
 .adminTop { height: var(--admin-bar-height); background: #fff; border-bottom: 1px solid var(--slate-200); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; }
 .adminBrand { display: flex; align-items: center; gap: 10px; font-weight: 600; }
+.adminLogo { display: inline-flex; align-items: center; gap: 10px; font-size: 19px; font-weight: 800; letter-spacing: -0.02em; color: var(--slate-900); }
+.adminLogo .logoMark { margin-right: 0; color: var(--navy-900); }
 .adminBody { display: flex; min-height: calc(100vh - var(--admin-bar-height)); }
 .adminSide { width: var(--admin-side-width); background: var(--navy-900); color: var(--on-navy-sub); display: flex; flex-direction: column; padding: 16px 12px; flex: none; }
 .adminSide ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }

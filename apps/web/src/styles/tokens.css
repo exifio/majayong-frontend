@@ -79,7 +79,7 @@
   --admin-bar-height: 64px;
   --admin-side-width: 232px;
   --dropdown-width: 440px;
-  --footer-height-ref: 393px;  /* 1440 · 1280 기준 참고값. 높이는 내용에 맡긴다 */
+  --footer-height-ref: 256px;  /* 1280 기준 참고값(디자인 보완 1104 Part 1-C). 높이는 내용에 맡긴다 */
 
   /* ── 글꼴 ── */
   --font: "Pretendard Variable", Pretendard, system-ui, sans-serif;

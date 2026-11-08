@@ -12,6 +12,7 @@ import { apiRequest } from '@/lib/api';
 import { DEMO_ADMIN_QUEUES } from '@/mocks/demo';
 import { Chip, EmptyState } from '@/components/ui';
 import { Gnb, Logo, PublicHeader } from './Chrome';
+import { LogoMark } from './LogoMark';
 import { Footer } from './Footer';
 import s from './layout.module.css';
 
@@ -79,8 +80,7 @@ function AdminShell({ children }: { children: ReactNode }) {
       <div data-shell="admin">
         <div className={s.adminTop}>
           <div className={s.adminBrand}>
-            <span className={s.logoMark} aria-hidden="true" style={{ color: 'var(--navy-900)' }}><span /><span /><span /></span>
-            마자용 운영 <Chip tone="neutral">운영자 콘솔</Chip>
+            <span className={s.adminLogo}><LogoMark />마자용 운영</span> <Chip tone="neutral">운영자 콘솔</Chip>
           </div>
           <span className={s.accountName}>{session.status === 'user' ? session.name : ''}</span>
         </div>
