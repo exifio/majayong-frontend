@@ -8,6 +8,7 @@ import { ROLE_HOME, useSession } from '@/app/session';
 import { ApiRequestError, apiRequest } from '@/lib/api';
 import { notificationToItem } from '@/lib/notification-adapter';
 import { LoadingState, Button, Tabs } from '@/components/ui';
+import { LogoMark } from './LogoMark';
 import s from './layout.module.css';
 
 /* ── 로고 ── 로그인 후 → 역할 홈, 비로그인 → 의뢰인 랜딩 */
@@ -16,7 +17,7 @@ export function Logo() {
   const to = session.status === 'user' ? ROLE_HOME[session.role] : '/';
   return (
     <Link to={to} className={s.logo} aria-label="마자용 홈">
-      <span className={s.logoMark} aria-hidden="true"><span /><span /><span /></span>
+      <LogoMark />
       <span className={s.logoText}>마자용</span>
     </Link>
   );
