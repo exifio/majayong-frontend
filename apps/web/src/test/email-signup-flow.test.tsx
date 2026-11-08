@@ -134,6 +134,7 @@ describe('Email signup end-to-end & reload persistence', () => {
     expect(JSON.parse(String(profileCall![1]?.body))).toEqual({
       displayName: '실제 공급자',
       ndaConsent: true,
+      portfolioConsent: true,
     });
 
     expect(window.sessionStorage.getItem('mj.signup.password')).toBeNull();

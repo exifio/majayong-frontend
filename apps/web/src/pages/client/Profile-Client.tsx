@@ -6,6 +6,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button, Note, Tabs, TextAreaField, TextField } from '@/components/ui';
 import { LiveReceivedReviews } from '@/components/review/LiveReceivedReviews';
 import { useSession } from '@/app/session';
+import { LiveClientProfileForm } from '@/components/account/LiveClientProfileForm';
 import { DEMO, resolveProfileMock, starsOf } from './Profile-Client.data';
 import s from './Profile-Client.module.css';
 
@@ -26,7 +27,14 @@ export default function ProfileClient() {
   const [intro, setIntro] = useState<string>(DEMO.introValue);
   const [saved, setSaved] = useState(false);
 
+  // 토큰이 있고 ?mock=이 없으면 기본 정보는 실제 프로필 API를 쓴다. 실제 화면의 탭 이동은 mock을 붙이지 않는다.
+  const liveForm = live && !params.has('mock');
+
   const setTab = (key: string) => {
+    if (liveForm) {
+      navigate(key === 'reviews' ? '/c/profile?tab=reviews' : '/c/profile', { replace: true });
+      return;
+    }
     if (key === 'reviews') {
       navigate('/c/profile?tab=reviews&mock=' + encodeURIComponent('받은 리뷰'), { replace: true });
     } else {
@@ -64,7 +72,9 @@ export default function ProfileClient() {
         onChange={setTab}
       />
 
-      {!isReviews ? (
+      {!isReviews && liveForm ? (
+        <LiveClientProfileForm styles={s} />
+      ) : !isReviews ? (
         <section className={s.section} aria-label="기본 정보">
           <div className={s.fields}>
             <TextField label="이름" value={DEMO.name} readOnly />

@@ -2,6 +2,7 @@ import type {
   DataEnvelope,
   IsoDate,
   NotificationType,
+  Role,
 } from './common';
 
 /**
@@ -464,14 +465,100 @@ export interface PaymentStatementsDto {
 
 export type ApiBusinessType = 'BUSINESS' | 'INDIVIDUAL';
 
+/* ── 계정·프로필 ── */
+export type ApiPortfolioItem = { type: 'LINK' | 'FILE'; url: string; title?: string };
+export type ApiPortfolioSummaryStatus = 'DRAFT' | 'PUBLISHED' | 'HIDDEN';
+
+/** GET /me — 계정 기본 정보. 로그인 수단(구글 연결·비밀번호 유무)은 돌려주지 않는다. */
+export interface MeDto {
+  id: string;
+  email: string;
+  role: Role;
+  name: string | null;
+  profileImageUrl: string | null;
+  bio: string | null;
+  termsVersion: string | null;
+  termsAgreedAt: IsoDate | null;
+  createdAt: IsoDate;
+}
+
+/** GET/PATCH /me/client-profile. 프로필 행이 없으면 data는 null. */
+export interface MyClientProfileDto {
+  name: string | null;
+  profileImageUrl: string | null;
+  bio: string | null;
+  businessName: string | null;
+  industryField: string | null;
+  storeAddress: string | null;
+  websiteUrl: string | null;
+  profileCompleted: boolean;
+}
+
+/** GET/PATCH /me/supplier-profile. 프로필 행이 없으면 data는 null. */
 export interface MySupplierProfileDto {
+  name: string | null;
+  profileImageUrl: string | null;
+  bio: string | null;
   displayName: string;
+  industryCodes: string[];
+  skills: string[];
+  careerYears: number | null;
+  /** 저장된 JSON 그대로 — FILE의 url은 비공개 저장소 경로다. */
+  portfolioItems: ApiPortfolioItem[] | null;
+  portfolioSummary: string | null;
+  portfolioSummaryStatus: ApiPortfolioSummaryStatus | null;
+  portfolioConsentAt: IsoDate | null;
+  ndaAgreedAt: IsoDate | null;
+  ndaVersion: string | null;
   businessType: ApiBusinessType | null;
   bizRegNoMasked: string | null;
   payoutBank: string | null;
   payoutAccountMasked: string | null;
   payoutHolder: string | null;
   payoutVerifiedAt: IsoDate | null;
+  ratingAvg: number | null;
+  reviewCount: number;
+}
+
+/** GET /projects/{projectId}/client-profile — 공급자 전용, NDA 동의와 명세 상세 열람 후. 열람 기록이 남는다. */
+export interface ClientProjectProfileDto {
+  name: string | null;
+  profileImageUrl: string | null;
+  bio: string | null;
+  businessName: string;
+  industryField: string | null;
+  storeAddress: string | null;
+  websiteUrl: string | null;
+  createdAt: IsoDate;
+  ratingAvg: number | null;
+  reviewCount: number;
+  recruitingProjectCount: number;
+}
+
+export interface UpdateClientProfileRequestDto {
+  name?: string | null;
+  profileImageUrl?: string | null;
+  bio?: string | null;
+  businessName?: string | null;
+  industryField?: string | null;
+  storeAddress?: string | null;
+  websiteUrl?: string | null;
+}
+
+export interface UpdateSupplierProfileRequestDto {
+  name?: string | null;
+  profileImageUrl?: string | null;
+  bio?: string | null;
+  displayName?: string;
+  industryCodes?: string[];
+  /** 최대 40개, 각 100자 이하. */
+  skills?: string[];
+  /** 0~80 정수. */
+  careerYears?: number | null;
+  /** 최대 30개. LINK는 https만, FILE은 본인 portfolio 경로만. 바꾸면 요약·요약 동의가 초기화된다. */
+  portfolioItems?: ApiPortfolioItem[] | null;
+  portfolioConsent?: boolean;
+  ndaConsent?: boolean;
 }
 
 export interface TaxInfoResultDto {
@@ -973,16 +1060,12 @@ export type BApiEmptyJsonBodyOperation =
 
 /** Request bodies keyed by matching OpenAPI operationId. */
 export interface BApiRequestBodies {
-  /** A API: only the fields this client sends today. */
-  updateSupplierProfile: { ndaConsent?: boolean; displayName?: string };
-  updateClientProfile: {
-    name?: string;
-    bio?: string | null;
-    businessName?: string;
-    industryField?: string;
-    storeAddress?: string | null;
-    websiteUrl?: string | null;
-  };
+  /* ── 계정·프로필 ── */
+  updateSupplierProfile: UpdateSupplierProfileRequestDto;
+  updateClientProfile: UpdateClientProfileRequestDto;
+  changePassword: { currentPassword?: string; newPassword: string };
+  requestEmailChange: { email: string };
+  disconnectGoogle: { password: string };
   updateClientTaxInfo: { bizRegNo?: string | null; taxInvoiceEmail?: string | null };
   updateSupplierTaxInfo: {
     businessType?: ApiBusinessType | null;
@@ -1101,9 +1184,17 @@ export interface BApiResponses {
   getSupplierProfile: DataEnvelope<SupplierPublicProfileDto>;
   listPublicProjects: DataEnvelope<PublicProjectListItemDto[]>;
   getSupplierProjectDetail: DataEnvelope<SupplierProjectDetailDto>;
-  updateSupplierProfile: DataEnvelope<unknown>;
-  updateClientProfile: DataEnvelope<unknown>;
-  getMySupplierProfile: DataEnvelope<MySupplierProfileDto>;
+  /* ── 계정·프로필 ── */
+  updateSupplierProfile: DataEnvelope<MySupplierProfileDto | null>;
+  updateClientProfile: DataEnvelope<MyClientProfileDto | null>;
+  getMySupplierProfile: DataEnvelope<MySupplierProfileDto | null>;
+  getMyClientProfile: DataEnvelope<MyClientProfileDto | null>;
+  getClientProjectProfile: DataEnvelope<ClientProjectProfileDto>;
+  getMe: DataEnvelope<MeDto>;
+  changePassword: DataEnvelope<{ passwordChanged: true }>;
+  requestEmailChange: DataEnvelope<{ requested: true }>;
+  disconnectGoogle: DataEnvelope<{ googleDisconnected: true }>;
+  withdrawAccount: DataEnvelope<{ withdrawnAt: IsoDate }>;
   updateClientTaxInfo: DataEnvelope<TaxInfoResultDto>;
   updateSupplierTaxInfo: DataEnvelope<TaxInfoResultDto>;
   updatePayoutAccount: DataEnvelope<PayoutAccountResultDto>;

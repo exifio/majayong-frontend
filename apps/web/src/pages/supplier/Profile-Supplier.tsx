@@ -20,6 +20,7 @@ import {
 } from './Profile-Supplier.data';
 import { LiveReceivedReviews } from '@/components/review/LiveReceivedReviews';
 import { useSession } from '@/app/session';
+import { LiveSupplierProfileForm } from '@/components/account/LiveSupplierProfileForm';
 import s from './Profile-Supplier.module.css';
 
 function SummaryChip({ state }: { state: SummaryState }) {
@@ -48,7 +49,14 @@ export default function ProfileSupplier() {
   const [portfolio, setPortfolio] = useState<string>(DEMO.portfolioValue);
   const [saved, setSaved] = useState(false);
 
+  // 토큰이 있고 ?mock=이 없으면 기본 정보는 실제 프로필 API를 쓴다. 실제 화면의 탭 이동은 mock을 붙이지 않는다.
+  const liveForm = live && !params.has('mock');
+
   const setTab = (key: string) => {
+    if (liveForm) {
+      navigate(key === 'reviews' ? '/s/profile?tab=reviews' : '/s/profile', { replace: true });
+      return;
+    }
     if (key === 'reviews') {
       navigate('/s/profile?tab=reviews&mock=' + encodeURIComponent('받은 리뷰'), { replace: true });
     } else {
@@ -89,7 +97,9 @@ export default function ProfileSupplier() {
         onChange={setTab}
       />
 
-      {!isReviews ? (
+      {!isReviews && liveForm ? (
+        <LiveSupplierProfileForm styles={s} skillOptions={DEMO.skillOptions} />
+      ) : !isReviews ? (
         <section className={s.section} aria-label="기본 정보">
           <div className={s.fields}>
             <TextField

@@ -1,10 +1,12 @@
 /* 회원가입 ③ 의뢰인 프로필 — 보드 Signup-Client · /signup/client · M1
- * 상태: 없음. F-07. Stepper는 Signup · Signup-Role과 같은 모양(이 파일 안). */
+ * 상태: 없음. F-07. PATCH /me/client-profile이 받는 상호·업종·주소·웹사이트·소개만 보낸다(규모 필드는 백엔드에 없음).
+ * Stepper는 Signup · Signup-Role과 같은 모양(이 파일 안). */
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button, Note, TextAreaField, TextField } from '@/components/ui';
 import { apiRequest } from '@/lib/api';
 import { useSession } from '@/app/session';
+import { isHttpsUrl } from '@/lib/account-profile';
 import { DEMO } from './Signup-Client.data';
 import s from './Signup-Client.module.css';
 
@@ -39,7 +41,8 @@ export default function SignupClient() {
 
   const [biz, setBiz] = useState('');
   const [industry, setIndustry] = useState('');
-  const [scale, setScale] = useState('');
+  const [address, setAddress] = useState('');
+  const [website, setWebsite] = useState('');
   const [intro, setIntro] = useState('');
   const [tried, setTried] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -47,6 +50,8 @@ export default function SignupClient() {
 
   const bizEmpty = biz.trim().length === 0;
   const bizError = tried && bizEmpty ? DEMO.bizError : undefined;
+  const websiteInvalid = website.trim().length > 0 && !isHttpsUrl(website.trim());
+  const websiteError = tried && websiteInvalid ? DEMO.websiteError : undefined;
 
   const saveProfile = async () => {
     setBusy(true);
@@ -58,6 +63,8 @@ export default function SignupClient() {
         jsonBody: {
           businessName: biz.trim(),
           ...(industry ? { industryField: industry } : {}),
+          ...(address.trim() ? { storeAddress: address.trim() } : {}),
+          ...(website.trim() ? { websiteUrl: website.trim() } : {}),
           ...(intro.trim() ? { bio: intro.trim() } : {}),
         },
       });
@@ -70,7 +77,7 @@ export default function SignupClient() {
   };
 
   const finish = () => {
-    if (bizEmpty) {
+    if (bizEmpty || websiteInvalid) {
       setTried(true);
       return;
     }
@@ -119,12 +126,23 @@ export default function SignupClient() {
         </div>
 
         <TextField
-          label={DEMO.scale}
-          placeholder={DEMO.scalePlaceholder}
+          label={DEMO.address}
+          placeholder={DEMO.addressPlaceholder}
           optional
-          value={scale}
-          onChange={(e) => setScale(e.target.value)}
-          hint={DEMO.scaleHint}
+          value={address}
+          onChange={(e) => setAddress(e.target.value)}
+          hint={DEMO.addressHint}
+        />
+
+        <TextField
+          label={DEMO.website}
+          placeholder={DEMO.websitePlaceholder}
+          optional
+          type="url"
+          value={website}
+          onChange={(e) => setWebsite(e.target.value)}
+          error={websiteError}
+          hint={DEMO.websiteHint}
         />
 
         <TextAreaField

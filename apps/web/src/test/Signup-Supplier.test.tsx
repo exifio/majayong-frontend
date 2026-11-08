@@ -33,8 +33,8 @@ describe('Signup-Supplier — 회원가입 ③ 공급자 프로필', () => {
     expect(within(root).getByText(DEMO.ndaNeed)).toBeTruthy();
   });
 
-  it('가입 완료: 활동 이름·NDA 동의를 PATCH하고 /s로 이동한다', async () => {
-    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(jsonResponse({ data: {} }));
+  it('가입 완료: 활동 이름·NDA·요약 동의를 PATCH하고 개인/사업자 구분을 저장한 뒤 /s로 이동한다', async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockImplementation(async () => jsonResponse({ data: {} }));
     vi.stubGlobal('fetch', fetchMock);
     const { container } = renderAt('/signup/supplier', 'supplier', undefined, 'test-token');
     const root = container.querySelector('[data-screen="Signup-Supplier"]') as HTMLElement;
@@ -60,13 +60,17 @@ describe('Signup-Supplier — 회원가입 ③ 공급자 프로필', () => {
     expect(JSON.parse(String(init?.body))).toEqual({
       displayName: '실제 공급자',
       ndaConsent: true,
+      portfolioConsent: true,
     });
+    const taxCall = fetchMock.mock.calls.find(([p]) => String(p).endsWith('/me/supplier-tax-info'));
+    expect(taxCall?.[1]?.method).toBe('PATCH');
+    expect(JSON.parse(String(taxCall?.[1]?.body))).toEqual({ businessType: 'INDIVIDUAL' });
 
     expect(findDesignViolations(container)).toEqual([]);
   });
 
   it('나중에 입력하기: NDA 동의를 PATCH한 뒤 /s로 이동한다', async () => {
-    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(jsonResponse({ data: {} }));
+    const fetchMock = vi.fn<typeof fetch>().mockImplementation(async () => jsonResponse({ data: {} }));
     vi.stubGlobal('fetch', fetchMock);
     const { container } = renderAt('/signup/supplier', 'supplier', undefined, 'test-token');
     const root = container.querySelector('[data-screen="Signup-Supplier"]') as HTMLElement;

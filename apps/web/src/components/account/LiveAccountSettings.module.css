@@ -1,0 +1,7 @@
+/* 계정 설정 실제 API 화면의 보조 문구 — 레이아웃은 각 페이지 module을 그대로 쓴다. */
+.error {
+  margin: 8px 0 0;
+  color: var(--red-600);
+  font-size: var(--fs-sub);
+  line-height: var(--lh-body);
+}

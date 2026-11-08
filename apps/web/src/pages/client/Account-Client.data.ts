@@ -29,8 +29,8 @@ export const DEMO = {
   googleUnlink: '연결 해제',
 
   notifyLabel: '알림',
-  notifyValue: '이메일 · 인앱 알림 받음',
-  notifyEdit: '알림 설정',
+  /* 알림 설정 API가 없어 저장하는 척하는 버튼을 두지 않는다. */
+  notifyValue: '알림은 화면 위 알림함으로 받습니다. 알림 설정은 아직 따로 바꿀 수 없습니다.',
 
   leaveLabel: '탈퇴',
   leaveValue: '진행 중 계약이 있으면 탈퇴할 수 없습니다.',

@@ -1,10 +1,14 @@
 /* 회원가입 ③ 공급자 프로필 — 보드 Signup-Supplier · /signup/supplier · M1
- * 상태: 없음. F-07 · F-21 · 7.2. Stepper는 Signup · Signup-Role과 같은 모양(이 파일 안). */
+ * 상태: 없음. F-07 · F-21 · 7.2.
+ * 가입 완료: PATCH /me/supplier-profile(활동 이름·경력·기술 스택·포트폴리오 링크·NDA·요약 동의) 뒤
+ * PATCH /me/supplier-tax-info(개인/사업자 구분). Stepper는 Signup · Signup-Role과 같은 모양(이 파일 안). */
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button, ConfirmCheck, SelectCards, TextField } from '@/components/ui';
 import { apiRequest } from '@/lib/api';
 import { useSession } from '@/app/session';
+import type { UpdateSupplierProfileRequestDto } from '@majayong/types/api';
+import { isHttpsUrl } from '@/lib/account-profile';
 import { DEMO } from './Signup-Supplier.data';
 import s from './Signup-Supplier.module.css';
 
@@ -59,15 +63,31 @@ export default function SignupSupplier() {
     );
   };
 
-  const saveProfile = async (displayName: string) => {
+  const careerText = career.trim();
+  const careerYears = careerText === '' ? null : Number(careerText);
+  const careerInvalid = careerYears !== null && (!Number.isInteger(careerYears) || careerYears < 0 || careerYears > 80);
+  const careerError = tried && careerInvalid ? DEMO.careerError : undefined;
+  const portfolioUrl = portfolio.trim();
+  const portfolioInvalid = portfolioUrl.length > 0 && !isHttpsUrl(portfolioUrl);
+  const portfolioError = tried && portfolioInvalid ? DEMO.portfolioError : undefined;
+
+  const saveProfile = async (body: UpdateSupplierProfileRequestDto, withBusinessType: boolean) => {
     setBusy(true);
     setError(null);
     try {
       await apiRequest('updateSupplierProfile', '/me/supplier-profile', {
         method: 'PATCH',
         accessToken: apiAccessToken,
-        jsonBody: { displayName, ndaConsent: true },
+        jsonBody: body,
       });
+      if (withBusinessType) {
+        // 개인/사업자 구분은 프로필이 아니라 증빙 정보(계정 설정의 정산 구분)에 저장된다.
+        await apiRequest('updateSupplierTaxInfo', '/me/supplier-tax-info', {
+          method: 'PATCH',
+          accessToken: apiAccessToken,
+          jsonBody: { businessType: type === 'business' ? 'BUSINESS' : 'INDIVIDUAL' },
+        });
+      }
       navigate('/s', { replace: true });
     } catch {
       setError('프로필을 저장하지 못했습니다. 다시 시도해 주세요.');
@@ -78,17 +98,29 @@ export default function SignupSupplier() {
 
   const finish = () => {
     if (!agreesOk) return;
-    if (nameEmpty) {
+    if (nameEmpty || careerInvalid || portfolioInvalid) {
       setTried(true);
       return;
     }
-    void saveProfile(name.trim());
+    void saveProfile({
+      displayName: name.trim(),
+      ...(careerYears !== null ? { careerYears } : {}),
+      ...(skills.length ? { skills } : {}),
+      ...(portfolioUrl ? { portfolioItems: [{ type: 'LINK' as const, url: portfolioUrl }] } : {}),
+      ndaConsent: true,
+      portfolioConsent: true,
+    }, true);
   };
 
+  /** 나중에 입력하기: 활동 이름(없으면 이메일 아이디)과 동의만 저장한다. */
   const skip = () => {
     if (!ndaOk) return;
     const emailName = authUser?.email.split('@', 1)[0]?.trim();
-    void saveProfile(name.trim() || emailName || '공급자');
+    void saveProfile({
+      displayName: name.trim() || emailName || '공급자',
+      ndaConsent: true,
+      ...(aiOk ? { portfolioConsent: true } : {}),
+    }, false);
   };
   return (
     <div className={s.page} data-screen="Signup-Supplier">
@@ -138,9 +170,10 @@ export default function SignupSupplier() {
           optional
           type="number"
           min={0}
-          max={50}
+          max={80}
           value={career}
           onChange={(e) => setCareer(e.target.value)}
+          error={careerError}
           hint={DEMO.careerHint}
         />
 
@@ -173,6 +206,7 @@ export default function SignupSupplier() {
           type="url"
           value={portfolio}
           onChange={(e) => setPortfolio(e.target.value)}
+          error={portfolioError}
           hint={DEMO.portfolioHint}
         />
       </div>
