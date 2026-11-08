@@ -222,6 +222,14 @@ const ICON_KIND: Record<NotificationType, 'neutral' | 'message' | 'done' | 'dead
   DEPOSIT_DUE: 'deadline', INSPECTION_DUE: 'deadline', WORK_DUE: 'deadline', WORK_OVERDUE: 'deadline',
 };
 const ICON = { neutral: InfoIcon, message: MessageSquare, done: CheckCircle2, deadline: CalendarClock };
+type IconKind = keyof typeof ICON;
+
+/** 서버가 새 알림 종류를 먼저 내보내도 드롭다운이 깨지지 않도록 모르는 종류는 중립 아이콘으로 보인다. */
+export function notificationIconKind(type: string): IconKind {
+  return Object.prototype.hasOwnProperty.call(ICON_KIND, type) ? ICON_KIND[type as NotificationType] : 'neutral';
+}
+
+const FALLBACK_NOTIFICATION_MESSAGE = '새 알림이 있습니다.';
 
 /* ── 알림 드롭다운 ── 페이지 없음, 폭 440, 최근 30일. 데이터 연결은 M3 */
 type NotificationLoadState = 'idle' | 'loading' | 'success' | 'auth-error' | 'error';
@@ -244,6 +252,7 @@ export function NotificationDropdown({
   onRetry: () => void;
 }) {
   const { open, setOpen, ref, btnRef } = usePopover();
+  const { pathname } = useLocation();
   const [tab, setTab] = useState('all');
   const shown = tab === 'unread' ? items.filter((item) => !item.isRead) : items;
 
@@ -288,15 +297,15 @@ export function NotificationDropdown({
               <li><p role="status" style={{ padding: '12px 16px' }}>{tab === 'unread' ? '안 읽은 알림이 없습니다.' : '새 알림이 없습니다.'}</p></li>
             )}
             {loadState === 'success' && shown.map((notification) => {
-              const kind = ICON_KIND[notification.type];
+              const kind = notificationIconKind(notification.type);
               const Icon = ICON[kind];
               return (
                 <li key={notification.id}>
-                  <Link className={s.ddRow} to={notification.targetUrl} data-unread={!notification.isRead}
+                  <Link className={s.ddRow} to={notification.targetUrl || pathname} data-unread={!notification.isRead}
                     onClick={() => { onMarkRead(notification); setOpen(false); }}>
                     <span className={`${s.ddIcon} ${s[`ic-${kind}`]}`} aria-hidden="true"><Icon size={16} /></span>
                     <span className={s.ddText}>
-                      <p className={s.ddMsg}>{notification.message}</p>
+                      <p className={s.ddMsg}>{notification.message || FALLBACK_NOTIFICATION_MESSAGE}</p>
                     </span>
                     {!notification.isRead && <span className={s.ddUnreadDot} aria-label="안 읽음" />}
                   </Link>

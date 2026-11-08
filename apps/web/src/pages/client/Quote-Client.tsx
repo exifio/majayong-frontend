@@ -1,17 +1,26 @@
 /* 견적서 상세 — 보드 Quote-Client · /c/projects/:pid/proposals?modal=quote · M3
- * 상태: 최준호(채팅에서 수정) / 김세라 / 스튜디오 넛(불가 1건) / 이전 명세 기준 / 거절 확인
- * 모달 틀은 App. 본문만. sid · mock으로 공급자. F-09 · ㉜ */
-import { useEffect, useState } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router-dom';
+ * 상태: 최준호(채팅에서 수정) / 김세라 / 스튜디오 넛(불가 1건) / 이전 명세 기준 / 거절 확인 (?mock 시연, 개발 환경에서만)
+ * 실제: sid(지원 ID 또는 공급자 ID)를 GET /projects/:pid/applications 목록에서 찾아
+ * GET /applications/:applicationId 상세(LiveApplicationDetail)를 보여 준다. 시연 데이터는 쓰지 않는다.
+ * 모달 틀은 App. 본문만. F-09 · ㉜ */
+import { useCallback, useEffect, useState } from 'react';
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
   Button,
   ConfirmDialog,
+  EmptyState,
+  LoadingState,
   MaskedText,
   Money,
   Note,
   StatusChip,
 } from '@/components/ui';
+import { LiveApplicationDetail } from '@/components/project/LiveApplicationDetail';
+import { useSession } from '@/app/session';
+import { ApiRequestError, apiRequest } from '@/lib/api';
 import { formatWon } from '@/lib/format';
+import type { SupplierApplicationCardDto } from '@majayong/types/api';
+import compareStyles from './Compare-Client.module.css';
 import {
   DEMO,
   DEFAULT_PID,
@@ -24,6 +33,113 @@ import {
 import s from './Quote-Client.module.css';
 
 export default function QuoteClient() {
+  const [params] = useSearchParams();
+  const { apiAccessToken } = useSession();
+  const demoMode = import.meta.env.DEV && (!apiAccessToken.trim() || params.get('mock') !== null);
+  return demoMode ? <DemoQuote /> : <LiveQuote />;
+}
+
+/** App ModalLayer와 같이 modal · sid · next만 지운다. */
+const CLOSE_PARAMS = ['modal', 'sid', 'next'];
+
+type LiveQuoteState =
+  | { kind: 'loading' }
+  | { kind: 'error'; message: string }
+  | { kind: 'ready'; card: SupplierApplicationCardDto | null };
+
+function LiveQuote() {
+  const { pid = '' } = useParams();
+  const [params] = useSearchParams();
+  const navigate = useNavigate();
+  const loc = useLocation();
+  const { apiAccessToken } = useSession();
+  const sid = params.get('sid')?.trim() ?? '';
+  const [state, setState] = useState<LiveQuoteState>({ kind: 'loading' });
+  const [retry, setRetry] = useState(0);
+
+  const close = useCallback(() => {
+    const next = new URLSearchParams(params);
+    CLOSE_PARAMS.forEach((key) => next.delete(key));
+    const q = next.toString();
+    navigate(`${loc.pathname}${q ? `?${q}` : ''}`, { replace: true });
+  }, [params, navigate, loc.pathname]);
+
+  useEffect(() => {
+    if (!sid || !pid) return;
+    const controller = new AbortController();
+    setState({ kind: 'loading' });
+    apiRequest('listProjectApplications', `/projects/${encodeURIComponent(pid)}/applications`, {
+      accessToken: apiAccessToken,
+      signal: controller.signal,
+    }).then((response) => {
+      const card = response.data.find((item) => item.applicationId === sid)
+        ?? response.data.find((item) => item.supplierId === sid)
+        ?? null;
+      setState({ kind: 'ready', card });
+    }).catch((caught: unknown) => {
+      if (caught instanceof Error && caught.name === 'AbortError') return;
+      setState({
+        kind: 'error',
+        message: caught instanceof ApiRequestError && caught.status === 401
+          ? 'API 토큰 인증에 실패했습니다. 토큰을 확인해 주세요.'
+          : '견적서를 불러오지 못했습니다.',
+      });
+    });
+    return () => controller.abort();
+  }, [pid, sid, apiAccessToken, retry]);
+
+  if (!sid || !pid) {
+    return (
+      <div className={s.page} data-screen="Quote-Client">
+        <EmptyState title="열 견적서를 고르지 않았습니다" action={<Button variant="ghost" onClick={close}>제안 비교로 돌아가기</Button>}>
+          제안 비교 목록에서 지원서를 열어 확인해 주세요.
+        </EmptyState>
+      </div>
+    );
+  }
+
+  if (state.kind === 'loading') {
+    return (
+      <div className={s.page} data-screen="Quote-Client">
+        <LoadingState label="견적서를 불러오는 중입니다." />
+      </div>
+    );
+  }
+
+  if (state.kind === 'error') {
+    return (
+      <div className={s.page} data-screen="Quote-Client">
+        <p role="alert">{state.message}</p>
+        <Button variant="ghost" onClick={close}>닫기</Button>
+        <Button variant="tint" onClick={() => setRetry((count) => count + 1)}>다시 시도</Button>
+      </div>
+    );
+  }
+
+  if (state.card === null) {
+    return (
+      <div className={s.page} data-screen="Quote-Client">
+        <EmptyState title="견적서를 찾을 수 없습니다" action={<Button variant="ghost" onClick={close}>제안 비교로 돌아가기</Button>}>
+          이 프로젝트에 해당 지원서가 없거나 철회되었습니다. 제안 비교 목록에서 다시 확인해 주세요.
+        </EmptyState>
+      </div>
+    );
+  }
+
+  return (
+    <div className={s.page} data-screen="Quote-Client">
+      <LiveApplicationDetail
+        applicationId={state.card.applicationId}
+        projectId={pid}
+        supplierId={state.card.supplierId}
+        styles={compareStyles}
+        onClose={close}
+      />
+    </div>
+  );
+}
+
+function DemoQuote() {
   const { pid = DEFAULT_PID } = useParams();
   const [params, setParams] = useSearchParams();
   const mock = resolveQuoteMock(params.get('mock'));

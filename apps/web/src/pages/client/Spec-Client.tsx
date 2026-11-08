@@ -16,13 +16,17 @@ import {
 import { useSession } from '@/app/session';
 import { ApiRequestError, apiRequest } from '@/lib/api';
 import { projectStatusLabel } from '@/lib/project-adapter';
-import type { MyProjectDto } from '@majayong/types/api';
+import { formatDateInput } from '@/lib/draft-adapter';
+import type { ExtendDeadlineResultDto, MyProjectDto } from '@majayong/types/api';
 import {
   DEMO,
   DRAFT_HREF,
   DEFAULT_PID,
+  EXTENDABLE_STATUSES,
+  EXTEND_ERROR_MESSAGES,
   MY_HREF,
   compareHref,
+  extendedDeadlineOf,
   isWithinExtend,
   resolveSpecMock,
   specDemoOf,
@@ -42,6 +46,8 @@ function LiveSpec({ pid }: { pid: string }) {
   const [project, setProject] = useState<MyProjectDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [extOpen, setExtOpen] = useState(false);
+  const [extended, setExtended] = useState<string | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -80,6 +86,7 @@ function LiveSpec({ pid }: { pid: string }) {
   }
 
   const deadline = project.deadline ? new Date(project.deadline).toLocaleDateString('ko-KR') : '정하지 않음';
+  const canExtend = project.deadline !== null && (EXTENDABLE_STATUSES as readonly string[]).includes(project.status);
   return (
     <div className={s.page} data-screen="Spec-Client">
       <p className={s.crumb}>
@@ -99,6 +106,14 @@ function LiveSpec({ pid }: { pid: string }) {
           명세 버전 <b>{project.currentVersion}</b>
         </p>
       </div>
+
+      {extended && (
+        <div className={s.startedBand}>
+          <Band tone="done" title="모집 마감을 연장했습니다">
+            새 마감은 {extended}입니다. 받은 견적은 그대로 두고 지원을 계속 받습니다.
+          </Band>
+        </div>
+      )}
 
       <div className={s.lay}>
         <div>
@@ -126,11 +141,122 @@ function LiveSpec({ pid }: { pid: string }) {
                 제안 비교 보기
               </Button>
               <Button variant="ghost" full to="/c/projects">내 프로젝트로</Button>
+              {canExtend ? (
+                <div className={s.extendLink}>
+                  <Button variant="text" onClick={() => setExtOpen(true)}>마감 연장</Button>
+                </div>
+              ) : null}
             </div>
           </section>
+          <p className={s.railNote}>명세 내용 고치기는 아직 이 화면에서 지원하지 않습니다. 마감 연장은 모집 중 · 선정 중 · 마감된 프로젝트에서 할 수 있습니다.</p>
         </aside>
       </div>
+
+      {extOpen && project.deadline && (
+        <LiveExtendModal
+          pid={pid}
+          currentDeadline={project.deadline}
+          onClose={() => setExtOpen(false)}
+          onDone={(next) => {
+            setProject((current) => current ? { ...current, deadline: next.deadline, status: next.status, selectionEndsAt: null } : current);
+            setExtended(new Date(next.deadline).toLocaleDateString('ko-KR'));
+            setExtOpen(false);
+          }}
+        />
+      )}
     </div>
+  );
+}
+
+function LiveExtendModal({
+  pid,
+  currentDeadline,
+  onClose,
+  onDone,
+}: {
+  pid: string;
+  currentDeadline: string;
+  onClose: () => void;
+  onDone: (result: ExtendDeadlineResultDto) => void;
+}) {
+  const { apiAccessToken } = useSession();
+  const dateId = useId();
+  const current = new Date(currentDeadline);
+  const minDate = new Date(current.getFullYear(), current.getMonth(), current.getDate() + 1);
+  const maxDate = new Date(current.getFullYear(), current.getMonth(), current.getDate() + DEMO.extendMaxDays);
+  const [picked, setPicked] = useState(formatDateInput(new Date(current.getFullYear(), current.getMonth(), current.getDate() + 7)));
+  const [busy, setBusy] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const next = extendedDeadlineOf(currentDeadline, picked);
+
+  async function submit() {
+    if (!next || busy) return;
+    setBusy(true);
+    setSubmitError(null);
+    try {
+      const response = await apiRequest('extendProjectDeadline', `/projects/${encodeURIComponent(pid)}/extend-deadline`, {
+        method: 'POST',
+        accessToken: apiAccessToken,
+        jsonBody: { deadline: next.toISOString() },
+      });
+      onDone(response.data);
+    } catch (caught) {
+      setSubmitError(caught instanceof ApiRequestError
+        ? EXTEND_ERROR_MESSAGES[caught.code] ?? '마감을 연장하지 못했습니다. 다시 시도해 주세요.'
+        : '마감을 연장하지 못했습니다. 다시 시도해 주세요.');
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Modal
+      title={DEMO.extendTitle}
+      size="content"
+      onClose={onClose}
+      actions={
+        <>
+          <Button variant="ghost" onClick={onClose}>취소</Button>
+          {busy ? (
+            <Button variant="primary" disabled disabledReason="마감을 연장하고 있습니다.">연장 중…</Button>
+          ) : (
+            <Button variant="primary" onClick={() => void submit()} disabled={!next} disabledReason={DEMO.extendHint}>
+              마감 연장
+            </Button>
+          )}
+        </>
+      }
+    >
+      <p className={s.editLead}>{DEMO.extendLead}</p>
+      <div className={s.dr}>
+        <div>
+          <p className={s.drK}>지금 마감</p>
+          <div className={s.now}>{current.toLocaleDateString('ko-KR')}</div>
+        </div>
+        <div className={s.ar} aria-hidden="true">→</div>
+        <div>
+          <p className={s.drK}><label htmlFor={dateId}>새 마감</label></p>
+          <input
+            id={dateId}
+            className={`${s.inp} ${next ? '' : s.inpErr}`}
+            type="date"
+            min={formatDateInput(minDate)}
+            max={formatDateInput(maxDate)}
+            value={picked}
+            onChange={(e) => setPicked(e.target.value)}
+            aria-label="새 마감일"
+            aria-invalid={!next}
+            aria-describedby={next ? `${dateId}-hint` : `${dateId}-err`}
+          />
+        </div>
+      </div>
+      {next ? (
+        <p id={`${dateId}-hint`} className={s.hint}>{DEMO.extendHint} 마감 시각은 지금과 같습니다.</p>
+      ) : (
+        <p id={`${dateId}-err`} className={s.err} role="alert">{DEMO.extendHint}</p>
+      )}
+      {submitError && <p className={s.err} role="alert">{submitError}</p>}
+      <p className={s.hint}>지원은 계속 받고, 이미 받은 견적은 그대로 둡니다. 모집 상태는 다시 &apos;모집 중&apos;이 됩니다.</p>
+    </Modal>
   );
 }
 

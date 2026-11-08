@@ -202,6 +202,41 @@ export interface PublishedProjectDto {
   itemCount: number;
 }
 
+/* ── 초안·프로젝트 ── */
+/** GET /drafts/{draftId}/price-report — 의뢰인 본인 초안만. 확정된 초안은 409 DRAFT_ALREADY_CONFIRMED. */
+export interface PriceReportItemDto {
+  blockId: string;
+  name: string;
+  status: 'ADDED' | 'REMOVED' | 'SUGGESTED';
+  unitPrice: number;
+  /** 근거 한 문자열(줄바꿈으로 나뉜 3줄: 들어간 작업 / 작업량 기준 / 달라질 수 있는 것) */
+  priceBasis: string;
+  includedInEstimate: boolean;
+  /** 포함 항목 합계 대비 비중(소수 1자리), 제외 항목은 0 */
+  sharePercent: number;
+}
+
+export interface PriceReportDto {
+  subtotal: number;
+  clientFee: number;
+  estimatedTotal: number;
+  pendingFeatureCount: number;
+  items: PriceReportItemDto[];
+}
+
+/** POST /drafts/{draftId}/apply-estimate — 본문 없음. 희망 예산을 예상 총액으로 바꾼다. */
+export interface ApplyEstimateResultDto {
+  hopeBudget: number;
+  estimatedTotal: number;
+}
+
+/** POST /projects/{projectId}/extend-deadline — 기존 마감 이후 14일 이내, RECRUITING · SELECTING · EXPIRED만. */
+export interface ExtendDeadlineResultDto {
+  projectId: string;
+  deadline: IsoDate;
+  status: ApiProjectStatus;
+}
+
 /** Public supplier profile (GET /profiles/suppliers/{supplierId}). */
 export interface SupplierPublicProfileDto {
   supplierId: string;
@@ -1108,6 +1143,8 @@ export interface BApiRequestBodies {
   addDraftBlock: { blockId: string };
   updateConditionNote: { key: string; note: string };
   updateHopeBudget: { hopeBudget: number | null };
+  /* ── 초안·프로젝트 ── */
+  extendProjectDeadline: { deadline: IsoDate };
   publishDraft: {
     recruitStartAt?: IsoDate;
     deadline: IsoDate;
@@ -1172,6 +1209,10 @@ export interface BApiResponses {
   updateConditionNote: DataEnvelope<DraftDto>;
   updateHopeBudget: DataEnvelope<DraftDto>;
   publishDraft: DataEnvelope<PublishedProjectDto>;
+  /* ── 초안·프로젝트 ── */
+  getDraftPriceReport: DataEnvelope<PriceReportDto>;
+  applyDraftEstimate: DataEnvelope<ApplyEstimateResultDto>;
+  extendProjectDeadline: DataEnvelope<ExtendDeadlineResultDto>;
   getApplication: DataEnvelope<ApplicationRevisionDto>;
   withdrawApplication: DataEnvelope<ApplicationStatusResultDto>;
   rejectApplication: DataEnvelope<ApplicationStatusResultDto>;

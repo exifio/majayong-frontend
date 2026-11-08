@@ -26,3 +26,14 @@ describe('notificationToItem — 문의 답변 알림', () => {
     expect(item.message).not.toContain('예치');
   });
 });
+
+describe('notificationToItem — 모르는 알림 종류', () => {
+  it('기본 문구와 서버 링크를 쓰고, 링크가 없으면 역할 홈으로 보낸다', () => {
+    const unknown = { type: 'SOMETHING_NEW' as NotificationDto['type'] };
+    expect(notificationToItem(notification({ ...unknown, targetUrl: '/c/projects/p-1' }), 'CLIENT')).toMatchObject({
+      message: '새 알림이 있습니다.',
+      targetUrl: '/c/projects/p-1',
+    });
+    expect(notificationToItem(notification({ ...unknown, targetUrl: '' }), 'SUPPLIER').targetUrl).toBe('/s');
+  });
+});

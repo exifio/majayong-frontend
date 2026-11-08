@@ -2,7 +2,7 @@
  * 상태: 기본 / 초안 만드는 중 / 만들기 실패 / 채팅 반영 중
  * 추가 · 삭제 · 되돌리기는 이 화면 상태만 바꾼다. API는 부르지 않는다. */
 import { useEffect, useState } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useParams, useSearchParams } from 'react-router-dom';
 import { Check, Plus } from 'lucide-react';
 import { LoadingState, Attr, Band, Button, Chip, Skeleton, Tabs } from '@/components/ui';
 import { PageHeader } from '@/components/layout/Chrome';
@@ -97,6 +97,25 @@ function LiveDraft({ did }: { did: string }) {
     }).finally(() => setLoading(false));
     return () => controller.abort();
   }, [did, apiAccessToken]);
+
+  // 단가 분석 리포트에서 '예상 총액을 희망 예산으로 반영'하면 history state로 알려 온다. 화면을 가리지 않고 다시 읽는다.
+  const refreshedAt = (useLocation().state as { draftRefreshedAt?: number } | null)?.draftRefreshedAt;
+  useEffect(() => {
+    if (!refreshedAt) return;
+    const controller = new AbortController();
+    apiRequest('getDraft', `/drafts/${encodeURIComponent(did)}`, { accessToken: apiAccessToken, signal: controller.signal })
+      .then((response) => {
+        setDraft(response.data);
+        setScreen(toDraftScreen(response.data));
+        setSaveState('saved');
+      })
+      .catch((caught: unknown) => {
+        if (caught instanceof Error && caught.name === 'AbortError') return;
+        setSaveState('error');
+        setSaveError('바뀐 희망 예산을 불러오지 못했습니다. 화면을 새로고침해 주세요.');
+      });
+    return () => controller.abort();
+  }, [refreshedAt, did, apiAccessToken]);
 
   async function mutate(errorMessage: string, work: () => Promise<DraftDto>): Promise<boolean> {
     setSaveState('saving');
@@ -377,7 +396,6 @@ function LiveDraft({ did }: { did: string }) {
             rawMock={null}
             matched={null}
             hopeBudget={screen.hopeBudget}
-            showReport={false}
             onMatch={() => void matchBudget(quote.total)}
           />
         </section>
