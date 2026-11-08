@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-do
 import { Button, TextField } from '@/components/ui';
 import { AuthError } from '@/app/auth';
 import { ROLE_HOME, useSession } from '@/app/session';
+import { startGoogleOAuth } from '@/app/google-oauth';
 import { DEMO } from './Login.data';
 import s from './Login.module.css';
 
@@ -22,6 +23,16 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [googleError, setGoogleError] = useState(false);
+
+  function loginWithGoogle() {
+    setGoogleError(false);
+    try {
+      startGoogleOAuth();
+    } catch {
+      setGoogleError(true);
+    }
+  }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -58,6 +69,18 @@ export default function Login() {
           <p>{error}</p>
         </div>
       )}
+
+      {googleError && (
+        <div className={s.fail} role="alert">
+          <b>구글 로그인을 시작할 수 없습니다</b>
+          <p>잠시 후 다시 시도해 주세요.</p>
+        </div>
+      )}
+
+      <Button variant="ghost" full className={s.google} onClick={loginWithGoogle}>
+        {DEMO.google}
+      </Button>
+      <div className={s.div}>{DEMO.orEmail}</div>
 
       <form onSubmit={(event) => void submit(event)}>
         <div className={s.fields}>
