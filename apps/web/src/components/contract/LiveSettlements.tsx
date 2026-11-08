@@ -10,6 +10,7 @@ import type {
   PaymentInstallmentDto,
   PaymentStatementDto,
   PaymentStatementsDto,
+  SettlementSummaryDto,
 } from '@majayong/types/api';
 import { LoadingState, EmptyState, Money, Button } from '@/components/ui';
 import { useSession } from '@/app/session';
@@ -41,6 +42,11 @@ function Metric({ label, amount }: { label: string; amount: number }) {
       <span className={s.metricValue}><Money amount={amount} /></span>
     </div>
   );
+}
+
+function isSettlementSummary(value: unknown): value is SettlementSummaryDto {
+  return typeof value === 'object' && value !== null
+    && 'role' in value && 'totals' in value;
 }
 
 /** 세금계산서 표시에 필요한 구간 id(단계별)와 사업자 여부. 한 계약 공급자 화면에서만 채운다. */
@@ -147,6 +153,7 @@ export function LiveSettlements({ role }: { role: Role }) {
   const contractId = params.get('contract');
   const [state, setState] = useState<LoadState>('loading');
   const [data, setData] = useState<PaymentStatementsDto | null>(null);
+  const [summary, setSummary] = useState<SettlementSummaryDto | null>(null);
   const [single, setSingle] = useState<PaymentStatementDto | null>(null);
   const [installmentIds, setInstallmentIds] = useState<Partial<Record<ApiInstallmentStage, string>> | null>(null);
 
@@ -179,9 +186,14 @@ export function LiveSettlements({ role }: { role: Role }) {
           });
         });
     } else {
-      apiRequest('listPaymentStatements', '/me/payment-statements', options)
-        .then((response) => {
+      Promise.all([
+        apiRequest('listPaymentStatements', '/me/payment-statements', options),
+        apiRequest('getMySettlementSummary', '/me/settlements/summary', options)
+          .catch(() => ({ data: null as SettlementSummaryDto | null })),
+      ])
+        .then(([response, summaryResponse]) => {
           setData(response.data);
+          setSummary(isSettlementSummary(summaryResponse.data) ? summaryResponse.data : null);
           setState('ready');
         })
         .catch((error: unknown) => {
@@ -225,6 +237,28 @@ export function LiveSettlements({ role }: { role: Role }) {
   return (
     <div>
       <p className={s.notice}>{data?.transferNote}</p>
+      {summary ? (
+        <section className={s.summary} aria-label="정산 전체 합계">
+          <h2 className={s.summaryTitle}>전체 합계 · 계약 {summary.contractCount}건</h2>
+          <div className={s.summaryGrid}>
+            {summary.role === 'CLIENT' ? (
+              <>
+                <Metric label="예치한 금액" amount={summary.totals.totalDeposited} />
+                <Metric label="공급자에게 지급" amount={summary.totals.paidToSupplier} />
+                <Metric label="남은 예치금" amount={summary.totals.remainingDeposit} />
+                <Metric label="낸 수수료" amount={summary.totals.clientFeePaid} />
+              </>
+            ) : (
+              <>
+                <Metric label="합의 금액" amount={summary.totals.totalAgreed} />
+                <Metric label="받은 금액" amount={summary.totals.totalReceived} />
+                <Metric label="받을 예정" amount={summary.totals.expectedToReceive} />
+                <Metric label="낸 수수료" amount={summary.totals.supplierFeePaid} />
+              </>
+            )}
+          </div>
+        </section>
+      ) : null}
       {statements.length === 0 ? (
         <EmptyState title="아직 정산 내역이 없습니다">
           계약이 체결되고 예치·지급이 진행되면 이곳에 표시됩니다.

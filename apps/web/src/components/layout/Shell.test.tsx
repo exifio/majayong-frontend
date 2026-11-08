@@ -25,6 +25,18 @@ const block = (over: Record<string, unknown>) => ({
 });
 
 function respond(url: string): Response {
+  if (url.includes('/admin/menu-counts')) {
+    return jsonResponse({
+      data: {
+        blocksPending: 2,
+        heldDeposits: 1,
+        escalatedInspections: 3,
+        cancellationQueue: 0,
+        reportsPending: 4,
+        inquiriesWaiting: 2,
+      },
+    });
+  }
   if (url.includes('/admin/blocks')) {
     return jsonResponse({
       data: [
@@ -68,7 +80,7 @@ describe('운영자 셸', () => {
 });
 
 describe('운영자 셸 — 메뉴 배지', () => {
-  it('목록 API 길이로 배지를 세고, 실패한 메뉴에는 배지를 그리지 않는다', async () => {
+  it('메뉴 건수 API로 배지를 세고, 실패한 메뉴에는 배지를 그리지 않는다', async () => {
     const fetchMock = vi.fn<typeof fetch>().mockImplementation(async (input) => respond(String(input)));
     vi.stubGlobal('fetch', fetchMock);
     renderAt('/admin/events', 'admin', undefined, 'test-token');
@@ -80,7 +92,7 @@ describe('운영자 셸 — 메뉴 배지', () => {
     await waitFor(() => expect(link(/이견 개입/).textContent).toBe('이견 개입3'));
     await waitFor(() => expect(link(/신고 처리/).textContent).toBe('신고 처리4'));
     expect(link(/환불 처리/).textContent).toBe('환불 처리');
-    expect(fetchMock.mock.calls.some(([path]) => String(path).includes('/admin/reports?status=OPEN'))).toBe(true);
+    expect(fetchMock.mock.calls.some(([path]) => String(path).includes('/admin/menu-counts'))).toBe(true);
   });
 
   it('토큰이 없으면 시연 숫자를 그리지 않는다', () => {

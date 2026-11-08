@@ -6,7 +6,7 @@ import { LoadingState, Button, ConfirmDialog, MaskedText, Money, StatusChip } fr
 import { useSession } from '@/app/session';
 import { ApiRequestError, apiRequest } from '@/lib/api';
 import { applicationStatusLabel } from '@/lib/application-status';
-import { formatDateTime } from '@/lib/format';
+import { formatDateTime, formatWon } from '@/lib/format';
 
 type State = 'loading' | 'success' | 'auth-error' | 'error';
 
@@ -36,6 +36,7 @@ export function LiveApplicationDetail({
   const [confirming, setConfirming] = useState(false);
   const [rejecting, setRejecting] = useState(false);
   const [rejectError, setRejectError] = useState<string | null>(null);
+  const [revisions, setRevisions] = useState<ApplicationRevisionDto[]>([]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -53,6 +54,12 @@ export function LiveApplicationDetail({
       }).then((preview) => {
         setTitles(Object.fromEntries(preview.data.draft.items.map((item) => [item.specItemId, item.title])));
       }).catch(() => { /* titles are optional */ });
+      apiRequest('listApplicationRevisions', `/applications/${encodeURIComponent(applicationId)}/revisions`, {
+        accessToken: apiAccessToken,
+        signal: controller.signal,
+      }).then((response) => {
+        setRevisions(response.data);
+      }).catch(() => { /* revision history is optional */ });
     }).catch((error: unknown) => {
       if (error instanceof Error && error.name === 'AbortError') return;
       setState(error instanceof ApiRequestError && error.status === 401 ? 'auth-error' : 'error');
@@ -124,6 +131,19 @@ export function LiveApplicationDetail({
             <p className={s.amtK}>지원 금액</p>
             <Money amount={application.totalAmount} size="big" />
           </div>
+
+          {revisions.length > 1 ? (
+            <div className={s.pf}>
+              <p className={s.pfK}>견적 회차 이력</p>
+              <ul>
+                {revisions.map((revision) => (
+                  <li key={revision.id}>
+                    {revision.revisionNo}회차 · {formatWon(revision.totalAmount)} · {revision.durationDays}일 · {formatDateTime(revision.submittedAt)}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
 
           <div className={s.pf}>
             <p className={s.pfK}>지원 메시지</p>

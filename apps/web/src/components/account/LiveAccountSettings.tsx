@@ -1,6 +1,6 @@
 /* 계정 설정 실제 API — 의뢰인 · 공급자 공용.
- * GET /me · POST /me/password/change · POST /me/email/change-request · POST /me/google/disconnect · DELETE /me.
- * 알림 설정 API는 없으므로 저장하는 척하는 컨트롤을 두지 않는다. */
+ * GET /me · POST /me/password/change · POST /me/email/change-request · POST /me/google/disconnect · DELETE /me
+ * · GET/PATCH /me/notification-settings. */
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { MeDto } from '@majayong/types/api';
@@ -9,6 +9,7 @@ import { useSession } from '@/app/session';
 import { apiRequest } from '@/lib/api';
 import { errorCode, isAbort, joinedLabel, newPasswordError } from '@/lib/account-profile';
 import { LiveSettlementInfo } from './LiveSettlementInfo';
+import { LiveNotificationSettings } from './LiveNotificationSettings';
 import own from './LiveAccountSettings.module.css';
 
 type Role = 'CLIENT' | 'SUPPLIER';
@@ -319,13 +320,6 @@ export function LiveAccountSettings({
             </Button>
           </li>
 
-          <li className={s.row}>
-            <div>
-              <p className={s.k}>{ACCOUNT_TEXT.notifyLabel}</p>
-              <p className={s.v}>{ACCOUNT_TEXT.notifyValue}</p>
-            </div>
-          </li>
-
           <li className={`${s.row} ${s.leave}`}>
             <div>
               <p className={s.k}>{ACCOUNT_TEXT.leaveLabel}</p>
@@ -338,6 +332,7 @@ export function LiveAccountSettings({
         </ul>
       ) : null}
 
+      <LiveNotificationSettings />
       <LiveSettlementInfo role={role} />
 
       {dialog === 'email' && me ? (

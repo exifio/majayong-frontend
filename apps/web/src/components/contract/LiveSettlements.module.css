@@ -39,6 +39,27 @@
   margin-top: 14px;
 }
 
+.summary {
+  margin: 16px 0;
+  padding: 18px 20px;
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-card);
+  background: #fff;
+}
+
+.summaryTitle {
+  margin: 0 0 6px;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.summaryGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  margin-top: 10px;
+}
+
 .metric {
   display: flex;
   flex-direction: column;

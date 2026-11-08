@@ -3,6 +3,7 @@
 .crumb a { color: var(--slate-600); }
 .title { margin: 0 0 6px; font-size: var(--fs-page); font-weight: 600; color: var(--slate-900); }
 .sub { margin: 0 0 20px; font-size: var(--fs-body); color: var(--slate-600); line-height: var(--lh-body); }
+.summaryLine { margin: -8px 0 16px; font-size: 14px; color: var(--slate-600); }
 .state { padding: 24px 0; color: var(--slate-600); }
 .stageLine { margin: 0 0 14px; font-weight: 600; color: var(--slate-900); }
 .items { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 16px; }

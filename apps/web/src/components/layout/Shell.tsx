@@ -63,53 +63,27 @@ const NO_QUEUE_COUNTS: AdminQueueCounts = {
   reports: null,
 };
 
-/* 개수 전용 API가 없어 각 목록 API(페이지 없이 전체를 돌려줌)의 길이로 센다.
+/* 개수 전용 API(`GET /admin/menu-counts`)로 한 번에 센다.
  * 실패하거나 모르면 null — 배지를 그리지 않는다(가짜 숫자 금지). */
 function loadAdminQueueCounts(
   accessToken: string,
   signal: AbortSignal,
   onCount: (key: AdminQueueKey, count: number | null) => void,
 ) {
-  const track = (key: AdminQueueKey, request: Promise<number>) => {
-    request
-      .then((count) => onCount(key, count))
-      .catch((error: unknown) => {
-        if (!(error instanceof Error && error.name === 'AbortError')) onCount(key, null);
-      });
-  };
-  track(
-    'blocks',
-    apiRequest('listAdminBlocks', '/admin/blocks', { accessToken, signal }).then(
-      ({ data }) =>
-        data.filter(
-          (row) => row.source === 'AI' && row.reviewedAt === null && row.isActive && !row.mergedIntoId,
-        ).length,
-    ),
-  );
-  track(
-    'payments',
-    apiRequest('listHeldDeposits', '/admin/deposits/held', { accessToken, signal }).then(
-      ({ data }) => data.filter((row) => row.status === 'HELD').length,
-    ),
-  );
-  track(
-    'refunds',
-    apiRequest('listCancellationQueue', '/admin/contracts/cancellation-queue', { accessToken, signal }).then(
-      ({ data }) => data.length,
-    ),
-  );
-  track(
-    'disputes',
-    apiRequest('listEscalatedInspections', '/admin/inspection-requests/escalated', { accessToken, signal }).then(
-      ({ data }) => data.length,
-    ),
-  );
-  track(
-    'reports',
-    apiRequest('listReports', '/admin/reports', { accessToken, signal, query: { status: 'OPEN' } }).then(
-      ({ data }) => data.filter((row) => row.status === 'OPEN').length,
-    ),
-  );
+  apiRequest('getAdminMenuCounts', '/admin/menu-counts', { accessToken, signal })
+    .then(({ data }) => {
+      onCount('blocks', data.blocksPending);
+      onCount('payments', data.heldDeposits);
+      onCount('refunds', data.cancellationQueue);
+      onCount('disputes', data.escalatedInspections);
+      onCount('reports', data.reportsPending);
+    })
+    .catch((error: unknown) => {
+      if (error instanceof Error && error.name === 'AbortError') return;
+      for (const key of ['blocks', 'payments', 'refunds', 'disputes', 'reports'] as const) {
+        onCount(key, null);
+      }
+    });
 }
 
 function AdminShell({ children }: { children: ReactNode }) {

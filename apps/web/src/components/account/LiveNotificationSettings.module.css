@@ -1,0 +1,66 @@
+.card {
+  margin: 24px 0;
+  padding: 20px 22px;
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-card);
+  background: #fff;
+}
+
+.title {
+  margin: 0 0 4px;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--slate-900);
+}
+
+.sub {
+  margin: 0 0 14px;
+  font-size: 14px;
+  color: var(--slate-600);
+}
+
+.list {
+  list-style: none;
+  margin: 0 0 14px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.row {
+  display: flex;
+  align-items: flex-start;
+}
+
+.label {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 14px;
+  color: var(--slate-800);
+  cursor: pointer;
+}
+
+.label input {
+  margin-top: 3px;
+}
+
+.note {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--slate-500);
+}
+
+.notice {
+  margin: 0 0 10px;
+  color: var(--teal-700, #0f766e);
+  font-size: 13px;
+}
+
+.error {
+  margin: 0 0 10px;
+  color: var(--red-600, #dc2626);
+  font-size: 13px;
+}

@@ -44,15 +44,22 @@ afterEach(() => {
 });
 
 describe('LiveAccountSettings — 계정 설정 실제 API', () => {
-  it('GET /me의 이메일·이름을 보여 주고 알림 설정 저장 버튼은 두지 않는다', async () => {
-    stubFetch(() => undefined);
+  it('GET /me의 이메일·이름과 알림 설정 저장 버튼을 보여 준다', async () => {
+    stubFetch((url) => url.endsWith('/me/notification-settings')
+      ? jsonResponse({
+          data: {
+            contract: true, chat: true, recruiting: true,
+            review: true, support: true, marketing: false,
+          },
+        })
+      : undefined);
     const { container } = renderAt('/c/account', 'client', undefined, 'test-token');
     const root = container.querySelector('[data-screen="Account-Client"]') as HTMLElement;
 
     expect(await within(root).findByText('owner@example.com')).toBeTruthy();
     expect(within(root).getByText('정민재')).toBeTruthy();
-    expect(within(root).getByText(/알림 설정은 아직 따로 바꿀 수 없습니다/)).toBeTruthy();
-    expect(within(root).queryByRole('button', { name: '알림 설정' })).toBeNull();
+    expect(await within(root).findByRole('button', { name: '알림 설정 저장' })).toBeTruthy();
+    expect(within(root).getByText('계약·예치·검수·정산')).toBeTruthy();
     expect(findDesignViolations(container)).toEqual([]);
   });
 

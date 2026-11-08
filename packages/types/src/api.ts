@@ -1046,6 +1046,77 @@ export interface InquiryDto {
   createdAt: IsoDate;
 }
 
+export interface InspectionSummaryItemDto {
+  contractItemId: string;
+  title: string;
+  stage: ApiInstallmentStage;
+  approved: boolean;
+  autoApproved: boolean;
+  latestDeliveryStatus: string | null;
+  openInspectionCount: number;
+  escalatedCount: number;
+}
+
+export interface InspectionSummaryDto {
+  contractId: string;
+  totalItems: number;
+  approvedItems: number;
+  pendingItems: number;
+  openInspectionItems: number;
+  escalatedItems: number;
+  installments: Array<{
+    installmentId: string;
+    stage: ApiInstallmentStage;
+    status: string;
+    items: InspectionSummaryItemDto[];
+  }>;
+}
+
+export type SettlementSummaryDto =
+  | {
+      simulated: true;
+      transferNote: string;
+      role: 'CLIENT';
+      contractCount: number;
+      totals: {
+        totalDeposited: number;
+        paidToSupplier: number;
+        remainingDeposit: number;
+        clientFeePaid: number;
+      };
+    }
+  | {
+      simulated: true;
+      transferNote: string;
+      role: 'SUPPLIER';
+      contractCount: number;
+      totals: {
+        totalAgreed: number;
+        totalReceived: number;
+        expectedToReceive: number;
+        supplierFeePaid: number;
+        withholdingTaxTotal: number;
+      };
+    };
+
+export interface NotificationSettingsDto {
+  contract: boolean;
+  chat: boolean;
+  recruiting: boolean;
+  review: boolean;
+  support: boolean;
+  marketing: boolean;
+}
+
+export interface AdminMenuCountsDto {
+  blocksPending: number;
+  heldDeposits: number;
+  escalatedInspections: number;
+  cancellationQueue: number;
+  reportsPending: number;
+  inquiriesWaiting: number;
+}
+
 export interface ApplicationQuestionDto {
   /** Must contain non-blank text and be at most 500 characters. */
   text: string;
@@ -1209,6 +1280,7 @@ export interface BApiRequestBodies {
   updateSupplierProfile: UpdateSupplierProfileRequestDto;
   updateClientProfile: UpdateClientProfileRequestDto;
   changePassword: { currentPassword?: string; newPassword: string };
+  updateNotificationSettings: NotificationSettingsDto;
   requestEmailChange: { email: string };
   disconnectGoogle: { password: string };
   updateClientTaxInfo: { bizRegNo?: string | null; taxInvoiceEmail?: string | null };
@@ -1312,6 +1384,7 @@ export interface BApiResponses {
   listProjectApplications: DataEnvelope<SupplierApplicationCardDto[]>;
   submitApplication: DataEnvelope<ApplicationRevisionDto>;
   listMyApplications: DataEnvelope<ApplicationRevisionDto[]>;
+  listApplicationRevisions: DataEnvelope<ApplicationRevisionDto[]>;
   listMyProjects: DataEnvelope<MyProjectDto[]>;
   getMyProject: DataEnvelope<MyProjectDetailDto>;
   createDraft: DataEnvelope<DraftDto>;
@@ -1372,8 +1445,10 @@ export interface BApiResponses {
   confirmAgreement: DataEnvelope<ConfirmAgreementResultDto>;
   listMyContracts: DataEnvelope<ContractViewDto[]>;
   listPaymentStatements: DataEnvelope<PaymentStatementsDto>;
+  getMySettlementSummary: DataEnvelope<SettlementSummaryDto>;
   getContract: DataEnvelope<ContractViewDto>;
   getContractDocument: DataEnvelope<ContractDocumentDto>;
+  getInspectionSummary: DataEnvelope<InspectionSummaryDto>;
   createDeposit: DataEnvelope<CreateDepositResultDto>;
   listDeposits: DataEnvelope<EscrowDepositDto[]>;
   confirmDeposit: DataEnvelope<ConfirmDepositResultDto>;
@@ -1398,6 +1473,9 @@ export interface BApiResponses {
   getInquiry: DataEnvelope<InquiryDto>;
   listAdminInquiries: DataEnvelope<InquiryDto[]>;
   answerInquiry: DataEnvelope<InquiryDto>;
+  getNotificationSettings: DataEnvelope<NotificationSettingsDto>;
+  updateNotificationSettings: DataEnvelope<NotificationSettingsDto>;
+  getAdminMenuCounts: DataEnvelope<AdminMenuCountsDto>;
   presignUpload: DataEnvelope<PresignUploadResponseDto>;
   presignDownload: DataEnvelope<PresignDownloadResponseDto>;
   listAdminBlocks: DataEnvelope<AdminBlockDto[]>;

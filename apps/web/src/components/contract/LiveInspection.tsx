@@ -10,6 +10,7 @@ import type {
   ContractRecordDto,
   DeliveryDto,
   InspectionRequestDto,
+  InspectionSummaryDto,
 } from '@majayong/types/api';
 import { ApiRequestError, apiRequest } from '@/lib/api';
 import { useSession } from '@/app/session';
@@ -55,6 +56,7 @@ export function LiveInspection({ cid }: { cid: string }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [summary, setSummary] = useState<InspectionSummaryDto | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -63,10 +65,13 @@ export function LiveInspection({ cid }: { cid: string }) {
     Promise.all([
       apiRequest('getContract', `/contracts/${encodeURIComponent(cid)}`, options),
       apiRequest('listContractInstallments', `/contracts/${encodeURIComponent(cid)}/installments`, options),
+      apiRequest('getInspectionSummary', `/contracts/${encodeURIComponent(cid)}/inspection-summary`, options)
+        .catch(() => ({ data: null as InspectionSummaryDto | null })),
     ])
-      .then(async ([contractResponse, installmentResponse]) => {
+      .then(async ([contractResponse, installmentResponse, summaryResponse]) => {
         const nextStage = inspectStage(installmentResponse.data.installments);
         setContract(contractResponse.data);
+        setSummary(summaryResponse.data);
         setStage(nextStage);
         if (nextStage) {
           const deliveries = await apiRequest('listDeliveries', `/installments/${encodeURIComponent(nextStage.id)}/deliveries`, options);
@@ -192,6 +197,13 @@ export function LiveInspection({ cid }: { cid: string }) {
       </p>
       <h1 className={s.title}>검수</h1>
       <p className={s.sub}>납품된 항목을 확인하고 승인하거나 보완을 요청합니다.</p>
+      {summary ? (
+        <p className={s.summaryLine}>
+          전체 {summary.totalItems}개 · 승인 {summary.approvedItems} · 대기 {summary.pendingItems}
+          {summary.openInspectionItems > 0 ? ` · 보완 ${summary.openInspectionItems}` : ''}
+          {summary.escalatedItems > 0 ? ` · 운영자 판정 ${summary.escalatedItems}` : ''}
+        </p>
+      ) : null}
 
       {!stage || !delivery ? (
         <p className={s.state}>아직 검수할 납품이 없습니다. 공급자가 납품하면 이곳에 표시됩니다.</p>
