@@ -38,7 +38,21 @@ export function Chip({ tone, children }: { tone: ChipTone; children: ReactNode }
   return <span className={`${s.chip} ${s[`chip-${tone}`]}`} data-chip={tone}>{children}</span>;
 }
 
-/** 상태 이름만 주면 톤을 고른다 */
-export function StatusChip({ status }: { status: string }) {
-  return <Chip tone={chipToneOf(status)}>{status}</Chip>;
+/** 신고 상태(백엔드 ReportStatus) → 화면 상태 이름. */
+export const REPORT_STATUS_LABEL: Readonly<Record<string, string>> = {
+  OPEN: '처리 대기',
+  RESOLVED: '처리 완료',
+};
+
+/** 상태 이름만 주면 톤을 고른다.
+ * API 코드를 그대로 받는 화면은 `labels`로 화면 이름을 넘기고, 톤은 바꾼 이름으로 고른다. */
+export function StatusChip({
+  status,
+  labels,
+}: {
+  status: string;
+  labels?: Readonly<Record<string, string>>;
+}) {
+  const label = labels?.[status] ?? status;
+  return <Chip tone={chipToneOf(label)}>{label}</Chip>;
 }

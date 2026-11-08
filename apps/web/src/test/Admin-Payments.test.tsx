@@ -7,7 +7,7 @@ import { renderAt } from './render';
 
 describe('Admin-Payments — 보류된 결제', () => {
   it('목록 · ?id= · 확정 primary 하나', () => {
-    const { container } = renderAt('/admin/payments?id=pay-1', 'admin');
+    const { container } = renderAt(`/admin/payments?mock=${encodeURIComponent('목록')}&id=pay-1`, 'admin');
     const root = container.querySelector('[data-screen="Admin-Payments"]') as HTMLElement;
     expect(screen.getByRole('heading', { name: DEMO.title })).toBeTruthy();
     expect(within(root).getByRole('heading', { name: /골목 파스타/ })).toBeTruthy();
@@ -36,7 +36,7 @@ describe('Admin-Payments — 보류된 결제', () => {
   });
 
   it('확정 · teal 띠 · 사유 없으면 disabledReason', () => {
-    const { container } = renderAt('/admin/payments?id=pay-1', 'admin');
+    const { container } = renderAt(`/admin/payments?mock=${encodeURIComponent('목록')}&id=pay-1`, 'admin');
     const root = container.querySelector('[data-screen="Admin-Payments"]') as HTMLElement;
     fireEvent.change(within(root).getByLabelText(/사유/), { target: { value: '' } });
     expect(within(root).getByRole('button', { name: DEMO.confirm }).hasAttribute('disabled')).toBe(

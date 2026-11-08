@@ -742,6 +742,85 @@ export interface DecideInspectionDisputeRequestDto {
   decisionNotes: { client: string; supplier: string };
 }
 
+/* ── 운영자(admin-ops) ── */
+/** `GET /admin/deposits/held`. 백엔드는 HELD만 돌려주고 heldReason은 현재 빈 문자열일 수 있다. */
+export interface AdminHeldDepositDto {
+  id: string;
+  contractId: string;
+  amount: number;
+  status: 'HELD' | 'COMPLETED' | 'FAILED';
+  heldReason: string;
+}
+
+export type AdminHeldDepositDecision = 'OPERATOR_CONFIRMED' | 'OPERATOR_VOIDED';
+
+export interface ResolveHeldDepositRequestDto {
+  decision: AdminHeldDepositDecision;
+  reason: string;
+  /** OPERATOR_CONFIRMED는 PG 재조회용 paymentKey가 필요하다. */
+  paymentKey?: string;
+}
+
+/** `GET /admin/contracts/cancellation-queue` — CANCEL_REQUESTED 계약. */
+export interface AdminCancellationContractDto {
+  id: string;
+  status: string;
+  /** CancelCause. 값이 없으면 빈 문자열. */
+  cancelCause: ApiCancelCause | '';
+  totalDeposited: number;
+  agreedAmount: number;
+  clientFee: number;
+  /** 요청 단계에서는 요청자가 제안한 비율, 판정 후에는 확정 비율. */
+  compensationRate?: number | null;
+  cancelResolution?: 'ADMIN_DECIDED' | null;
+  cancelResolvedAt?: IsoDate | null;
+  refundAmount?: number | null;
+  settledAmount?: number | null;
+  clientFeeRefund?: number | null;
+  refundedAt?: IsoDate | null;
+  cancelPayoutAt?: IsoDate | null;
+  depositedAt?: IsoDate | null;
+  cancelRequestedAt?: IsoDate | null;
+  cancelEscalatedAt?: IsoDate | null;
+  /** 공급자 이의 시 요구 보상 비율. */
+  objectionRate?: number | null;
+  installmentStatuses?: string[];
+}
+
+export interface DecideCancellationRequestDto {
+  /** 0~100 정수. 의뢰인 사정(전액 환불 구간 제외)은 50 이상. */
+  compensationRate: number;
+  reason: string;
+}
+
+export interface MarkSettlementProcessedRequestDto {
+  refunded: boolean;
+  cancelPayout: boolean;
+  reason: string;
+}
+
+/** `GET /admin/event-logs`. 전후 값은 응답에 없다. */
+export interface AdminEventLogDto {
+  id: string;
+  actorUserId: string;
+  actionType: string;
+  targetType: string;
+  targetId: string;
+  reason: string;
+  occurredAt: IsoDate;
+}
+
+export interface AdminEventLogQueryDto {
+  actorUserId?: string;
+  actionType?: string;
+  targetType?: string;
+  targetId?: string;
+  /** ISO 8601 */
+  from?: IsoDate;
+  /** ISO 8601 */
+  to?: IsoDate;
+}
+
 export interface InquiryAttachmentDto {
   /** 신규 업로드 첨부. 구버전 응답에는 없을 수 있다. */
   fileId?: string;
@@ -962,6 +1041,10 @@ export interface BApiRequestBodies {
   presignUpload: PresignUploadRequestDto;
   executeAdminBlockAction: ExecuteAdminBlockActionRequestDto;
   decideInspectionDispute: DecideInspectionDisputeRequestDto;
+  /* ── 운영자(admin-ops) ── */
+  resolveHeldDeposit: ResolveHeldDepositRequestDto;
+  decideCancellation: DecideCancellationRequestDto;
+  markSettlementProcessed: MarkSettlementProcessedRequestDto;
 }
 
 /** Query DTOs accepted by the matching handlers. */
@@ -983,6 +1066,8 @@ export interface BApiQueryParams {
   listMyReports: { status?: ApiReportStatus };
   listReports: { status?: ApiReportStatus };
   listAdminInquiries: { status?: ApiInquiryStatus };
+  /* ── 운영자(admin-ops) ── */
+  listEventLogs: AdminEventLogQueryDto;
 }
 
 /** Response envelopes keyed by openapi/openapi.yaml operationId. */
@@ -1069,6 +1154,13 @@ export interface BApiResponses {
   executeAdminBlockAction: DataEnvelope<AdminBlockActionResultDto>;
   listEscalatedInspections: DataEnvelope<AdminEscalatedInspectionDto[]>;
   decideInspectionDispute: DataEnvelope<AdminEscalatedInspectionDto>;
+  /* ── 운영자(admin-ops) ── */
+  listHeldDeposits: DataEnvelope<AdminHeldDepositDto[]>;
+  resolveHeldDeposit: DataEnvelope<AdminHeldDepositDto>;
+  listCancellationQueue: DataEnvelope<AdminCancellationContractDto[]>;
+  decideCancellation: DataEnvelope<AdminCancellationContractDto>;
+  markSettlementProcessed: DataEnvelope<AdminCancellationContractDto>;
+  listEventLogs: DataEnvelope<AdminEventLogDto[]>;
 }
 
 export type BApiOperationId = keyof BApiResponses;
