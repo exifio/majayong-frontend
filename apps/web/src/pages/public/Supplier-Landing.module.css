@@ -1,8 +1,8 @@
-/* 공급자 랜딩 — 보드 Supplier-Landing. Main과 같은 구조. 토큰만. */
-
+/* 공급자 랜딩 — 디자인 캔버스 Supplier-Landing 보드. 섹션 부품은 components/landing, 여기는 밴드 · navy 히어로 글만. 토큰만 */
 .root {
   margin: -34px calc(-1 * var(--gutter)) -52px;
   width: calc(100% + 2 * var(--gutter));
+  word-break: keep-all;
 }
 
 .inner {
@@ -20,11 +20,17 @@
 .half {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: var(--sp-10);
 }
 
-.half > * {
-  flex: 1 1 440px;
+.heroText {
+  flex: 1 1 420px;
+  min-width: 0;
+}
+
+.heroArt {
+  flex: 1 1 560px;
   min-width: 0;
 }
 
@@ -55,30 +61,13 @@
   letter-spacing: -0.6px;
   margin: 0 0 var(--sp-3);
   line-height: 1.35;
-  white-space: pre-line;
-}
-
-.st {
-  font-size: var(--fs-body);
-  font-weight: 600;
-  margin: 0 0 var(--sp-2);
 }
 
 .lead {
   font-size: var(--fs-body);
-  color: var(--slate-600);
-  margin: 0 0 28px;
-  line-height: 1.7;
-}
-
-.leadOn {
   color: var(--on-navy-sub);
-}
-
-.sec {
-  font-size: var(--fs-sub);
-  color: var(--slate-600);
-  line-height: 1.6;
+  margin: 0 0 24px;
+  line-height: 1.7;
 }
 
 .ctaRow {
@@ -87,124 +76,17 @@
   flex-wrap: wrap;
 }
 
-.feeNote {
-  margin: var(--sp-5) 0 0;
-  color: var(--on-navy-sub);
+.ghostOnNavy {
+  /* 히어로 보조 — ghost는 흰 배경용이라 navy 위에 테두리만 */
+  border-color: var(--on-navy-line) !important;
+  color: var(--on-navy) !important;
+  background: transparent !important;
 }
 
-.demo {
-  background: #fff;
-  border-radius: var(--radius-card-lg);
-  padding: 18px 20px;
-  color: var(--slate-900);
-}
-
-.demoHead {
-  display: flex;
-  justify-content: space-between;
-  font-size: var(--fs-label);
-  color: var(--slate-600);
-  padding-bottom: var(--sp-3);
-  border-bottom: 1px solid var(--slate-200);
-  margin-bottom: 4px;
-}
-
-.qr {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--slate-200);
-}
-
-.qr:last-of-type {
-  border-bottom: 0;
-}
-
-.nm {
-  font-size: 15px;
-  font-weight: 600;
-}
-
-.est {
-  font-size: var(--fs-label);
-  color: var(--slate-600);
-  margin-top: 2px;
-}
-
-.qbox {
-  display: inline-block;
-  border: 1px solid var(--slate-300);
-  border-radius: 8px;
-  padding: 7px 12px;
-  font-size: 15px;
-  font-weight: 500;
-  min-width: 72px;
-  text-align: center;
-  white-space: nowrap;
-}
-
-.qboxAmt {
-  min-width: 112px;
-  text-align: right;
-}
-
-.chipNo {
-  display: inline-block;
-  font-size: var(--fs-label);
-  font-weight: 500;
-  padding: 4px 10px;
-  border-radius: 6px;
-  background: var(--amber-50);
-  color: var(--amber-700);
-  border: 1px solid var(--amber-line);
-}
-
-.totalRow {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--slate-200);
-}
-
-.totalMarks {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-}
-
-.sum {
-  background: var(--navy-900);
-  border-radius: 10px;
-  padding: 14px 16px;
-  margin-top: 8px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: var(--sp-3);
-}
-
-.sumLabel {
-  color: var(--on-navy-sub);
+.miniNote {
   font-size: var(--fs-sub);
-}
-
-.sumValue {
-  color: var(--on-navy);
-  font-size: 22px;
-  font-weight: 600;
-  letter-spacing: -0.4px;
-  font-variant-numeric: tabular-nums;
-}
-
-.demoFoot {
-  font-size: var(--fs-label);
-  margin: 10px 0 0;
-  color: var(--slate-600);
+  color: var(--on-navy-sub);
+  margin: 18px 0 0;
 }
 
 .band {
@@ -217,8 +99,9 @@
   border-bottom: 1px solid var(--slate-200);
 }
 
+/* 마지막 띠 — 푸터 navy-900과 구분(디자인 보완 1104 Part 1-C) */
 .bandNavy {
-  background: var(--navy-900);
+  background: var(--navy-700);
   color: var(--on-navy);
   text-align: center;
   padding: 56px 0;
@@ -229,7 +112,6 @@
 }
 
 .bandNavy .lead {
-  color: var(--on-navy-sub);
   margin-bottom: 26px;
 }
 
@@ -237,118 +119,6 @@
   color: var(--on-navy-sub);
   font-size: var(--fs-sub);
   margin: 18px 0 0;
-}
-
-.cols {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--sp-4);
-}
-
-.cols > * {
-  flex: 1 1 280px;
-  min-width: 0;
-}
-
-.flowCols > * {
-  flex: 1 1 200px;
-}
-
-.card {
-  background: #fff;
-  border: 1px solid var(--slate-200);
-  border-radius: var(--radius-card);
-  padding: 22px 24px;
-  height: 100%;
-}
-
-.stepNum {
-  display: inline-block;
-  font-size: var(--fs-label);
-  font-weight: 600;
-  color: var(--slate-500);
-  margin-bottom: 8px;
-}
-
-.chkl {
-  list-style: none;
-  margin: 0 0 20px;
-  padding: 0;
-}
-
-.chkl li {
-  font-size: var(--fs-body);
-  color: var(--slate-600);
-  margin: 0 0 10px;
-  padding-left: 26px;
-  position: relative;
-}
-
-.chkl li::before {
-  content: '';
-  position: absolute;
-  left: 2px;
-  top: 7px;
-  width: 5px;
-  height: 10px;
-  border: solid var(--teal-700);
-  border-width: 0 2px 2px 0;
-  transform: rotate(43deg);
-}
-
-.info {
-  background: #fff;
-  border: 1px solid var(--slate-200);
-  border-radius: 10px;
-  padding: 14px 16px;
-  font-size: var(--fs-sub);
-  color: var(--slate-600);
-  line-height: 1.6;
-}
-
-.info b {
-  color: var(--slate-900);
-}
-
-.priceRow {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 14px 0;
-  border-bottom: 1px solid var(--slate-200);
-}
-
-.priceRow:last-of-type {
-  border-bottom: 0;
-}
-
-.priceValue {
-  font-size: var(--fs-amount-row);
-  font-weight: 600;
-}
-
-.costExample {
-  margin-top: 16px;
-  padding-top: 14px;
-  border-top: 1px solid var(--slate-200);
-}
-
-.costExampleTitle {
-  font-size: var(--fs-sub);
-  font-weight: 600;
-  color: var(--slate-900);
-  margin: 0 0 10px;
-}
-
-.costNote {
-  margin: 14px 0 0;
-}
-
-.ghostOnNavy {
-  /* 히어로 보조 — ghost는 흰 배경용이라 navy 위에 테두리만 */
-  border-color: var(--on-navy-line) !important;
-  color: var(--on-navy) !important;
-  background: transparent !important;
 }
 
 @media (max-width: 767.98px) {
