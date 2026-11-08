@@ -220,7 +220,14 @@ export function LiveAgreement({ styles }: { styles: Record<string, string> }) {
             </div>
             <div className={s.amtV}>{formatWon(application.totalAmount)}</div>
             <p className={s.payNote}>기간 {application.durationDays}일 · 결제 구간 비율 {preview.draft.interimRatio}%</p>
-            <p className={s.payNote}>수수료와 예치 금액은 계약이 생성된 뒤 계약서에서 확인합니다.</p>
+            {preview.quote ? (
+              <>
+                <p className={s.payNote}>의뢰인 수수료 {formatWon(preview.quote.clientFee)}</p>
+                <p className={s.payNote}><b>예치할 금액 {formatWon(preview.quote.depositAmount)}</b></p>
+              </>
+            ) : (
+              <p className={s.payNote}>수수료와 예치 금액은 계약이 생성된 뒤 계약서에서 확인합니다.</p>
+            )}
           </section>
 
           <section className={s.card} aria-labelledby="live-agree-after">

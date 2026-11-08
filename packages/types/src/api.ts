@@ -367,6 +367,13 @@ export interface AgreementPreviewDto {
   draft: AgreementDraftDto;
   stale: boolean;
   readOnly: true;
+  /** D-38: 합의 시점 견적 금액·수수료·예치액. 구 응답과 호환되도록 optional. */
+  quote?: {
+    totalAmount: number;
+    durationDays: number;
+    clientFee: number;
+    depositAmount: number;
+  } | null;
 }
 
 export interface ContractItemDto {
