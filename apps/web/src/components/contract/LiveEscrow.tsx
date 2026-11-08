@@ -98,9 +98,9 @@ export function LiveEscrow({
     setConfirming(true);
     setPaymentError(null);
     confirmDeposit(apiAccessToken, cid, orderId, paymentKey, amount)
-      .then((result) => {
+      .then(() => {
         if (!active) return;
-        setContract(result.contract);
+        // 승인 응답의 계약은 축약형(supplierId·items 없음)이라 화면 상태에 넣지 않고, 아래 retry로 전체 계약을 다시 조회한다.
         setPaymentNotice('예치가 완료되었습니다.');
         navigate(`/c/contracts/${encodeURIComponent(cid)}/escrow`, { replace: true });
         setRetry((count) => count + 1);

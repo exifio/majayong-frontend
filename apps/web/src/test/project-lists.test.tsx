@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SessionProvider, DEV_SESSIONS, useSession } from '@/app/session';
@@ -70,7 +70,7 @@ describe('LiveProjectList', () => {
     renderWithToken(<LiveProjectList styles={{}} />);
 
     expect(await screen.findByText('예약 기능 개발')).toBeTruthy();
-    expect(screen.getByText('예약기반음식점')).toBeTruthy();
+    expect(within(screen.getByRole('article', { name: '예약 기능 개발' })).getByText('예약기반음식점')).toBeTruthy();
     expect(screen.getByText('300~400만원')).toBeTruthy();
     expect(screen.getByRole('link', { name: '상세 보기' }).getAttribute('href'))
       .toBe('/s/projects/project-1');
@@ -105,7 +105,7 @@ describe('LiveProjectList', () => {
   it('shows the empty state when no project matches', async () => {
     fetchMock.mockResolvedValueOnce(jsonResponse({ data: [], meta: { page: 1, pageSize: 10, total: 0 } }));
     renderWithToken(<LiveProjectList styles={{}} />);
-    expect(await screen.findByText('조건에 맞는 프로젝트가 없습니다.')).toBeTruthy();
+    expect(await screen.findByText('아직 공개된 프로젝트가 없습니다.')).toBeTruthy();
   });
 });
 
