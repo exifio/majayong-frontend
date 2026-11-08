@@ -67,6 +67,15 @@ describe('Main — 의뢰인 랜딩', () => {
     expect(within(safe).getByRole('link', { name: '안전장치 자세히 보기' }).getAttribute('href')).toBe('/help');
   });
 
+  it('상단 메뉴는 서비스 소개 · 진행 과정 · 안전장치이고 각 섹션 제목으로 이어진다', () => {
+    const { container } = renderAt('/', 'guest');
+    const menu = container.querySelector('header ul') as HTMLElement;
+    const links = within(menu).getAllByRole('link');
+    expect(links.map((a) => a.textContent)).toEqual(['서비스 소개', '진행 과정', '안전장치']);
+    const targets = links.map((a) => container.querySelector(a.getAttribute('href')!)?.querySelector('h2')?.textContent);
+    expect(targets).toEqual(['외주 맡기기가 쉬워집니다', '명세를 확정한 다음은', '안심하고 맡길 수 있도록']);
+  });
+
   it('정의된 mock 목록이 비어 있지 않다', () => {
     expect(MAIN_MOCKS.length).toBeGreaterThan(0);
   });

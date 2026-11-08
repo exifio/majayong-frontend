@@ -120,7 +120,7 @@ export default function SupplierLanding() {
         </div>
       </section>
 
-      {/* 이용 흐름 — 헤더 앵커 #flow */}
+      {/* 진행 과정 — 헤더 앵커 #flow */}
       <section className={`${s.band} ${s.bandAlt}`} id="flow">
         <div className={s.inner}>
           <SectionHead title={data.flowTitle} titleClassName={s.sh} />
@@ -128,7 +128,7 @@ export default function SupplierLanding() {
         </div>
       </section>
 
-      {/* 정산 · 비용 — 헤더 앵커 #price */}
+      {/* 정산 방식 — 헤더 앵커 #price */}
       <section className={s.band} id="price">
         <div className={s.inner}>
           <SectionHead title={data.payTitle} titleClassName={s.sh} more={{ to: '/help', label: '정산 자세히 보기' }} />

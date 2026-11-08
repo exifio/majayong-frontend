@@ -31,16 +31,16 @@ export const ADMIN_MENU = [
 
 export const ADMIN_MENU_BOTTOM = { label: '이벤트 기록', to: '/admin/events' } as const;
 
-/** 랜딩 안 메뉴(페이지 안 이동) */
+/** 랜딩 안 메뉴(페이지 안 이동) — 섹션과 1:1. 의뢰인 #value · #how · #safe, 공급자 #how · #flow · #price */
 export const LANDING_MENU = {
   client: [
-    { label: '작동 방식', to: '#how' },
+    { label: '서비스 소개', to: '#value' },
+    { label: '진행 과정', to: '#how' },
     { label: '안전장치', to: '#safe' },
-    { label: '비용', to: '#start' },
   ],
   supplier: [
     { label: '견적 방식', to: '#how' },
-    { label: '이용 흐름', to: '#flow' },
-    { label: '정산·비용', to: '#price' },
+    { label: '진행 과정', to: '#flow' },
+    { label: '정산 방식', to: '#price' },
   ],
 } as const;
