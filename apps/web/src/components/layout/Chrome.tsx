@@ -56,7 +56,7 @@ export function PublicHeader({ variant }: { variant: 'landing-client' | 'landing
           )}
           <Link className={s.textLink} to={`${landing ? here : '/'}?modal=login`}>로그인</Link>
           {landing
-            ? <Button size="sm" variant={navy ? 'onnavy' : 'primary'} to="/signup">{navy ? '공급자로 가입하기' : '화면 초안 받아보기'}</Button>
+            ? <Button size="sm" variant="primary" to="/signup">{navy ? '공급자로 등록' : '화면 초안 받아보기'}</Button>
             : <Link className={s.textLink} to="/signup">회원가입</Link>}
         </div>
       </div>
