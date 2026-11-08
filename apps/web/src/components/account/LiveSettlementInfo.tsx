@@ -31,6 +31,7 @@ const TEXT = {
   verified: '인증 완료',
   notVerified: '인증 전',
   unavailable: '서버에서 계좌 인증을 사용할 수 없습니다. 계좌는 저장됐지만 인증은 별도 확인이 필요합니다.',
+  sandbox: '시연 환경에서는 실제 은행 인증이 아닙니다.',
   taxSaved: '증빙 정보를 저장했습니다.',
   payoutSaved: '계좌를 저장했습니다. 인증 전에는 지급이 보류됩니다.',
   error: '저장하지 못했습니다. 다시 시도해 주세요.',
@@ -196,6 +197,7 @@ export function LiveSettlementInfo({ role }: { role: 'CLIENT' | 'SUPPLIER' }) {
             {' · '}
             {payout.verifiedAt ? `${TEXT.verified} ${formatDateTime(payout.verifiedAt)}` : TEXT.notVerified}
           </p>
+          <p className={s.sub}>{TEXT.sandbox}</p>
           <div className={s.selectField}>
             <label className={s.label} htmlFor="payout-bank">{TEXT.bank}</label>
             <select id="payout-bank" className={s.select} value={bank} onChange={(event) => setBank(event.target.value)}>

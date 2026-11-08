@@ -52,6 +52,7 @@ describe('LiveSettlementInfo — 증빙·정산 정보', () => {
     expect(await within(root).findByText('계좌를 저장했습니다. 인증 전에는 지급이 보류됩니다.')).toBeTruthy();
     expect(within(root).getByText(/●●●● 2048/)).toBeTruthy();
     expect(within(root).getAllByText(/인증 전/).length).toBeGreaterThan(0);
+    expect(within(root).getByText('시연 환경에서는 실제 은행 인증이 아닙니다.')).toBeTruthy();
   });
 
   it('서버가 계좌 인증을 지원하지 않으면 성공으로 표시하지 않는다', async () => {
