@@ -221,9 +221,9 @@ export function LiveContract({ cid, styles }: { cid?: string; styles: Record<str
 
       <div className={s.head}>
         <div>
-          <h1 className={s.title}>계약 · 전자서명</h1>
+          <h1 className={s.title}>{contract.projectTitle ?? '계약 · 전자서명'}</h1>
           <p className={s.sub}>
-            프로젝트 {contract.projectId.slice(0, 8)} · {formatWon(contract.agreedAmount)} · {contract.durationDays}일
+            상대 {contract.counterpartName ?? '이름 미등록'} · {formatWon(contract.agreedAmount)} · {contract.durationDays}일
           </p>
         </div>
         <StatusChip status={label} />
@@ -279,6 +279,25 @@ export function LiveContract({ cid, styles }: { cid?: string; styles: Record<str
               </article>
             ))}
           </section>
+
+          {document.articles && document.articles.length > 0 ? (
+            <section className={s.sec} aria-label="계약 조항">
+              <h2>계약 조항</h2>
+              {document.articles.map((article) => (
+                <article key={article.id} className={s.feat}>
+                  <div>
+                    <b className={s.featName}>{article.heading}</b>
+                    {article.paragraphs.map((paragraph, index) => (
+                      <p key={`${article.id}-${index}`} className={s.featDesc}>{paragraph}</p>
+                    ))}
+                  </div>
+                </article>
+              ))}
+              {document.articlesDraft ? (
+                <p className={s.featDesc}>법률·세무 검토 전 초안입니다. 실제 계약 전 확정 문안으로 교체됩니다.</p>
+              ) : null}
+            </section>
+          ) : null}
         </div>
 
         <aside>

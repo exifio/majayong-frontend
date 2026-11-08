@@ -7,7 +7,7 @@ import { Button, Money, StatusChip } from '@/components/ui';
 import { useSession } from '@/app/session';
 import { ApiRequestError, apiRequest } from '@/lib/api';
 import { applicationStatusLabel } from '@/lib/application-status';
-import { formatDateTime } from '@/lib/format';
+import { formatDateTime, formatWon } from '@/lib/format';
 import { supplierProfile, type SupplierProfileSummary } from '@/lib/supplier-profile';
 import { LiveApplicationDetail } from './LiveApplicationDetail';
 
@@ -111,7 +111,7 @@ export function LiveApplications({ pid, styles }: { pid?: string; styles: Record
                           {profile?.profileImageUrl && (
                             <img src={profile.profileImageUrl} alt="" width={24} height={24} style={{ borderRadius: 12, marginRight: 6 }} />
                           )}
-                          {profile?.displayName ?? `공급자 ${card.supplierId.slice(0, 8)}`}
+                          {profile?.displayName ?? card.supplierName ?? `공급자 ${card.supplierId.slice(0, 8)}`}
                           {statuses[card.applicationId] && (
                             <StatusChip status={applicationStatusLabel(statuses[card.applicationId]!)} />
                           )}
@@ -165,6 +165,12 @@ export function LiveApplications({ pid, styles }: { pid?: string; styles: Record
                         <p className={s.amtK}>지원 금액</p>
                         <Money amount={card.totalAmount} size="big" />
                         <div className={s.fx}>{card.durationDays}일</div>
+                        {card.depositAmount !== undefined ? (
+                          <div className={s.fx}>수수료 포함 {formatWon(card.depositAmount)}</div>
+                        ) : null}
+                        {card.revisionCount > 1 && card.firstRevisionAmount !== undefined ? (
+                          <div className={s.fx}>첫 견적 {formatWon(card.firstRevisionAmount)}</div>
+                        ) : null}
                       </div>
                     </div>
                   </article>

@@ -1,13 +1,13 @@
 /* 내 계약 목록 — 실제 GET /me/contracts 응답만 그린다. */
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { screen, waitFor } from '@testing-library/react';
-import type { ContractRecordDto } from '@majayong/types/api';
+import type { ContractViewDto } from '@majayong/types/api';
 import { renderAt } from '@/test/render';
 
 const jsonResponse = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
 
-const contract = (over: Partial<ContractRecordDto> = {}): ContractRecordDto => ({
+const contract = (over: Partial<ContractViewDto> = {}): ContractViewDto => ({
   id: 'contract-1',
   applicationId: 'application-1',
   projectId: 'project-1',
@@ -28,6 +28,10 @@ const contract = (over: Partial<ContractRecordDto> = {}): ContractRecordDto => (
   paymentStatus: 'PENDING',
   totalDeposited: 0,
   items: [],
+  projectTitle: '예약 달력, 예약금 결제 외 2개 기능',
+  counterpartName: '최준호',
+  displayStatus: 'AWAITING_DEPOSIT',
+  reviewWrittenByMe: false,
   ...over,
 });
 
@@ -50,6 +54,18 @@ describe('LiveContractsList — 내 계약', () => {
     expect(await screen.findByText('3,100,000원')).toBeTruthy();
     expect(screen.getAllByText('예치 대기').length).toBeGreaterThan(0);
     expect(screen.getByText(/30일/)).toBeTruthy();
+  });
+
+  it('프로젝트 제목·상대방 이름·서버 표시 상태·리뷰 작성 여부를 보여 준다', async () => {
+    vi.stubGlobal('fetch', vi.fn<typeof fetch>().mockImplementation(async () => jsonResponse({
+      data: [contract({ status: 'COMPLETED', displayStatus: 'CONTRACT_COMPLETED', reviewWrittenByMe: true })],
+    })));
+    renderAt('/c/contracts', 'client', undefined, 'test-token');
+
+    expect(await screen.findByText('예약 달력, 예약금 결제 외 2개 기능')).toBeTruthy();
+    expect(screen.getByText('공급자 최준호')).toBeTruthy();
+    expect(screen.getByText('완료')).toBeTruthy();
+    expect(screen.getByText('리뷰 작성 완료')).toBeTruthy();
   });
 
   it('목록 요청이 실패하면 오류를 알린다', async () => {

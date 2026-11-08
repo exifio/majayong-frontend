@@ -1,7 +1,7 @@
 /* 명세 보기 — 실제 마감 연장(POST /projects/:projectId/extend-deadline) */
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
-import type { MyProjectDto } from '@majayong/types/api';
+import type { MyProjectDetailDto } from '@majayong/types/api';
 import { renderAt } from '@/test/render';
 import { extendedDeadlineOf } from './Spec-Client.data';
 
@@ -11,7 +11,7 @@ function jsonResponse(body: unknown, status = 200) {
 
 const DEADLINE = '2026-11-20T14:59:59.999Z';
 
-function project(status: MyProjectDto['status']): MyProjectDto {
+function project(status: MyProjectDetailDto['status']): MyProjectDetailDto {
   return {
     projectId: 'p-9',
     title: '근무표 관리',
@@ -22,13 +22,20 @@ function project(status: MyProjectDto['status']): MyProjectDto {
     currentVersion: 1,
     applicationCount: 2,
     detailViewCount: 4,
+    summary: '근무표 관리',
+    industryCode: 'FOOD',
+    requiredSkills: [],
+    hopeBudget: null,
+    hopeBudgetBand: null,
+    recruitStartAt: null,
+    items: [],
   };
 }
 
-function stubApi(status: MyProjectDto['status'], extend?: (body: unknown) => Response) {
+function stubApi(status: MyProjectDetailDto['status'], extend?: (body: unknown) => Response) {
   const fetchMock = vi.fn<typeof fetch>().mockImplementation(async (input, init) => {
     const url = String(input);
-    if (url === '/api/v1/me/projects') return jsonResponse({ data: [project(status)] });
+    if (url === '/api/v1/me/projects/p-9') return jsonResponse({ data: project(status) });
     if (url === '/api/v1/projects/p-9/extend-deadline' && init?.method === 'POST' && extend) {
       return extend(JSON.parse(String(init.body)));
     }

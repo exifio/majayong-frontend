@@ -17,7 +17,7 @@ import { useSession } from '@/app/session';
 import { ApiRequestError, apiRequest } from '@/lib/api';
 import { projectStatusLabel } from '@/lib/project-adapter';
 import { formatDateInput } from '@/lib/draft-adapter';
-import type { ExtendDeadlineResultDto, MyProjectDto } from '@majayong/types/api';
+import type { ExtendDeadlineResultDto, MyProjectDetailDto } from '@majayong/types/api';
 import {
   DEMO,
   DRAFT_HREF,
@@ -43,7 +43,7 @@ export default function SpecClient() {
 
 function LiveSpec({ pid }: { pid: string }) {
   const { apiAccessToken } = useSession();
-  const [project, setProject] = useState<MyProjectDto | null>(null);
+  const [project, setProject] = useState<MyProjectDetailDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [extOpen, setExtOpen] = useState(false);
@@ -53,11 +53,9 @@ function LiveSpec({ pid }: { pid: string }) {
     const controller = new AbortController();
     setLoading(true);
     setError(null);
-    apiRequest('listMyProjects', '/me/projects', { accessToken: apiAccessToken, signal: controller.signal })
+    apiRequest('getMyProject', `/me/projects/${encodeURIComponent(pid)}`, { accessToken: apiAccessToken, signal: controller.signal })
       .then((response) => {
-        const found = response.data.find((item) => item.projectId === pid) ?? null;
-        setProject(found);
-        if (found === null) setError('프로젝트를 찾을 수 없습니다.');
+        setProject(response.data);
       })
       .catch((caught: unknown) => {
         if (caught instanceof Error && caught.name === 'AbortError') return;
@@ -125,6 +123,23 @@ function LiveSpec({ pid }: { pid: string }) {
             <p className={s.ds}>
               지원한 공급자 {project.applicationCount}명 · 상세 열람 {project.detailViewCount}회 · 명세 버전 {project.currentVersion}
             </p>
+          </section>
+
+          <div className={s.secH}>
+            <h2>명세</h2>
+            <p>현재 버전에 포함된 기능입니다. 계약 전 공급자에게 공개되는 내용과 같습니다.</p>
+          </div>
+          <section className={s.fc} aria-label="명세 항목">
+            {project.items.length === 0 ? (
+              <p className={s.ds}>표시할 명세 항목이 없습니다.</p>
+            ) : (
+              project.items.map((item) => (
+                <article key={item.specItemId} aria-label={item.title}>
+                  <b>{item.title}</b>
+                  <p className={s.ds}>{item.description}</p>
+                </article>
+              ))
+            )}
           </section>
         </div>
 

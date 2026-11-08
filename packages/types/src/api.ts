@@ -48,8 +48,13 @@ export interface ApplicationRevisionDto extends ApplicationRecordDto {
 export interface SupplierApplicationCardDto {
   applicationId: string;
   supplierId: string;
+  /** D-38 추가 필드. 구 응답과 호환되도록 optional로 둔다. */
+  supplierName?: string | null;
   revisionNo: number;
   totalAmount: number;
+  clientFee?: number;
+  depositAmount?: number;
+  firstRevisionAmount?: number;
   durationDays: number;
   questionCount: number;
   revisionCount: number;
@@ -144,6 +149,24 @@ export interface MyProjectDto {
   currentVersion: number;
   applicationCount: number;
   detailViewCount: number;
+}
+
+export interface MyProjectDetailItemDto {
+  specItemId: string;
+  title: string;
+  description: string;
+  conditions: unknown;
+  wireframe: unknown;
+}
+
+export interface MyProjectDetailDto extends MyProjectDto {
+  summary: string;
+  industryCode: string;
+  requiredSkills: string[];
+  hopeBudget: number | null;
+  hopeBudgetBand: string | null;
+  recruitStartAt: IsoDate | null;
+  items: MyProjectDetailItemDto[];
 }
 
 export type ApiDraftEntryType = 'SENTENCE' | 'DEFAULT_DRAFT';
@@ -364,6 +387,11 @@ export interface ContractRecordDto {
   clientUserId: string;
   supplierId: string;
   status: ApiContractStatus;
+  /** D-38 추가 필드. 구 응답과 호환되도록 optional로 둔다. */
+  projectTitle?: string | null;
+  counterpartName?: string | null;
+  displayStatus?: ApiContractDisplayStatus;
+  reviewWrittenByMe?: boolean;
   specVersionNo: number;
   agreedAmount: number;
   durationDays: number;
@@ -378,6 +406,19 @@ export interface ContractRecordDto {
   paymentStatus: ApiPaymentStatus;
   totalDeposited: number;
   items: ContractItemDto[];
+}
+
+export type ApiContractDisplayStatus =
+  | 'SIGNING' | 'COUNTERPART_SIGNATURE_PENDING' | 'AWAITING_DEPOSIT' | 'IN_PROGRESS'
+  | 'INSPECTION_DUE' | 'WORK_OVERDUE' | 'CONTRACT_COMPLETED'
+  | 'CANCEL_IN_PROGRESS' | 'CONTRACT_CANCELLED';
+
+/** `GET /me/contracts`·`GET /contracts/{id}` 응답. 계약 저장 필드 + 표시용 파생 필드. */
+export interface ContractViewDto extends ContractRecordDto {
+  projectTitle: string | null;
+  counterpartName: string | null;
+  displayStatus: ApiContractDisplayStatus;
+  reviewWrittenByMe: boolean;
 }
 
 export type ApiCancelCause = 'CLIENT' | 'SUPPLIER' | 'MUTUAL';
@@ -691,6 +732,12 @@ export interface BreakContractResultDto {
   projectStatus: ApiProjectStatus | null;
 }
 
+export interface ContractArticleDto {
+  id: string;
+  heading: string;
+  paragraphs: string[];
+}
+
 export interface ContractDocumentDto {
   contractId: string;
   contentHash: string;
@@ -702,6 +749,10 @@ export interface ContractDocumentDto {
   depositAmount: number;
   supplierPayout: number;
   items: ContractItemDto[];
+  /** D-38: 법률 검토 문안. 구 응답과 호환되도록 optional로 둔다. */
+  articles?: ContractArticleDto[];
+  articlesVersion?: string;
+  articlesDraft?: boolean;
 }
 
 export interface NotificationDto {
@@ -1251,6 +1302,7 @@ export interface BApiResponses {
   submitApplication: DataEnvelope<ApplicationRevisionDto>;
   listMyApplications: DataEnvelope<ApplicationRevisionDto[]>;
   listMyProjects: DataEnvelope<MyProjectDto[]>;
+  getMyProject: DataEnvelope<MyProjectDetailDto>;
   createDraft: DataEnvelope<DraftDto>;
   listDrafts: DataEnvelope<DraftDto[]>;
   getDraft: DataEnvelope<DraftDto>;
@@ -1307,9 +1359,9 @@ export interface BApiResponses {
   readMessages: DataEnvelope<UpdatedCountDto>;
   previewAgreement: DataEnvelope<AgreementPreviewDto>;
   confirmAgreement: DataEnvelope<ConfirmAgreementResultDto>;
-  listMyContracts: DataEnvelope<ContractRecordDto[]>;
+  listMyContracts: DataEnvelope<ContractViewDto[]>;
   listPaymentStatements: DataEnvelope<PaymentStatementsDto>;
-  getContract: DataEnvelope<ContractRecordDto>;
+  getContract: DataEnvelope<ContractViewDto>;
   getContractDocument: DataEnvelope<ContractDocumentDto>;
   createDeposit: DataEnvelope<CreateDepositResultDto>;
   listDeposits: DataEnvelope<EscrowDepositDto[]>;

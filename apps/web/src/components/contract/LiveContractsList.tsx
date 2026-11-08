@@ -1,11 +1,11 @@
 /* 내 계약 목록 — 실제 계약 응답만 표시한다. */
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import type { ContractRecordDto } from '@majayong/types/api';
+import type { ContractViewDto } from '@majayong/types/api';
 import { LoadingState, Chip, EmptyState, Money, chipToneOf } from '@/components/ui';
 import { useSession } from '@/app/session';
 import { apiRequest } from '@/lib/api';
-import { contractDisplayLabel } from '@/lib/contract-status';
+import { contractDisplayStatusLabel } from '@/lib/contract-status';
 import { paymentStatusLabel } from '@/lib/payment-status';
 import { formatDate } from '@/lib/format';
 import s from './LiveContractsList.module.css';
@@ -15,7 +15,7 @@ type LoadState = 'loading' | 'ready' | 'error';
 export function LiveContractsList({ role }: { role: 'CLIENT' | 'SUPPLIER' }) {
   const { apiAccessToken } = useSession();
   const [state, setState] = useState<LoadState>('loading');
-  const [contracts, setContracts] = useState<ContractRecordDto[]>([]);
+  const [contracts, setContracts] = useState<ContractViewDto[]>([]);
   const base = role === 'CLIENT' ? '/c' : '/s';
 
   useEffect(() => {
@@ -48,14 +48,25 @@ export function LiveContractsList({ role }: { role: 'CLIENT' | 'SUPPLIER' }) {
   return (
     <ul className={s.list} aria-label="내 계약 목록">
       {contracts.map((contract) => {
-        const label = contractDisplayLabel(contract.status, contract.paymentStatus);
+        const label = contractDisplayStatusLabel(contract.displayStatus);
+        const counterpartRole = role === 'CLIENT' ? '공급자' : '의뢰인';
         return (
           <li key={contract.id} className={s.card}>
             <div className={s.top}>
               <Chip tone={chipToneOf(label)}>{label}</Chip>
               <span className={s.payment}>{paymentStatusLabel(contract.paymentStatus)}</span>
+              {contract.status === 'COMPLETED' ? (
+                <span className={s.review}>
+                  {contract.reviewWrittenByMe ? '리뷰 작성 완료' : '리뷰 미작성'}
+                </span>
+              ) : null}
             </div>
-            <p className={s.title}>{contract.items[0]?.title ?? `계약 ${contract.id.slice(0, 8)}`}</p>
+            <p className={s.title}>
+              {contract.projectTitle ?? contract.items[0]?.title ?? `계약 ${contract.id.slice(0, 8)}`}
+            </p>
+            <p className={s.counterpart}>
+              {counterpartRole} {contract.counterpartName ?? '이름 미등록'}
+            </p>
             <dl className={s.meta}>
               <div>
                 <dt>합의 금액</dt>
