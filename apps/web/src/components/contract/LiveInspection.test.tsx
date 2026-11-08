@@ -36,17 +36,25 @@ const contract: ContractRecordDto = {
       origin: 'AGREEMENT',
       stage: 'INTERIM',
       sortOrder: 0,
-      conditions: [],
+      conditions: [
+        { key: 'refund-cutoff', text: '마감 시각 이후 환불 불가', state: 'DECIDED', evidenceMessageIds: [] },
+        { key: 'color', text: '버튼 색상', state: 'UNDECIDED', evidenceMessageIds: [] },
+      ],
     },
   ],
 };
 
-const workspace = (mock: ReturnType<typeof vi.fn<typeof fetch>>) => mock.mockImplementation(async (input) => {
+const workspace = (
+  mock: ReturnType<typeof vi.fn<typeof fetch>>,
+  options: { status?: 'DELIVERED' | 'REWORK_REQUESTED'; requests?: unknown[] } = {},
+) => mock.mockImplementation(async (input, init) => {
   const url = String(input);
+  if (url.endsWith('/rework-requests') && init?.method !== 'POST') return jsonResponse({ data: options.requests ?? [] });
+  if (url.endsWith('/escalate')) return jsonResponse({ data: { ...openRequest, status: 'ESCALATED', escalatedAt: '2026-11-08T00:00:00.000Z' } });
   if (url.endsWith('/contracts/contract-1')) return jsonResponse({ data: contract });
   if (url.endsWith('/contracts/contract-1/installments')) {
     return jsonResponse({ data: { simulated: true, transferNote: '', installments: [
-      { id: 'installment-1', stage: 'INTERIM', ratio: 50, amount: 1_550_000, status: 'DELIVERED', approvedAt: null, releasedAt: null, holdReason: null },
+      { id: 'installment-1', stage: 'INTERIM', ratio: 50, amount: 1_550_000, status: options.status ?? 'DELIVERED', approvedAt: null, releasedAt: null, holdReason: null },
     ] } });
   }
   if (url.endsWith('/installments/installment-1/deliveries')) {
@@ -59,6 +67,11 @@ const workspace = (mock: ReturnType<typeof vi.fn<typeof fetch>>) => mock.mockImp
   }
   return jsonResponse({ data: {} });
 });
+
+const openRequest = {
+  id: 'inspection-1', deliveryId: 'delivery-1', contractItemId: 'item-interim', reason: 'NOT_WORKING',
+  conditionKey: null, note: '버튼이 눌리지 않습니다', status: 'OPEN', escalatedAt: null, createdAt: '2026-11-07T00:00:00.000Z',
+};
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -78,7 +91,7 @@ describe('LiveInspection — 의뢰인 검수', () => {
     const call = fetchMock.mock.calls.find(([url]) => String(url).endsWith('/contract-items/item-interim/approve'));
     expect(call).toBeTruthy();
     expect(JSON.parse(String(call![1]?.body))).toEqual({ deliveryId: 'delivery-1' });
-  });
+  }, 15000);
 
   it('보완 사유를 보내면 상태가 보완 요청함으로 바뀐다', async () => {
     const fetchMock = vi.fn<typeof fetch>();
@@ -88,16 +101,68 @@ describe('LiveInspection — 의뢰인 검수', () => {
     const root = container.querySelector('[data-screen="Inspect-Client"]') as HTMLElement;
 
     fireEvent.click(await within(root).findByRole('button', { name: '보완 요청' }));
-    fireEvent.change(within(root).getByLabelText('보완 사유'), { target: { value: '링크가 열리지 않습니다' } });
+    fireEvent.click(within(root).getByRole('radio', { name: '기타' }));
+    fireEvent.change(within(root).getByLabelText(/^보완 사유/), { target: { value: '링크가 열리지 않습니다' } });
     fireEvent.click(within(root).getByRole('button', { name: '보완 요청 보내기' }));
 
     expect(await within(root).findByText('보완 요청함')).toBeTruthy();
-    const call = fetchMock.mock.calls.find(([url]) => String(url).endsWith('/contract-items/item-interim/rework-requests'));
+    const call = fetchMock.mock.calls.find(([url, init]) =>
+      String(url).endsWith('/contract-items/item-interim/rework-requests') && init?.method === 'POST');
     expect(call).toBeTruthy();
     expect(JSON.parse(String(call![1]?.body))).toEqual({
       deliveryId: 'delivery-1',
       reason: 'OTHER',
       note: '링크가 열리지 않습니다',
     });
-  });
+  }, 15000);
+
+  it('합의 조건과 다름은 정해진 조건만 고를 수 있고 조건 키를 함께 보낸다', async () => {
+    const fetchMock = vi.fn<typeof fetch>();
+    workspace(fetchMock);
+    vi.stubGlobal('fetch', fetchMock);
+    const { container } = renderAt('/c/contracts/contract-1/inspect', 'client', undefined, 'test-token');
+    const root = container.querySelector('[data-screen="Inspect-Client"]') as HTMLElement;
+
+    fireEvent.click(await within(root).findByRole('button', { name: '보완 요청' }));
+    const reasons = within(root).getByRole('radiogroup', { name: /보완 사유 종류/ });
+    expect(within(reasons).getAllByRole('radio').map((radio) => radio.textContent)).toEqual([
+      '합의 조건과 다름', '작동하지 않음', '빠진 부분이 있음', '기타',
+    ]);
+    fireEvent.click(within(reasons).getByRole('radio', { name: '합의 조건과 다름' }));
+    const conditions = within(root).getByRole('radiogroup', { name: '다른 조건' });
+    expect(within(conditions).queryByRole('radio', { name: '버튼 색상' })).toBeNull();
+    fireEvent.change(within(root).getByLabelText(/^보완 사유/), { target: { value: '마감 뒤에도 환불됩니다' } });
+    expect(within(root).getByRole('button', { name: '보완 요청 보내기' })).toHaveProperty('disabled', true);
+    fireEvent.click(within(conditions).getByRole('radio', { name: '마감 시각 이후 환불 불가' }));
+    fireEvent.click(within(root).getByRole('button', { name: '보완 요청 보내기' }));
+
+    expect(await within(root).findByText('보완 요청함')).toBeTruthy();
+    const call = fetchMock.mock.calls.find(([url, init]) =>
+      String(url).endsWith('/contract-items/item-interim/rework-requests') && init?.method === 'POST');
+    expect(JSON.parse(String(call![1]?.body))).toEqual({
+      deliveryId: 'delivery-1',
+      reason: 'CONDITION_MISMATCH',
+      conditionKey: 'refund-cutoff',
+      note: '마감 뒤에도 환불됩니다',
+    });
+  }, 15000);
+
+  it('진행 중인 보완 요청은 사유와 확인할 내용을 적어 도움 요청으로 올린다', async () => {
+    const fetchMock = vi.fn<typeof fetch>();
+    workspace(fetchMock, { status: 'REWORK_REQUESTED', requests: [openRequest] });
+    vi.stubGlobal('fetch', fetchMock);
+    const { container } = renderAt('/c/contracts/contract-1/inspect', 'client', undefined, 'test-token');
+    const root = container.querySelector('[data-screen="Inspect-Client"]') as HTMLElement;
+
+    expect(await within(root).findByText(/작동하지 않음 — 버튼이 눌리지 않습니다/)).toBeTruthy();
+    expect(within(root).queryByRole('button', { name: '승인' })).toBeNull();
+    fireEvent.click(within(root).getByRole('button', { name: '도움 요청' }));
+    fireEvent.change(within(root).getByLabelText(/^도움 요청 사유/), { target: { value: '보완 범위 이견' } });
+    fireEvent.change(within(root).getByLabelText(/^운영자가 확인할 내용/), { target: { value: '버튼 동작이 계약 범위인지' } });
+    fireEvent.click(within(root).getByRole('button', { name: '도움 요청 보내기' }));
+
+    expect(await within(root).findByText('운영자 확인 중')).toBeTruthy();
+    const call = fetchMock.mock.calls.find(([url]) => String(url).endsWith('/inspection-requests/inspection-1/escalate'));
+    expect(JSON.parse(String(call![1]?.body))).toEqual({ reason: '보완 범위 이견', what: '버튼 동작이 계약 범위인지' });
+  }, 15000);
 });

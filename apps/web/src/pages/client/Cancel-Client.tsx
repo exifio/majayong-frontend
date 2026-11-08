@@ -14,6 +14,10 @@ import {
   TextAreaField,
 } from '@/components/ui';
 import { formatWon } from '@/lib/format';
+import { useSession } from '@/app/session';
+import { LiveCancellation } from '@/components/contract/LiveCancellation';
+import { AuthRequired } from '@/components/system/AuthRequired';
+import { DEMO_DATA_ENABLED } from '@/lib/feature-flags';
 import {
   DEMO,
   DEFAULT_CID,
@@ -28,6 +32,7 @@ import s from './Cancel-Client.module.css';
 export default function CancelClient() {
   const { cid = DEFAULT_CID } = useParams();
   const [params] = useSearchParams();
+  const { apiAccessToken } = useSession();
   const navigate = useNavigate();
   const mock: CancelMock = resolveCancelMock(params.get('mock'));
   const demo = cancelDemoOf(mock);
@@ -42,6 +47,9 @@ export default function CancelClient() {
     setExplain(next.explain);
     setConfirmOpen(false);
   }, [params]);
+
+  if (apiAccessToken.trim()) return <LiveCancellation cid={cid} role="CLIENT" />;
+  if (!DEMO_DATA_ENABLED) return <AuthRequired />;
 
   const lines =
     reason === 'supplier'

@@ -20,6 +20,7 @@ export const DEMO = {
   businessDesc: '법인 · 개인사업자로 활동합니다.',
   career: '경력',
   careerHint: '연 단위로 적어 주세요.',
+  careerError: '0에서 80 사이의 정수로 적어 주세요',
   skills: '기술 스택',
   skillsHint: '의뢰인 명세의 필요 기술과 맞춰보는 데 씁니다.',
   skillOptions: [
@@ -34,7 +35,8 @@ export const DEMO = {
     '디자인',
   ] as const,
   portfolio: '포트폴리오 링크',
-  portfolioHint: '작업한 사이트, 깃허브, 노션 등.',
+  portfolioHint: '작업한 사이트, 깃허브, 노션 등. https:// 주소만 저장됩니다.',
+  portfolioError: 'https://로 시작하는 주소를 입력해 주세요',
   agreeTitle: '가입 전 확인',
   agrees: [
     {

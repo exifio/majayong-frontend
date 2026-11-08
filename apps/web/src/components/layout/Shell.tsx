@@ -9,7 +9,6 @@ import type { Shell as ShellKind } from '@/app/routes';
 import { ADMIN_MENU, ADMIN_MENU_BOTTOM } from '@/app/menus';
 import { useSession } from '@/app/session';
 import { apiRequest } from '@/lib/api';
-import { DEMO_ADMIN_QUEUES } from '@/mocks/demo';
 import { Chip, EmptyState } from '@/components/ui';
 import { Gnb, Logo, PublicHeader } from './Chrome';
 import { LogoMark } from './LogoMark';
@@ -53,6 +52,66 @@ function MinimalHeader() {
   );
 }
 
+type AdminQueueKey = Exclude<(typeof ADMIN_MENU)[number]['queue'], 'inquiries'>;
+type AdminQueueCounts = Record<AdminQueueKey, number | null>;
+
+const NO_QUEUE_COUNTS: AdminQueueCounts = {
+  blocks: null,
+  payments: null,
+  refunds: null,
+  disputes: null,
+  reports: null,
+};
+
+/* 개수 전용 API가 없어 각 목록 API(페이지 없이 전체를 돌려줌)의 길이로 센다.
+ * 실패하거나 모르면 null — 배지를 그리지 않는다(가짜 숫자 금지). */
+function loadAdminQueueCounts(
+  accessToken: string,
+  signal: AbortSignal,
+  onCount: (key: AdminQueueKey, count: number | null) => void,
+) {
+  const track = (key: AdminQueueKey, request: Promise<number>) => {
+    request
+      .then((count) => onCount(key, count))
+      .catch((error: unknown) => {
+        if (!(error instanceof Error && error.name === 'AbortError')) onCount(key, null);
+      });
+  };
+  track(
+    'blocks',
+    apiRequest('listAdminBlocks', '/admin/blocks', { accessToken, signal }).then(
+      ({ data }) =>
+        data.filter(
+          (row) => row.source === 'AI' && row.reviewedAt === null && row.isActive && !row.mergedIntoId,
+        ).length,
+    ),
+  );
+  track(
+    'payments',
+    apiRequest('listHeldDeposits', '/admin/deposits/held', { accessToken, signal }).then(
+      ({ data }) => data.filter((row) => row.status === 'HELD').length,
+    ),
+  );
+  track(
+    'refunds',
+    apiRequest('listCancellationQueue', '/admin/contracts/cancellation-queue', { accessToken, signal }).then(
+      ({ data }) => data.length,
+    ),
+  );
+  track(
+    'disputes',
+    apiRequest('listEscalatedInspections', '/admin/inspection-requests/escalated', { accessToken, signal }).then(
+      ({ data }) => data.length,
+    ),
+  );
+  track(
+    'reports',
+    apiRequest('listReports', '/admin/reports', { accessToken, signal, query: { status: 'OPEN' } }).then(
+      ({ data }) => data.filter((row) => row.status === 'OPEN').length,
+    ),
+  );
+}
+
 function AdminShell({ children }: { children: ReactNode }) {
   const { pathname } = useLocation();
   const { session, apiAccessToken } = useSession();
@@ -75,6 +134,19 @@ function AdminShell({ children }: { children: ReactNode }) {
     return () => controller.abort();
   }, [apiAccessToken, pathname]);
 
+  const [queueCounts, setQueueCounts] = useState<AdminQueueCounts>(NO_QUEUE_COUNTS);
+  useEffect(() => {
+    if (!apiAccessToken) {
+      setQueueCounts(NO_QUEUE_COUNTS);
+      return;
+    }
+    const controller = new AbortController();
+    loadAdminQueueCounts(apiAccessToken, controller.signal, (key, count) => {
+      setQueueCounts((current) => (current[key] === count ? current : { ...current, [key]: count }));
+    });
+    return () => controller.abort();
+  }, [apiAccessToken, pathname]);
+
   return (
     <AdminInquiryCountContext.Provider value={setInquiryCount}>
       <div data-shell="admin">
@@ -88,7 +160,7 @@ function AdminShell({ children }: { children: ReactNode }) {
           <nav className={s.adminSide} aria-label="운영자 메뉴">
             <ul>
               {ADMIN_MENU.map((m) => {
-                const count = m.queue === 'inquiries' ? inquiryCount : DEMO_ADMIN_QUEUES[m.queue];
+                const count = m.queue === 'inquiries' ? inquiryCount : queueCounts[m.queue];
                 return (
                   <li key={m.to}>
                     <Link className={s.adminLink} to={m.to} aria-current={pathname === m.to ? 'page' : undefined}>

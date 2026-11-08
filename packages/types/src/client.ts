@@ -26,7 +26,8 @@ export interface ClientPriceReportRow {
   name: string;
   approxPrice: Won;          // '약 N원'
   share: number;             // 비중 %
-  basis: [string, string, string];
+  /** 백엔드 priceBasis 한 문자열(줄바꿈으로 구분) */
+  basis: string;
   excluded: boolean;
 }
 

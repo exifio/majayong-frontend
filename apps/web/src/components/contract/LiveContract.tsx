@@ -33,6 +33,10 @@ export function LiveContract({ cid, styles }: { cid?: string; styles: Record<str
   const [withdrawing, setWithdrawing] = useState(false);
   const [withdrawError, setWithdrawError] = useState<string | null>(null);
   const [withdrawNotice, setWithdrawNotice] = useState<string | null>(null);
+  const [breakOpen, setBreakOpen] = useState(false);
+  const [breaking, setBreaking] = useState(false);
+  const [breakError, setBreakError] = useState<string | null>(null);
+  const [breakNotice, setBreakNotice] = useState<string | null>(null);
 
   useEffect(() => {
     if (!cid) return;
@@ -87,6 +91,34 @@ export function LiveContract({ cid, styles }: { cid?: string; styles: Record<str
       setWithdrawError(error instanceof ApiRequestError ? error.message : '취소 요청을 철회하지 못했습니다.');
     } finally {
       setWithdrawing(false);
+    }
+  }
+
+  /* 서명 전(PENDING_CONSENT) 결렬: 공급자는 서명 거절, 의뢰인은 임시 계약 취소. 서버가 역할·상태를 다시 확인한다. */
+  async function breakProvisional(asSupplier: boolean) {
+    if (!cid || breaking) return;
+    setBreakOpen(false);
+    setBreaking(true);
+    setBreakError(null);
+    setBreakNotice(null);
+    try {
+      const path = `/contracts/${encodeURIComponent(cid)}/${asSupplier ? 'decline' : 'cancel-provisional'}`;
+      const response = asSupplier
+        ? await apiRequest('declineContract', path, { method: 'POST', accessToken: apiAccessToken, jsonBody: {} })
+        : await apiRequest('cancelProvisionalContract', path, { method: 'POST', accessToken: apiAccessToken, jsonBody: {} });
+      setBreakNotice(response.data.broken
+        ? (asSupplier ? '서명을 거절했습니다. 계약이 결렬되었습니다.' : '임시 계약을 취소했습니다.')
+        : '이미 처리된 계약입니다. 최신 상태를 불러옵니다.');
+      setRetry((count) => count + 1);
+    } catch (error) {
+      if (error instanceof ApiRequestError && error.status === 401) {
+        setState('auth-error');
+      } else {
+        setBreakError(error instanceof ApiRequestError ? error.message : '요청을 처리하지 못했습니다. 다시 시도해 주세요.');
+        if (error instanceof ApiRequestError && error.status === 409) setRetry((count) => count + 1);
+      }
+    } finally {
+      setBreaking(false);
     }
   }
 
@@ -163,6 +195,11 @@ export function LiveContract({ cid, styles }: { cid?: string; styles: Record<str
     cancellation.cancelRequestedBy === authUser?.id &&
     cancellation.cancelResolvedAt === null &&
     cancellation.cancelEscalatedAt === null;
+  const canBreak = CONTRACT_SIGN_ENABLED && role !== 'ADMIN' && contract.status === 'PENDING_CONSENT';
+  const breakLabel = isSupplier ? '서명 거절' : '임시 계약 취소';
+  const canRequestCancel = role !== 'ADMIN' && contract.status === 'ACTIVE' &&
+    (contract.paymentStatus === 'DEPOSITED' || contract.paymentStatus === 'PARTIALLY_RELEASED');
+  const cancelHref = `${isSupplier ? '/s' : '/c'}/contracts/${encodeURIComponent(cid)}/cancel`;
   const listHref = isSupplier ? '/s/contracts' : '/c/contracts';
   const bandBody = contract.status === 'PENDING_CONSENT'
     ? (mySignedAt === null
@@ -207,6 +244,7 @@ export function LiveContract({ cid, styles }: { cid?: string; styles: Record<str
               {cancellation.cancelNote ?? '상대방이 취소를 요청했습니다.'}
               {cancellation.cancelEscalatedAt ? ' · 운영자 판정 대기 중입니다.' : ''}
             </p>
+            <p className={s.bandBody}><Link to={cancelHref}>취소 요청 자세히 보기</Link></p>
             {withdrawError ? <p role="alert">{withdrawError}</p> : null}
             {canWithdraw ? (
               <Button variant="ghost" type="button" disabled={withdrawing} onClick={() => setWithdrawOpen(true)}>
@@ -298,6 +336,19 @@ export function LiveContract({ cid, styles }: { cid?: string; styles: Record<str
               </Button>
             )}
 
+            {breakNotice && <p role="status">{breakNotice}</p>}
+            {breakError && <p role="alert">{breakError}</p>}
+            {canBreak ? (
+              <Button variant="warn" full type="button" disabled={breaking} onClick={() => setBreakOpen(true)}>
+                {breaking ? '처리 중' : breakLabel}
+              </Button>
+            ) : null}
+            {canRequestCancel ? (
+              <p className={s.doneNote}>
+                거래를 이어갈 수 없다면 <Link to={cancelHref}>계약 취소 요청</Link>을 보낼 수 있습니다.
+              </p>
+            ) : null}
+
             {!isSupplier && contract.status === 'ACTIVE' && contract.paymentStatus === 'PENDING' && (
               <p className={s.doneNote}>
                 다음 단계는 예치입니다. <Link to={`/c/contracts/${encodeURIComponent(cid)}/escrow`}>예치 화면 보기</Link>
@@ -323,6 +374,21 @@ export function LiveContract({ cid, styles }: { cid?: string; styles: Record<str
             서명 기한 {formatDateTime(contract.consentDeadline)}
           </p>
           <p>계약 내용과 금액·조건을 확인했습니다. 서명하면 계약에 서명한 것으로 기록되고, 양측 서명이 끝나면 계약이 체결됩니다.</p>
+        </ConfirmDialog>
+      )}
+      {breakOpen && (
+        <ConfirmDialog
+          title={isSupplier ? '이 계약의 서명을 거절할까요?' : '임시 계약을 취소할까요?'}
+          confirmLabel={breakLabel}
+          danger
+          onConfirm={() => void breakProvisional(isSupplier)}
+          onCancel={() => setBreakOpen(false)}
+        >
+          <p>
+            {isSupplier
+              ? '거절하면 계약이 결렬되고 이 지원은 선정되지 않은 것으로 바뀝니다. 되돌릴 수 없습니다.'
+              : '취소하면 계약이 결렬되고 이 공급자 선정이 취소됩니다. 되돌릴 수 없습니다.'}
+          </p>
         </ConfirmDialog>
       )}
       {withdrawOpen && (

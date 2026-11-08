@@ -11,10 +11,22 @@ import {
   TextField,
 } from '@/components/ui';
 import { LiveSettlementInfo } from '@/components/account/LiveSettlementInfo';
+import { LiveAccountSettings } from '@/components/account/LiveAccountSettings';
+import { useSession } from '@/app/session';
 import { DEMO, resolveAccountMock, type AccountMock } from './Account-Supplier.data';
 import s from './Account-Supplier.module.css';
 
+/** 로그인(토큰)했으면 실제 계정 API, ?mock=이 있으면 보드 시연을 그린다. */
 export default function AccountSupplier() {
+  const { apiAccessToken } = useSession();
+  const [params] = useSearchParams();
+  if (apiAccessToken.trim() && !params.has('mock')) {
+    return <LiveAccountSettings role="SUPPLIER" styles={s} screen="Account-Supplier" />;
+  }
+  return <AccountSupplierDemo />;
+}
+
+function AccountSupplierDemo() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const mock = resolveAccountMock(params.get('mock'));
@@ -102,9 +114,6 @@ export default function AccountSupplier() {
             <p className={s.k}>{DEMO.notifyLabel}</p>
             <p className={s.v}>{DEMO.notifyValue}</p>
           </div>
-          <Button variant="text" size="sm" type="button">
-            {DEMO.notifyEdit}
-          </Button>
         </li>
 
         <li className={`${s.row} ${s.leave}`}>

@@ -87,7 +87,7 @@ describe('Admin-Disputes — 이견 개입', () => {
     expect(within(root).getByText('두 손님이 동시에 예약하면 정원 12석을 넘습니다.')).toBeTruthy();
     expect(within(root).getByText('점심 1회 · 저녁 2회, 회차마다 정원 12석')).toBeTruthy();
     expect(within(root).getByText('동시 예약을 고쳤습니다.')).toBeTruthy();
-    expect(within(root).getByRole('button', { name: '판정 확정' }).hasAttribute('disabled')).toBe(true);
+    expect(within(root).getByRole('button', { name: '판정 보내기' }).hasAttribute('disabled')).toBe(true);
     expect(findDesignViolations(container)).toEqual([]);
   });
 
@@ -102,11 +102,11 @@ describe('Admin-Disputes — 이견 개입', () => {
     const { container } = renderAt('/admin/disputes', 'admin', undefined, 'test-token');
     const root = container.querySelector('[data-screen="Admin-Disputes"]') as HTMLElement;
 
-    fireEvent.click(await within(root).findByRole('radio', { name: /^승인/ }));
+    fireEvent.click(await within(root).findByRole('radio', { name: /^승인이 맞다/ }));
     fireEvent.change(within(root).getByLabelText(/판정 사유/), {
       target: { value: '회차 구성 조건을 충족했습니다.' },
     });
-    fireEvent.click(within(root).getByRole('button', { name: '판정 확정' }));
+    fireEvent.click(within(root).getByRole('button', { name: '판정 보내기' }));
 
     await waitFor(() =>
       expect(fetchMock.mock.calls.some(([, init]) => init?.method === 'POST')).toBe(true),
@@ -142,7 +142,23 @@ describe('Admin-Disputes — 이견 개입', () => {
     renderAt('/admin/disputes', 'admin', undefined, 'test-token');
 
     expect(await screen.findByText(/판정 완료/)).toBeTruthy();
-    expect(screen.getAllByText(/부분 정산/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/정하지 않은 조건이다/).length).toBeGreaterThan(0);
+    expect(screen.queryByText(/부분 정산/)).toBeNull();
+  });
+
+  it('판정 선택지는 보완이 맞다·승인이 맞다·정하지 않은 조건이다 순서로 보인다', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn<typeof fetch>().mockImplementation(async () => jsonResponse({ data: [inspection()] })),
+    );
+    const { container } = renderAt('/admin/disputes', 'admin', undefined, 'test-token');
+    const root = container.querySelector('[data-screen="Admin-Disputes"]') as HTMLElement;
+
+    await within(root).findByRole('heading', { name: '회차 예약' });
+    const names = within(root).getAllByRole('radio').map((radio) => radio.textContent ?? '');
+    expect(names[0]).toMatch(/^보완이 맞다/);
+    expect(names[1]).toMatch(/^승인이 맞다/);
+    expect(names[2]).toMatch(/^정하지 않은 조건이다/);
   });
 
   it('이견이 없으면 빈 상태를 보여 준다', async () => {

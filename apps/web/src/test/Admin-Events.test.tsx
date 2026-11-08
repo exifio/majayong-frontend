@@ -7,7 +7,7 @@ import { location, renderAt } from './render';
 
 describe('Admin-Events — 이벤트 기록', () => {
   it('목록 · formatDateTime · 필터 · primary 없음', () => {
-    const { container } = renderAt('/admin/events', 'admin');
+    const { container } = renderAt(`/admin/events?mock=${encodeURIComponent('목록')}`, 'admin');
     const root = container.querySelector('[data-screen="Admin-Events"]') as HTMLElement;
     expect(screen.getByRole('heading', { name: DEMO.title })).toBeTruthy();
     expect(within(root).getByText(/11월 2일 10:05/)).toBeTruthy();
@@ -35,7 +35,7 @@ describe('Admin-Events — 이벤트 기록', () => {
   });
 
   it('종류 필터', () => {
-    const { container } = renderAt('/admin/events', 'admin');
+    const { container } = renderAt(`/admin/events?mock=${encodeURIComponent('목록')}`, 'admin');
     const root = container.querySelector('[data-screen="Admin-Events"]') as HTMLElement;
     fireEvent.change(within(root).getByLabelText(DEMO.kindLabel), {
       target: { value: '단가 수정' },

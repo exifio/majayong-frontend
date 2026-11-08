@@ -2,6 +2,7 @@ import type {
   DataEnvelope,
   IsoDate,
   NotificationType,
+  Role,
 } from './common';
 
 /**
@@ -201,6 +202,41 @@ export interface PublishedProjectDto {
   itemCount: number;
 }
 
+/* ── 초안·프로젝트 ── */
+/** GET /drafts/{draftId}/price-report — 의뢰인 본인 초안만. 확정된 초안은 409 DRAFT_ALREADY_CONFIRMED. */
+export interface PriceReportItemDto {
+  blockId: string;
+  name: string;
+  status: 'ADDED' | 'REMOVED' | 'SUGGESTED';
+  unitPrice: number;
+  /** 근거 한 문자열(줄바꿈으로 나뉜 3줄: 들어간 작업 / 작업량 기준 / 달라질 수 있는 것) */
+  priceBasis: string;
+  includedInEstimate: boolean;
+  /** 포함 항목 합계 대비 비중(소수 1자리), 제외 항목은 0 */
+  sharePercent: number;
+}
+
+export interface PriceReportDto {
+  subtotal: number;
+  clientFee: number;
+  estimatedTotal: number;
+  pendingFeatureCount: number;
+  items: PriceReportItemDto[];
+}
+
+/** POST /drafts/{draftId}/apply-estimate — 본문 없음. 희망 예산을 예상 총액으로 바꾼다. */
+export interface ApplyEstimateResultDto {
+  hopeBudget: number;
+  estimatedTotal: number;
+}
+
+/** POST /projects/{projectId}/extend-deadline — 기존 마감 이후 14일 이내, RECRUITING · SELECTING · EXPIRED만. */
+export interface ExtendDeadlineResultDto {
+  projectId: string;
+  deadline: IsoDate;
+  status: ApiProjectStatus;
+}
+
 /** Public supplier profile (GET /profiles/suppliers/{supplierId}). */
 export interface SupplierPublicProfileDto {
   supplierId: string;
@@ -354,6 +390,8 @@ export interface CancellationDto {
   cancelRequestedBy: string | null;
   cancelRequestedAt: IsoDate | null;
   cancelNote: string | null;
+  /** 요청 때 고른 근거 메시지. 근거 없이 요청하면 null. */
+  cancelEvidence: CancelEvidenceDto | null;
   objectionRate: number | null;
   objectionNote: string | null;
   cancelEscalatedAt: IsoDate | null;
@@ -363,7 +401,14 @@ export interface CancellationDto {
   refundAmount: number | null;
   settledAmount: number | null;
   clientFeeRefund: number | null;
+  refundReason: string | null;
+  refundedAt: IsoDate | null;
+  cancelPayoutAt: IsoDate | null;
   paused: boolean;
+}
+
+export interface CancelEvidenceDto {
+  messageIds: string[];
 }
 
 export type ApiDepositStatus = 'PENDING' | 'HELD' | 'COMPLETED' | 'FAILED';
@@ -464,14 +509,100 @@ export interface PaymentStatementsDto {
 
 export type ApiBusinessType = 'BUSINESS' | 'INDIVIDUAL';
 
+/* ── 계정·프로필 ── */
+export type ApiPortfolioItem = { type: 'LINK' | 'FILE'; url: string; title?: string };
+export type ApiPortfolioSummaryStatus = 'DRAFT' | 'PUBLISHED' | 'HIDDEN';
+
+/** GET /me — 계정 기본 정보. 로그인 수단(구글 연결·비밀번호 유무)은 돌려주지 않는다. */
+export interface MeDto {
+  id: string;
+  email: string;
+  role: Role;
+  name: string | null;
+  profileImageUrl: string | null;
+  bio: string | null;
+  termsVersion: string | null;
+  termsAgreedAt: IsoDate | null;
+  createdAt: IsoDate;
+}
+
+/** GET/PATCH /me/client-profile. 프로필 행이 없으면 data는 null. */
+export interface MyClientProfileDto {
+  name: string | null;
+  profileImageUrl: string | null;
+  bio: string | null;
+  businessName: string | null;
+  industryField: string | null;
+  storeAddress: string | null;
+  websiteUrl: string | null;
+  profileCompleted: boolean;
+}
+
+/** GET/PATCH /me/supplier-profile. 프로필 행이 없으면 data는 null. */
 export interface MySupplierProfileDto {
+  name: string | null;
+  profileImageUrl: string | null;
+  bio: string | null;
   displayName: string;
+  industryCodes: string[];
+  skills: string[];
+  careerYears: number | null;
+  /** 저장된 JSON 그대로 — FILE의 url은 비공개 저장소 경로다. */
+  portfolioItems: ApiPortfolioItem[] | null;
+  portfolioSummary: string | null;
+  portfolioSummaryStatus: ApiPortfolioSummaryStatus | null;
+  portfolioConsentAt: IsoDate | null;
+  ndaAgreedAt: IsoDate | null;
+  ndaVersion: string | null;
   businessType: ApiBusinessType | null;
   bizRegNoMasked: string | null;
   payoutBank: string | null;
   payoutAccountMasked: string | null;
   payoutHolder: string | null;
   payoutVerifiedAt: IsoDate | null;
+  ratingAvg: number | null;
+  reviewCount: number;
+}
+
+/** GET /projects/{projectId}/client-profile — 공급자 전용, NDA 동의와 명세 상세 열람 후. 열람 기록이 남는다. */
+export interface ClientProjectProfileDto {
+  name: string | null;
+  profileImageUrl: string | null;
+  bio: string | null;
+  businessName: string;
+  industryField: string | null;
+  storeAddress: string | null;
+  websiteUrl: string | null;
+  createdAt: IsoDate;
+  ratingAvg: number | null;
+  reviewCount: number;
+  recruitingProjectCount: number;
+}
+
+export interface UpdateClientProfileRequestDto {
+  name?: string | null;
+  profileImageUrl?: string | null;
+  bio?: string | null;
+  businessName?: string | null;
+  industryField?: string | null;
+  storeAddress?: string | null;
+  websiteUrl?: string | null;
+}
+
+export interface UpdateSupplierProfileRequestDto {
+  name?: string | null;
+  profileImageUrl?: string | null;
+  bio?: string | null;
+  displayName?: string;
+  industryCodes?: string[];
+  /** 최대 40개, 각 100자 이하. */
+  skills?: string[];
+  /** 0~80 정수. */
+  careerYears?: number | null;
+  /** 최대 30개. LINK는 https만, FILE은 본인 portfolio 경로만. 바꾸면 요약·요약 동의가 초기화된다. */
+  portfolioItems?: ApiPortfolioItem[] | null;
+  portfolioConsent?: boolean;
+  ndaConsent?: boolean;
 }
 
 export interface TaxInfoResultDto {
@@ -742,6 +873,85 @@ export interface DecideInspectionDisputeRequestDto {
   decisionNotes: { client: string; supplier: string };
 }
 
+/* ── 운영자(admin-ops) ── */
+/** `GET /admin/deposits/held`. 백엔드는 HELD만 돌려주고 heldReason은 현재 빈 문자열일 수 있다. */
+export interface AdminHeldDepositDto {
+  id: string;
+  contractId: string;
+  amount: number;
+  status: 'HELD' | 'COMPLETED' | 'FAILED';
+  heldReason: string;
+}
+
+export type AdminHeldDepositDecision = 'OPERATOR_CONFIRMED' | 'OPERATOR_VOIDED';
+
+export interface ResolveHeldDepositRequestDto {
+  decision: AdminHeldDepositDecision;
+  reason: string;
+  /** OPERATOR_CONFIRMED는 PG 재조회용 paymentKey가 필요하다. */
+  paymentKey?: string;
+}
+
+/** `GET /admin/contracts/cancellation-queue` — CANCEL_REQUESTED 계약. */
+export interface AdminCancellationContractDto {
+  id: string;
+  status: string;
+  /** CancelCause. 값이 없으면 빈 문자열. */
+  cancelCause: ApiCancelCause | '';
+  totalDeposited: number;
+  agreedAmount: number;
+  clientFee: number;
+  /** 요청 단계에서는 요청자가 제안한 비율, 판정 후에는 확정 비율. */
+  compensationRate?: number | null;
+  cancelResolution?: 'ADMIN_DECIDED' | null;
+  cancelResolvedAt?: IsoDate | null;
+  refundAmount?: number | null;
+  settledAmount?: number | null;
+  clientFeeRefund?: number | null;
+  refundedAt?: IsoDate | null;
+  cancelPayoutAt?: IsoDate | null;
+  depositedAt?: IsoDate | null;
+  cancelRequestedAt?: IsoDate | null;
+  cancelEscalatedAt?: IsoDate | null;
+  /** 공급자 이의 시 요구 보상 비율. */
+  objectionRate?: number | null;
+  installmentStatuses?: string[];
+}
+
+export interface DecideCancellationRequestDto {
+  /** 0~100 정수. 의뢰인 사정(전액 환불 구간 제외)은 50 이상. */
+  compensationRate: number;
+  reason: string;
+}
+
+export interface MarkSettlementProcessedRequestDto {
+  refunded: boolean;
+  cancelPayout: boolean;
+  reason: string;
+}
+
+/** `GET /admin/event-logs`. 전후 값은 응답에 없다. */
+export interface AdminEventLogDto {
+  id: string;
+  actorUserId: string;
+  actionType: string;
+  targetType: string;
+  targetId: string;
+  reason: string;
+  occurredAt: IsoDate;
+}
+
+export interface AdminEventLogQueryDto {
+  actorUserId?: string;
+  actionType?: string;
+  targetType?: string;
+  targetId?: string;
+  /** ISO 8601 */
+  from?: IsoDate;
+  /** ISO 8601 */
+  to?: IsoDate;
+}
+
 export interface InquiryAttachmentDto {
   /** 신규 업로드 첨부. 구버전 응답에는 없을 수 있다. */
   fileId?: string;
@@ -838,12 +1048,16 @@ export interface AnswerInquiryRequestDto {
   answer: string;
 }
 
-export interface PresignUploadRequestDto {
-  purpose: 'SUPPORT_INQUIRY';
+interface PresignUploadFileDto {
   fileName: string;
   fileSize: number;
   mimeType: string;
 }
+
+/** 문의 첨부는 계약 없이, 납품 파일은 담당 공급자의 contractId와 함께 요청한다. */
+export type PresignUploadRequestDto =
+  | (PresignUploadFileDto & { purpose: 'SUPPORT_INQUIRY'; inquiryId?: string })
+  | (PresignUploadFileDto & { purpose: 'DELIVERY'; contractId: string });
 
 export interface PresignUploadResponseDto {
   fileId: string;
@@ -857,23 +1071,56 @@ export interface PresignDownloadResponseDto {
   expiresInSec: number;
 }
 
-export interface PresignUploadRequestDto {
-  purpose: 'SUPPORT_INQUIRY';
-  fileName: string;
-  fileSize: number;
-  mimeType: string;
+/* ── 계약 흐름 ── */
+export type ApiInspectionReason = 'CONDITION_MISMATCH' | 'NOT_WORKING' | 'MISSING_PART' | 'OTHER';
+export type ApiInspectionStatus = 'OPEN' | 'RESOLVED' | 'ESCALATED';
+
+/** GET/POST 보완 요청(`/contract-items/{id}/rework-requests`) 한 건. */
+export interface InspectionRequestDto {
+  id: string;
+  deliveryId: string;
+  contractItemId: string;
+  reason: ApiInspectionReason;
+  conditionKey: string | null;
+  note: string | null;
+  status: ApiInspectionStatus;
+  escalatedAt: IsoDate | null;
+  resolvedAt?: IsoDate | null;
+  createdAt: IsoDate;
 }
 
-export interface PresignUploadResponseDto {
-  fileId: string;
-  uploadUrl: string;
-  objectKey: string;
-  expiresInSec: number;
+export interface EscalateInspectionRequestDto {
+  reason: string;
+  what: string;
+  claims?: { client: string; supplier: string };
+  evidence?: unknown;
 }
 
-export interface PresignDownloadResponseDto {
-  downloadUrl: string;
-  expiresInSec: number;
+export interface RequestCancellationRequestDto {
+  cause: ApiCancelCause;
+  note: string;
+  /** 1개 이상일 때만 보낸다. 빈 목록은 서버가 거부한다. */
+  evidence?: CancelEvidenceDto;
+  /** MUTUAL일 때 필수, 0~100 정수. */
+  proposedCompensationRate?: number;
+}
+
+export interface ObjectCancellationRequestDto {
+  objectionRate: number;
+  note: string;
+}
+
+/** 취소 요청·동의·이의 응답. 서버는 계약의 취소 관련 필드를 그대로 돌려준다. */
+export type CancellationUpdateDto = Partial<CancellationDto> & {
+  id: string;
+  status: ApiContractStatus;
+};
+
+export interface TaxInvoiceIssuedResultDto {
+  id: string;
+  stage: ApiInstallmentStage;
+  status: ApiInstallmentStatus;
+  taxInvoiceIssuedAt: IsoDate | null;
 }
 
 /** These operations require JSON on the wire but accept no fields. */
@@ -890,20 +1137,18 @@ export type BApiEmptyJsonBodyOperation =
   | 'readAllNotifications'
   | 'retryDraft'
   | 'restoreDraft'
-  | 'withdrawCancellation';
+  | 'withdrawCancellation'
+  | 'agreeCancellation'
+  | 'markTaxInvoiceIssued';
 
 /** Request bodies keyed by matching OpenAPI operationId. */
 export interface BApiRequestBodies {
-  /** A API: only the fields this client sends today. */
-  updateSupplierProfile: { ndaConsent?: boolean; displayName?: string };
-  updateClientProfile: {
-    name?: string;
-    bio?: string | null;
-    businessName?: string;
-    industryField?: string;
-    storeAddress?: string | null;
-    websiteUrl?: string | null;
-  };
+  /* ── 계정·프로필 ── */
+  updateSupplierProfile: UpdateSupplierProfileRequestDto;
+  updateClientProfile: UpdateClientProfileRequestDto;
+  changePassword: { currentPassword?: string; newPassword: string };
+  requestEmailChange: { email: string };
+  disconnectGoogle: { password: string };
   updateClientTaxInfo: { bizRegNo?: string | null; taxInvoiceEmail?: string | null };
   updateSupplierTaxInfo: {
     businessType?: ApiBusinessType | null;
@@ -916,9 +1161,10 @@ export interface BApiRequestBodies {
   approveContractItem: { deliveryId: string };
   requestRework: {
     deliveryId: string;
-    reason: 'CONDITION_MISMATCH' | 'NOT_WORKING' | 'MISSING_PART' | 'OTHER';
+    reason: ApiInspectionReason;
+    /** CONDITION_MISMATCH이면 필수이며 DECIDED 조건 키여야 한다. */
     conditionKey?: string;
-    note?: string;
+    note: string;
   };
   createReview: {
     rating: number;
@@ -939,6 +1185,12 @@ export interface BApiRequestBodies {
   declineContract: EmptyJsonObjectDto;
   cancelProvisionalContract: EmptyJsonObjectDto;
   withdrawCancellation: EmptyJsonObjectDto;
+  /* ── 계약 흐름 ── */
+  requestCancellation: RequestCancellationRequestDto;
+  agreeCancellation: EmptyJsonObjectDto;
+  objectCancellation: ObjectCancellationRequestDto;
+  escalateInspection: EscalateInspectionRequestDto;
+  markTaxInvoiceIssued: EmptyJsonObjectDto;
   readNotification: EmptyJsonObjectDto;
   readAllNotifications: EmptyJsonObjectDto;
   createDraft: { entryType: ApiDraftEntryType; text?: string };
@@ -946,6 +1198,8 @@ export interface BApiRequestBodies {
   addDraftBlock: { blockId: string };
   updateConditionNote: { key: string; note: string };
   updateHopeBudget: { hopeBudget: number | null };
+  /* ── 초안·프로젝트 ── */
+  extendProjectDeadline: { deadline: IsoDate };
   publishDraft: {
     recruitStartAt?: IsoDate;
     deadline: IsoDate;
@@ -962,6 +1216,10 @@ export interface BApiRequestBodies {
   presignUpload: PresignUploadRequestDto;
   executeAdminBlockAction: ExecuteAdminBlockActionRequestDto;
   decideInspectionDispute: DecideInspectionDisputeRequestDto;
+  /* ── 운영자(admin-ops) ── */
+  resolveHeldDeposit: ResolveHeldDepositRequestDto;
+  decideCancellation: DecideCancellationRequestDto;
+  markSettlementProcessed: MarkSettlementProcessedRequestDto;
 }
 
 /** Query DTOs accepted by the matching handlers. */
@@ -983,6 +1241,8 @@ export interface BApiQueryParams {
   listMyReports: { status?: ApiReportStatus };
   listReports: { status?: ApiReportStatus };
   listAdminInquiries: { status?: ApiInquiryStatus };
+  /* ── 운영자(admin-ops) ── */
+  listEventLogs: AdminEventLogQueryDto;
 }
 
 /** Response envelopes keyed by openapi/openapi.yaml operationId. */
@@ -1004,6 +1264,10 @@ export interface BApiResponses {
   updateConditionNote: DataEnvelope<DraftDto>;
   updateHopeBudget: DataEnvelope<DraftDto>;
   publishDraft: DataEnvelope<PublishedProjectDto>;
+  /* ── 초안·프로젝트 ── */
+  getDraftPriceReport: DataEnvelope<PriceReportDto>;
+  applyDraftEstimate: DataEnvelope<ApplyEstimateResultDto>;
+  extendProjectDeadline: DataEnvelope<ExtendDeadlineResultDto>;
   getApplication: DataEnvelope<ApplicationRevisionDto>;
   withdrawApplication: DataEnvelope<ApplicationStatusResultDto>;
   rejectApplication: DataEnvelope<ApplicationStatusResultDto>;
@@ -1016,9 +1280,17 @@ export interface BApiResponses {
   getSupplierProfile: DataEnvelope<SupplierPublicProfileDto>;
   listPublicProjects: DataEnvelope<PublicProjectListItemDto[]>;
   getSupplierProjectDetail: DataEnvelope<SupplierProjectDetailDto>;
-  updateSupplierProfile: DataEnvelope<unknown>;
-  updateClientProfile: DataEnvelope<unknown>;
-  getMySupplierProfile: DataEnvelope<MySupplierProfileDto>;
+  /* ── 계정·프로필 ── */
+  updateSupplierProfile: DataEnvelope<MySupplierProfileDto | null>;
+  updateClientProfile: DataEnvelope<MyClientProfileDto | null>;
+  getMySupplierProfile: DataEnvelope<MySupplierProfileDto | null>;
+  getMyClientProfile: DataEnvelope<MyClientProfileDto | null>;
+  getClientProjectProfile: DataEnvelope<ClientProjectProfileDto>;
+  getMe: DataEnvelope<MeDto>;
+  changePassword: DataEnvelope<{ passwordChanged: true }>;
+  requestEmailChange: DataEnvelope<{ requested: true }>;
+  disconnectGoogle: DataEnvelope<{ googleDisconnected: true }>;
+  withdrawAccount: DataEnvelope<{ withdrawnAt: IsoDate }>;
   updateClientTaxInfo: DataEnvelope<TaxInfoResultDto>;
   updateSupplierTaxInfo: DataEnvelope<TaxInfoResultDto>;
   updatePayoutAccount: DataEnvelope<PayoutAccountResultDto>;
@@ -1027,7 +1299,7 @@ export interface BApiResponses {
   listDeliveries: DataEnvelope<DeliveryDto[]>;
   submitDelivery: DataEnvelope<DeliveryDto>;
   approveContractItem: DataEnvelope<{ id: string; approvedAt: IsoDate | null; autoApproved: boolean }>;
-  requestRework: DataEnvelope<{ id: string; status: string }>;
+  requestRework: DataEnvelope<InspectionRequestDto>;
   listChatRooms: DataEnvelope<ChatRoomSummaryDto[]>;
   openChat: DataEnvelope<OpenChatResultDto>;
   listMessages: DataEnvelope<ConversationViewDto>;
@@ -1069,6 +1341,22 @@ export interface BApiResponses {
   executeAdminBlockAction: DataEnvelope<AdminBlockActionResultDto>;
   listEscalatedInspections: DataEnvelope<AdminEscalatedInspectionDto[]>;
   decideInspectionDispute: DataEnvelope<AdminEscalatedInspectionDto>;
+  /* ── 운영자(admin-ops) ── */
+  listHeldDeposits: DataEnvelope<AdminHeldDepositDto[]>;
+  resolveHeldDeposit: DataEnvelope<AdminHeldDepositDto>;
+  listCancellationQueue: DataEnvelope<AdminCancellationContractDto[]>;
+  decideCancellation: DataEnvelope<AdminCancellationContractDto>;
+  markSettlementProcessed: DataEnvelope<AdminCancellationContractDto>;
+  listEventLogs: DataEnvelope<AdminEventLogDto[]>;
+  /* ── 계약 흐름 ── */
+  getDelivery: DataEnvelope<DeliveryDto>;
+  listReworkRequests: DataEnvelope<InspectionRequestDto[]>;
+  escalateInspection: DataEnvelope<InspectionRequestDto>;
+  requestCancellation: DataEnvelope<CancellationUpdateDto>;
+  agreeCancellation: DataEnvelope<CancellationUpdateDto>;
+  objectCancellation: DataEnvelope<CancellationUpdateDto>;
+  getContractStatement: DataEnvelope<PaymentStatementDto>;
+  markTaxInvoiceIssued: DataEnvelope<TaxInvoiceIssuedResultDto>;
 }
 
 export type BApiOperationId = keyof BApiResponses;

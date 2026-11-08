@@ -24,11 +24,10 @@ describe('Signup-Client — 회원가입 ③ 의뢰인 프로필', () => {
     expect(within(root).queryByLabelText(/연락처|전화/)).toBeNull();
     const biz = within(root).getByLabelText(/상호/) as HTMLInputElement;
     const industry = within(root).getByLabelText(/업종/) as HTMLSelectElement;
-    const scale = within(root).getByLabelText(/규모/) as HTMLInputElement;
     const intro = within(root).getByLabelText(/한 줄 소개/) as HTMLTextAreaElement;
     expect(biz.value).toBe('');
     expect(industry.value).toBe('');
-    expect(scale.value).toBe('');
+    expect(within(root).queryByLabelText(/규모/)).toBeNull();
     expect(intro.value).toBe('');
 
     const submit = within(root).getByRole('button', { name: DEMO.submit });
@@ -37,7 +36,6 @@ describe('Signup-Client — 회원가입 ③ 의뢰인 프로필', () => {
 
     fireEvent.change(biz, { target: { value: '실제 의뢰인 상호' } });
     fireEvent.change(industry, { target: { value: DEMO.industries[1] } });
-    fireEvent.change(scale, { target: { value: '20석' } });
     fireEvent.change(intro, { target: { value: '실제 가게 소개' } });
 
     fireEvent.click(submit);

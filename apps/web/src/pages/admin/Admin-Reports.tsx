@@ -12,6 +12,7 @@ import {
   EmptyState,
   MaskedText,
   SelectCards,
+  REPORT_STATUS_LABEL,
   StatusChip,
   TextAreaField,
 } from '@/components/ui';
@@ -49,9 +50,9 @@ const REASON_LABEL: Record<ApiReportReason, string> = {
 };
 
 const ACTION_LABEL: Record<ApiReportAction, string> = {
-  NONE: '조치 없음',
+  NONE: '문제 없음',
   WARNING: '경고',
-  CHAT_RESTRICT_7D: '채팅 제한 7일',
+  CHAT_RESTRICT_7D: '채팅 7일 제한',
   SUSPEND: '계정 정지',
 };
 
@@ -61,7 +62,7 @@ const ROLE_LABEL = {
   ADMIN: '운영자',
 } as const;
 
-type ResolveAction = Extract<ApiReportAction, 'NONE' | 'WARNING' | 'SUSPEND'>;
+type ResolveAction = ApiReportAction;
 type LoadState = 'loading' | 'ready' | 'error';
 
 const ACTION_OPTIONS = [
@@ -69,7 +70,7 @@ const ACTION_OPTIONS = [
     key: 'NONE',
     label: (
       <span>
-        <b>조치 없음</b>
+        <b>{ACTION_LABEL.NONE}</b>
         <span>신고를 닫습니다</span>
       </span>
     ),
@@ -78,8 +79,17 @@ const ACTION_OPTIONS = [
     key: 'WARNING',
     label: (
       <span>
-        <b>경고</b>
+        <b>{ACTION_LABEL.WARNING}</b>
         <span>규칙 안내와 함께 경고</span>
+      </span>
+    ),
+  },
+  {
+    key: 'CHAT_RESTRICT_7D',
+    label: (
+      <span>
+        <b>{ACTION_LABEL.CHAT_RESTRICT_7D}</b>
+        <span>7일 동안 새 메시지 금지</span>
       </span>
     ),
   },
@@ -87,7 +97,7 @@ const ACTION_OPTIONS = [
     key: 'SUSPEND',
     label: (
       <span>
-        <b>계정 정지</b>
+        <b>{ACTION_LABEL.SUSPEND}</b>
         <span>로그인 불가 · 프로필 숨김</span>
       </span>
     ),
@@ -97,6 +107,7 @@ const ACTION_OPTIONS = [
 const ACTION_PREVIEWS: Record<ResolveAction, string> = {
   NONE: "신고를 닫고 신고자에게 '검토 완료'를 알립니다.",
   WARNING: '대상에게 경고와 규칙 안내를 보냅니다. 경고 2회가 쌓이면 채팅 제한을 검토합니다.',
+  CHAT_RESTRICT_7D: '대상은 지금부터 7일 동안 채팅에 새 메시지를 보낼 수 없습니다. 기한이 지나면 다시 보낼 수 있습니다.',
   SUSPEND: '로그인할 수 없고 공개 프로필이 숨겨집니다. 진행 중인 계약은 운영자가 따로 취소 정산합니다.',
 };
 
@@ -232,7 +243,7 @@ export default function AdminReports() {
                     >
                       <div className={s.rowChips}>
                         <Chip tone="amber">{REASON_LABEL[row.reason]}</Chip>
-                        <StatusChip status={row.status} />
+                        <StatusChip status={row.status} labels={REPORT_STATUS_LABEL} />
                       </div>
                       <span className={s.rowName}>{row.message.projectTitle}</span>
                       <span className={s.rowMeta}>
@@ -261,7 +272,7 @@ export default function AdminReports() {
 
             <div className={s.detailChips}>
               <Chip tone="amber">{REASON_LABEL[selected.reason]}</Chip>
-              <StatusChip status={selected.status} />
+              <StatusChip status={selected.status} labels={REPORT_STATUS_LABEL} />
               {selected.action ? <Chip tone="teal">{ACTION_LABEL[selected.action]}</Chip> : null}
             </div>
             <h2 className={s.detailTitle}>

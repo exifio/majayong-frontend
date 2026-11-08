@@ -152,6 +152,7 @@
   color: var(--slate-900);
 }
 .basisK { color: var(--slate-600); }
+.basisV { white-space: pre-line; }
 
 .fnOut .fnName {
   color: var(--slate-600);

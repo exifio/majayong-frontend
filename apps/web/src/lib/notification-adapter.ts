@@ -19,7 +19,7 @@ const MESSAGE_BY_TYPE: Record<NotificationType, string> = {
   INQUIRY_ANSWERED: '문의에 답변이 등록되었습니다.',
 };
 
-function screenUrl(notification: NotificationDto, role: Exclude<Role, 'ADMIN'>): string {
+function screenUrl(notification: NotificationDto, role: Exclude<Role, 'ADMIN'>): string | undefined {
   const targetId = encodeURIComponent(notification.targetId);
   switch (notification.type) {
     case 'APPLICATION_RECEIVED':
@@ -68,9 +68,10 @@ export function notificationToItem(
   return {
     id: notification.id,
     type: notification.type,
-    message: MESSAGE_BY_TYPE[notification.type],
+    // 모르는 종류(서버가 먼저 추가한 경우)도 화면이 깨지지 않게 기본 문구 · 서버 링크 · 역할 홈으로 보낸다.
+    message: MESSAGE_BY_TYPE[notification.type] ?? '새 알림이 있습니다.',
     target: notification.targetId,
-    targetUrl: screenUrl(notification, role),
+    targetUrl: screenUrl(notification, role) ?? (notification.targetUrl || (role === 'CLIENT' ? '/c' : '/s')),
     isRead: notification.isRead,
     createdAt: notification.createdAt,
   };

@@ -152,3 +152,29 @@ export function isWithinExtend(
   const diff = (next.getTime() - from.getTime()) / (24 * 60 * 60 * 1000);
   return diff >= 1 && diff <= maxDays;
 }
+
+/* ── 실제 마감 연장(POST /projects/:projectId/extend-deadline) ──
+ * 서버 규칙: RECRUITING · SELECTING · EXPIRED만, 새 마감 - 지금 마감이 0 초과 14일 이하(ms 단위). */
+export const EXTENDABLE_STATUSES = ['RECRUITING', 'SELECTING', 'EXPIRED'] as const;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** 고른 날짜(YYYY-MM-DD)를 지금 마감과 같은 시각의 새 마감으로 바꾼다. 범위를 벗어나면 null. */
+export function extendedDeadlineOf(currentIso: string, pickedIso: string, maxDays = DEMO.extendMaxDays): Date | null {
+  const current = new Date(currentIso);
+  const matched = pickedIso.trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (Number.isNaN(current.getTime()) || !matched) return null;
+  const picked = new Date(Number(matched[1]), Number(matched[2]) - 1, Number(matched[3]));
+  const base = new Date(current.getFullYear(), current.getMonth(), current.getDate());
+  const days = Math.round((picked.getTime() - base.getTime()) / DAY_MS);
+  if (!Number.isFinite(days) || days < 1 || days > maxDays) return null;
+  return new Date(current.getTime() + days * DAY_MS);
+}
+
+export const EXTEND_ERROR_MESSAGES: Partial<Record<string, string>> = {
+  PROJECT_NOT_FOUND: '프로젝트를 찾을 수 없습니다. 내 프로젝트에서 다시 열어 주세요.',
+  PROJECT_DEADLINE_NOT_EXTENDABLE: '지금 상태에서는 마감을 연장할 수 없습니다. 모집 중 · 선정 중 · 마감된 프로젝트만 연장할 수 있습니다.',
+  PROJECT_DEADLINE_MISSING: '마감일이 없는 프로젝트라 연장할 수 없습니다.',
+  INVALID_DEADLINE_EXTENSION: '지금 마감일부터 최대 14일까지 늘릴 수 있습니다. 날짜를 다시 골라 주세요.',
+  INVALID_REQUEST: '날짜 형식이 올바르지 않습니다. 다시 골라 주세요.',
+  ROLE_MISMATCH: '의뢰인 계정으로 로그인한 뒤 다시 시도해 주세요.',
+};

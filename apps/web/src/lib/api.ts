@@ -39,6 +39,8 @@ const EMPTY_JSON_BODY_OPERATIONS = new Set<BApiEmptyJsonBodyOperation>([
   'declineContract',
   'cancelProvisionalContract',
   'withdrawCancellation',
+  'agreeCancellation',
+  'markTaxInvoiceIssued',
   'readNotification',
   'readAllNotifications',
 ]);

@@ -9,6 +9,7 @@ import { ApiRequestError, apiRequest } from '@/lib/api';
 import { formatDate, formatWon } from '@/lib/format';
 import { industryLabel } from '@/lib/industry-label';
 import { projectDetailToScreen } from '@/lib/project-adapter';
+import { publicClientHref } from '@/lib/account-profile';
 
 type State = 'loading' | 'success' | 'nda' | 'auth-error' | 'error';
 
@@ -157,6 +158,7 @@ export function LiveProjectDetail({ pid, styles }: { pid?: string; styles: Recor
           <section className={s.fc} aria-label="의뢰인 정보">
             <div className={s.nmrow}>
               <span className={s.nm}>{detail.client.businessName ?? '상호 미등록'}</span>
+              {detail.client.businessName ? <Link to={publicClientHref(pid)}>프로필 보기</Link> : null}
             </div>
             {detail.client.name && <p className={s.ds}>{detail.client.name}</p>}
             {detail.client.industryField && <p className={s.ds}>{detail.client.industryField}</p>}

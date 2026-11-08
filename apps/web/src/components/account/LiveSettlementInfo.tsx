@@ -61,6 +61,8 @@ export function LiveSettlementInfo({ role }: { role: 'CLIENT' | 'SUPPLIER' }) {
     const controller = new AbortController();
     apiRequest('getMySupplierProfile', '/me/supplier-profile', { accessToken: apiAccessToken, signal: controller.signal })
       .then((response) => {
+        // 프로필 행이 아직 없으면 data는 null — 빈 입력 상태 그대로 둔다.
+        if (!response.data) return;
         setBusinessType(response.data.businessType ?? 'INDIVIDUAL');
         setBizMasked(response.data.bizRegNoMasked);
         setPayout({

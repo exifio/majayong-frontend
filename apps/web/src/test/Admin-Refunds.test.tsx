@@ -7,13 +7,14 @@ import { renderAt } from './render';
 
 describe('Admin-Refunds — 환불 처리', () => {
   it('처리 대기 · 정산안 Money · 환불 확정 primary 하나', () => {
-    const { container } = renderAt('/admin/refunds?id=rf-1', 'admin');
+    const { container } = renderAt(`/admin/refunds?mock=${encodeURIComponent('처리 대기')}&id=rf-1`, 'admin');
     const root = container.querySelector('[data-screen="Admin-Refunds"]') as HTMLElement;
     expect(screen.getByRole('heading', { name: DEMO.title })).toBeTruthy();
     expect(within(root).getAllByText(/2,441,250원/).length).toBeGreaterThan(0);
     expect(within(root).getAllByText(/736,250원/).length).toBeGreaterThan(0);
     expect(root.querySelectorAll('[data-btn="primary"]').length).toBe(1);
     expect(within(root).getByRole('button', { name: DEMO.confirm })).toBeTruthy();
+    expect(within(root).queryByText(/데이터 값/)).toBeNull();
     expect(findDesignViolations(container)).toEqual([]);
   });
 

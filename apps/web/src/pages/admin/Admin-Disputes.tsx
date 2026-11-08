@@ -24,7 +24,7 @@ const PAGE = {
   sub: '같은 항목에 보완 요청이 반복되면 개입합니다. 판단 근거는 계약서에 첨부된 합의 내용의 조건 줄이고, 화면은 근거를 모아 보여 줍니다.',
   listLabel: '이견 목록',
   detailLabel: '이견 상세',
-  confirm: '판정 확정',
+  confirm: '판정 보내기',
   reasonLabel: '판정 사유',
   reasonNeed: '사유를 적어 주세요',
   eventNote: '이 처리는 이벤트 기록에 남습니다',
@@ -36,28 +36,29 @@ const PAGE = {
   saving: '저장 중',
 } as const;
 
+/* 백엔드 enum DisputeDecision(schema.prisma) 순서·의미와 맞춘다. */
 const DECISION_LABEL: Record<ApiDisputeDecision, string> = {
-  APPROVE: '승인',
-  REWORK_VALID: '보완',
-  UNDECIDED_CONDITION: '부분 정산',
+  REWORK_VALID: '보완이 맞다',
+  APPROVE: '승인이 맞다',
+  UNDECIDED_CONDITION: '정하지 않은 조건이다',
 };
 
 const DECISION_OPTIONS = [
   {
-    key: 'APPROVE',
+    key: 'REWORK_VALID',
     label: (
       <span>
-        <b>승인</b>
-        <span>조건 줄을 충족했다 — 이 항목을 승인 처리합니다</span>
+        <b>{DECISION_LABEL.REWORK_VALID}</b>
+        <span>조건 줄을 지키지 못했다 — 공급자가 다시 작업하고 이 항목은 검수 대기로 돌아갑니다</span>
       </span>
     ),
   },
   {
-    key: 'REWORK_VALID',
+    key: 'APPROVE',
     label: (
       <span>
-        <b>보완</b>
-        <span>조건 줄을 지키지 못했다 — 검수 대기로 돌아갑니다</span>
+        <b>{DECISION_LABEL.APPROVE}</b>
+        <span>조건 줄을 충족했다 — 이 항목을 승인 처리합니다. 구간의 항목이 모두 승인되면 지급됩니다</span>
       </span>
     ),
   },
@@ -65,8 +66,8 @@ const DECISION_OPTIONS = [
     key: 'UNDECIDED_CONDITION',
     label: (
       <span>
-        <b>부분 정산</b>
-        <span>정하지 않은 조건 등은 검수에서 빼고 나머지는 승인합니다</span>
+        <b>{DECISION_LABEL.UNDECIDED_CONDITION}</b>
+        <span>요청한 부분이 &lsquo;정하지 않음&rsquo; 조건이다 — 기능 설명 기준으로 보고 그 부분은 검수 대상에서 뺍니다</span>
       </span>
     ),
   },
