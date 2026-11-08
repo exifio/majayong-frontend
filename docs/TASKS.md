@@ -54,7 +54,7 @@
 - [x] **BE-05** 납품·검수·운영자 결정 API — D-26 `items[].id` 추가, 로컬 납품 201·승인 200·보완 201
 - [x] **BE-06** Toss sandbox 승인 계약
 - [x] **BE-07** Toss 웹훅·재조회·복구 — 실제 테스트 웹훅 200·가상계좌 COMPLETED·15분 Cron 복구 PASS
-- [x] **BE-08** staging fixture 2세트/리셋
+- [ ] **BE-08** staging fixture 2세트/리셋 — 스크립트·데모 계정 연결은 BE `b127c1e`·`65e3f74`에 있음. **staging 실행 증거 없음**(2026-11-08 확인)
 - [x] **BE-09** 검색 keyword/sort/deadlineBefore
 - [x] **BE-10** 취소 철회/1원 인증 계약
 - [x] **BE-11** API 문서/권한/최종 스모크
@@ -72,6 +72,8 @@
   - **production 정적/보안(2026-11-07):** `robots.txt`·`sitemap.xml`이 SPA HTML로 응답하던 문제를 실제 정적 파일로 교체. `vercel.json`에 `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`, `Permissions-Policy` 추가. `index.html`에 설명·OG 메타 추가. 배포 후 content-type·헤더·메타 확인 PASS.
   - **재정리(2026-11-07):** A 정리 후 다시 생성된 `ADMIN@code.com`·`client@code.com`·`supplier@code.com`과 세션 7개를 삭제해 users 0·blocks 36·files 0 복구.
   - **P0 차단(2026-11-07):** production `TOSS_SECRET_KEY`가 무효(`GET /v1/payments/orders/{unknown}` → **401 UNAUTHORIZED_KEY**, 11자)다. 예치 confirm이 실패하므로 FE production `VITE_ENABLE_DEPOSIT`를 **false로 내리고 재배포**했다. A가 유효한 `test_sk_`로 교체하고 confirm을 재검증한 뒤 다시 켠다.
+  - **웹훅 등록 조건(2026-11-08, BE `99a84d8` 런북 기준):** Toss 대시보드에는 **백엔드 도메인** `https://<backend-domain>/api/v1/integrations/toss/payment-events`로 등록한다. FE 도메인(`majayong.vercel.app/api/v1/...`)은 `apps/web/api/proxy.js`가 서명 헤더를 넘기지 않고 본문을 다시 직렬화해 401이 된다. 실제 등록 URL은 아직 저장소에 기록이 없다.
+  - **예치 재활성화 전 FE 수정(2026-11-08):** 승인 응답의 계약은 축약형(supplierId·items 없음)이라 결제 화면이 깨질 수 있던 문제를 고쳤다 — 승인 후 계약을 다시 조회한다.
 
 ## 사용법
 
@@ -114,9 +116,9 @@
 | BE-03 | BE | P1 | Next | 문의 답변 알림 targetUrl·운영 이벤트 검증 | BE-02 | 하 | 대기 / 실호출 미검증 |
 | BE-04 | BE | P1 | Next | NDA/specItemId/지원·채팅·합의·서명 회귀 | BE-01, BE-00 | 중 | 대기 / 실호출 미검증 |
 | BE-05 | BE | P1 | Next | 납품·검수·운영자 결정 API 검증 | BE-04 | 중 | **완료** / D-26 항목 id, 로컬 201/200/201 확인 |
-| BE-06 | BE | P0 | Now | Toss sandbox 승인 계약 설계·구현(P0) | BE-00, INT-02 | 상 | 대기 / 실호출 미검증 |
-| BE-07 | BE | P0 | Now | Toss 웹훅 원형 정규화·재조회·장애 복구 | BE-06 | 상 | 대기 / 실호출 미검증 |
-| BE-08 | BE | P1 | Next | staging 시연 fixture 2세트/리셋·데모 판정 | BE-04, BE-05 | 중 | 대기 / 실호출 미검증 |
+| BE-06 | BE | P0 | Now | Toss sandbox 승인 계약 설계·구현(P0) | BE-00, INT-02 | 상 | **완료** / INT-02 sandbox 승인 E2E PASS(staging). production은 `TOSS_SECRET_KEY` 무효로 OFF |
+| BE-07 | BE | P0 | Now | Toss 웹훅 원형 정규화·재조회·장애 복구 | BE-06 | 상 | **완료** / INT-02 서명 웹훅 200·위조 401·재전송 멱등·Cron 복구 PASS(staging). 실제 등록 URL 미기록 |
+| BE-08 | BE | P1 | Next | staging 시연 fixture 2세트/리셋·데모 판정 | BE-04, BE-05 | 중 | 대기 / 스크립트·데모 계정 연결 완료(BE `b127c1e`·`65e3f74`), staging 실행 증거 없음 |
 | BE-09 | BE | P2 | Later | 검색 keyword/sort/deadlineBefore 선택적 확장 | BE-00 | 중 | **완료** / staging search keyword·sort·deadlineBefore 200 확인 |
 | BE-10 | BE | P2 | Later | 취소 요청 철회/1원 인증 발송은 계약 결정 후 | BE-00 | 중 | **완료** / 취소 철회 API·staging 200, 1원 인증은 샌드박스 |
 | BE-11 | BE | P1 | Next | API 문서/권한/최종 시연 스모크 | BE-02, BE-04, BE-05, BE-08 | 중 | 대기 / 실호출 미검증 |

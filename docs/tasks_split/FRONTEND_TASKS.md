@@ -297,6 +297,7 @@
 - **완료 조건:** 화면·문구에 미지원 동작 없음.
 - **최소 QA:** 해당 화면 확인만, UI 변경 시 인접 1~2개.
 - **확인 결과(2026-11-07 KST):** staging에서 `GET /projects?keyword=예약&sort=DEADLINE_SOON&deadlineBefore=2026-12-31` **200**(1건), 계약 취소 요청 **201** → 철회 **200** → 계약 `ACTIVE` 복귀를 확인했다. 브라우저에서 공급자 목록의 검색어·정렬·마감일 입력과 계약 상세의 "취소 요청 철회" 버튼·확인 대화상자·성공 상태를 확인했다. BE `f49e702`, FE `679644c`·`cd317cc`; 관련 FE 테스트 12/12, 취소 서비스 19/19, typecheck·build PASS.
+- **보완(2026-11-08 KST, 기준 `aaa93ae`):** 공급자 목록에 업종(`industryCode`)·예산 구간(디자인 보드 3구간 → `minBudget`/`maxBudget`, BE `[min, max)`) 필터와 카드 북마크(`PUT`/`DELETE /projects/{id}/bookmark`), `?view=bookmarks`의 실제 북마크 목록(`GET /me/bookmarks`)을 연결했다. 업종 라벨 계약 파일을 BE v2(6개)로 갱신해 `FOOD` 등이 '기타'로 보이던 문제를 고쳤다. 인접 테스트 5건 추가, 전체 Vitest 603/603·typecheck·build PASS, 로컬 dev에서 API mock으로 1280/390 렌더·overflow 0 확인. **미검증:** staging 실HTTP(업종·예산 필터, 북마크 저장·해제).
 - **보고 형식:** 기준 SHA·변경 파일·통과/미검증·실제 요청·남은 위험을 5줄 이내로 보고. 범위 확대가 필요하면 작업을 멈추고 별도 제안.
 
 ## FE-16 — 변경 영역별 가벼운 QA와 57보드 비교 마감
