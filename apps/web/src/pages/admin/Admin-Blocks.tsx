@@ -16,6 +16,7 @@ import {
 import { useSession } from '@/app/session';
 import { ApiRequestError, apiRequest } from '@/lib/api';
 import { formatDateTime } from '@/lib/format';
+import { industryLabel } from '@/lib/industry-label';
 import s from './Admin-Blocks.module.css';
 
 const PAGE = {
@@ -205,7 +206,7 @@ export default function AdminBlocks() {
                       <span className={s.rowName}>{row.title}</span>
                       <StatusChip status={statusOf(row)} />
                       <span className={s.rowMeta}>
-                        출처 프로젝트 {row.sourceProjectCount}건 · {row.industryCode}
+                        출처 프로젝트 {row.sourceProjectCount}건 · {row.industryLabel ?? industryLabel(row.industryCode)}
                       </span>
                     </button>
                   </li>
@@ -220,7 +221,7 @@ export default function AdminBlocks() {
               <StatusChip status={statusOf(selected)} />
             </div>
             <p className={s.detailMeta}>
-              {formatDateTime(selected.createdAt)} 생성 · {selected.industryCode} · 출처 프로젝트{' '}
+              {formatDateTime(selected.createdAt)} 생성 · {selected.industryLabel ?? industryLabel(selected.industryCode)} · 출처 프로젝트{' '}
               {selected.sourceProjectCount}건
             </p>
 
@@ -334,7 +335,7 @@ export default function AdminBlocks() {
                 >
                   <b>{target.title}</b>
                   <span>
-                    <Money amount={target.unitPrice} /> · {target.industryCode}
+                    <Money amount={target.unitPrice} /> · {target.industryLabel ?? industryLabel(target.industryCode)}
                   </span>
                 </button>
               ))}

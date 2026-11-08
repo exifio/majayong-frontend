@@ -68,6 +68,20 @@ describe('LiveContractsList — 내 계약', () => {
     expect(screen.getByText('리뷰 작성 완료')).toBeTruthy();
   });
 
+  it('구간 진행 상태를 보여 준다', async () => {
+    vi.stubGlobal('fetch', vi.fn<typeof fetch>().mockImplementation(async () => jsonResponse({
+      data: [contract({
+        installments: [
+          { stage: 'INTERIM', status: 'DELIVERED' },
+          { stage: 'FINAL', status: 'PENDING' },
+        ],
+      })],
+    })));
+    renderAt('/c/contracts', 'client', undefined, 'test-token');
+
+    expect(await screen.findByText('중간 검수 중 · 최종 대기')).toBeTruthy();
+  });
+
   it('목록 요청이 실패하면 오류를 알린다', async () => {
     vi.stubGlobal('fetch', vi.fn<typeof fetch>().mockImplementation(async () => jsonResponse({
       error: { code: 'INTERNAL_ERROR', message: '오류', requestId: 'r1' },

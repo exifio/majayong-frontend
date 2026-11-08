@@ -142,7 +142,9 @@ export default function AdminInquiries() {
                   onClick={() => select(row.id)}
                 >
                   <span className={s.rowTitle}>{row.title}</span>
-                  <span className={s.rowMeta}>{CATEGORY_LABEL[row.category]}</span>
+                  <span className={s.rowMeta}>
+                    {row.authorName ?? '문의자 미등록'} · {CATEGORY_LABEL[row.category]}
+                  </span>
                   <Chip tone={row.status === 'ANSWERED' ? 'teal' : 'amber'}>{STATUS_LABEL[row.status]}</Chip>
                 </button>
               </li>
@@ -158,7 +160,7 @@ export default function AdminInquiries() {
                 </Chip>
               </div>
               <p className={s.detailMeta}>
-                {CATEGORY_LABEL[selected.category]} · {formatDateTime(selected.createdAt)}
+                문의자 {selected.authorName ?? '이름 미등록'} · {CATEGORY_LABEL[selected.category]} · {formatDateTime(selected.createdAt)}
               </p>
               <p className={s.bodyText}>{selected.body}</p>
               {selected.attachments.length > 0 ? (

@@ -38,7 +38,7 @@ describe('Admin-Inquiries — 운영자 1:1 문의', () => {
     const inquiryLink = within(screen.getByRole('navigation', { name: '운영자 메뉴' }))
       .getByRole('link', { name: /1:1 문의/ });
     await waitFor(() => expect(inquiryLink.textContent).toBe('1:1 문의1'));
-    expect(screen.getAllByText('결제 · 예치').length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/결제 · 예치/).length).toBeGreaterThan(0);
     expect(screen.getByText('예치했는데 확인 중으로 나옵니다.')).toBeTruthy();
     expect(findDesignViolations(container)).toEqual([]);
   });

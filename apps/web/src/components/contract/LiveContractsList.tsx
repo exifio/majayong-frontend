@@ -12,6 +12,15 @@ import s from './LiveContractsList.module.css';
 
 type LoadState = 'loading' | 'ready' | 'error';
 
+const INSTALLMENT_LABEL: Record<string, string> = {
+  PENDING: '대기',
+  DELIVERED: '검수 중',
+  REWORK_REQUESTED: '보완 요청',
+  APPROVED: '승인',
+  RELEASED: '지급 완료',
+  REFUNDED: '환불',
+};
+
 export function LiveContractsList({ role }: { role: 'CLIENT' | 'SUPPLIER' }) {
   const { apiAccessToken } = useSession();
   const [state, setState] = useState<LoadState>('loading');
@@ -67,6 +76,13 @@ export function LiveContractsList({ role }: { role: 'CLIENT' | 'SUPPLIER' }) {
             <p className={s.counterpart}>
               {counterpartRole} {contract.counterpartName ?? '이름 미등록'}
             </p>
+            {contract.installments && contract.installments.length > 0 ? (
+              <p className={s.progress}>
+                {contract.installments
+                  .map((installment) => `${installment.stage === 'INTERIM' ? '중간' : '최종'} ${INSTALLMENT_LABEL[installment.status] ?? installment.status}`)
+                  .join(' · ')}
+              </p>
+            ) : null}
             <dl className={s.meta}>
               <div>
                 <dt>합의 금액</dt>

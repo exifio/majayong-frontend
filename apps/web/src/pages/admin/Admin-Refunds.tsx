@@ -148,6 +148,7 @@ function AdminRefundsLive() {
   const { apiAccessToken } = useSession();
   const [state, setState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [rows, setRows] = useState<AdminCancellationContractDto[]>([]);
+  const [history, setHistory] = useState<AdminCancellationContractDto[]>([]);
   const [rate, setRate] = useState('');
   const [reason, setReason] = useState('');
   const [refunded, setRefunded] = useState(false);
@@ -159,12 +160,19 @@ function AdminRefundsLive() {
 
   const load = (signal?: AbortSignal) => {
     setState('loading');
-    return apiRequest('listCancellationQueue', '/admin/contracts/cancellation-queue', {
-      accessToken: apiAccessToken,
-      signal,
-    })
-      .then((response) => {
-        setRows(response.data);
+    return Promise.all([
+      apiRequest('listCancellationQueue', '/admin/contracts/cancellation-queue', {
+        accessToken: apiAccessToken,
+        signal,
+      }),
+      apiRequest('listCancellationHistory', '/admin/contracts/cancellation-history', {
+        accessToken: apiAccessToken,
+        signal,
+      }).catch(() => ({ data: [] as AdminCancellationContractDto[] })),
+    ])
+      .then(([queue, past]) => {
+        setRows(queue.data);
+        setHistory(past.data);
         setState('ready');
       })
       .catch((caught: unknown) => {
@@ -181,7 +189,8 @@ function AdminRefundsLive() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [apiAccessToken]);
 
-  const selected = rows.find((row) => row.id === params.get('id')) ?? rows[0] ?? null;
+  const allRows = [...rows, ...history];
+  const selected = allRows.find((row) => row.id === params.get('id')) ?? allRows[0] ?? null;
 
   useEffect(() => {
     setRate('');
@@ -199,6 +208,7 @@ function AdminRefundsLive() {
 
   const replaceRow = (next: AdminCancellationContractDto) => {
     setRows((current) => current.map((row) => (row.id === next.id ? { ...row, ...next } : row)));
+    setHistory((current) => current.map((row) => (row.id === next.id ? { ...row, ...next } : row)));
   };
 
   const parsedRate = parseRate(rate);
@@ -221,6 +231,11 @@ function AdminRefundsLive() {
         },
       );
       replaceRow(response.data);
+      setRows((current) => current.filter((row) => row.id !== response.data.id));
+      setHistory((current) => [
+        response.data,
+        ...current.filter((row) => row.id !== response.data.id),
+      ]);
       setNotice(LIVE.decided);
     } catch (caught) {
       setError(caught instanceof ApiRequestError ? caught.message : LIVE.saveError);
@@ -278,7 +293,7 @@ function AdminRefundsLive() {
           </Button>
         </div>
       ) : null}
-      {state === 'ready' && rows.length === 0 ? (
+      {state === 'ready' && allRows.length === 0 ? (
         <EmptyState title={LIVE.empty}>{LIVE.emptyBody}</EmptyState>
       ) : null}
 
@@ -286,7 +301,7 @@ function AdminRefundsLive() {
         <div className={s.grid}>
           <section aria-label={DEMO.listLabel}>
             <ul className={s.rows}>
-              {rows.map((r) => {
+              {allRows.map((r) => {
                 const on = r.id === selected.id;
                 return (
                   <li key={r.id}>

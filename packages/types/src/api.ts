@@ -426,6 +426,7 @@ export interface ContractViewDto extends ContractRecordDto {
   counterpartName: string | null;
   displayStatus: ApiContractDisplayStatus;
   reviewWrittenByMe: boolean;
+  installments?: Array<{ stage: ApiInstallmentStage; status: string }>;
 }
 
 export type ApiCancelCause = 'CLIENT' | 'SUPPLIER' | 'MUTUAL';
@@ -840,6 +841,7 @@ export interface AdminBlockDto {
   description: string;
   functionSummary: string;
   industryCode: string;
+  industryLabel?: string;
   techTags: string[];
   conditions: AdminBlockConditionDto[];
   priceBasis: string;
@@ -1030,6 +1032,8 @@ export interface CreateInquiryAttachmentDto {
 export interface InquiryDto {
   id: string;
   userId: string;
+  /** D-38: 운영자 목록에서만 채워지는 문의자 표시명. */
+  authorName?: string | null;
   category: ApiInquiryCategory;
   contractId: string | null;
   title: string;
@@ -1404,6 +1408,7 @@ export interface BApiResponses {
   listHeldDeposits: DataEnvelope<AdminHeldDepositDto[]>;
   resolveHeldDeposit: DataEnvelope<AdminHeldDepositDto>;
   listCancellationQueue: DataEnvelope<AdminCancellationContractDto[]>;
+  listCancellationHistory: DataEnvelope<AdminCancellationContractDto[]>;
   decideCancellation: DataEnvelope<AdminCancellationContractDto>;
   markSettlementProcessed: DataEnvelope<AdminCancellationContractDto>;
   listEventLogs: DataEnvelope<AdminEventLogDto[]>;
