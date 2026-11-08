@@ -122,7 +122,7 @@ export default function Main() {
               <div className={s.ctaRow}>
                 {/* 파란 버튼은 헤더 하나 — 본문은 흰 바탕 navy 테두리 */}
                 <Button variant="ghost" size="lg" to="/signup" className={s.heroCta}>화면 초안 받아보기</Button>
-                <Button variant="ghost" size="lg" to="#how">작동 방식 보기</Button>
+                <Button variant="ghost" size="lg" to="#how">진행 과정 보기</Button>
               </div>
               <p className={s.miniNote}>{data.freeNote}</p>
             </div>
@@ -133,7 +133,7 @@ export default function Main() {
         </div>
       </section>
 
-      {/* 가치 카드 */}
+      {/* 서비스 소개 — 헤더 앵커 #value */}
       <section className={s.band} id="value">
         <div className={s.inner}>
           <SectionHead title={data.valueTitle} titleClassName={s.sh} />
@@ -141,7 +141,7 @@ export default function Main() {
         </div>
       </section>
 
-      {/* 작동 방식 — 헤더 앵커 #how */}
+      {/* 진행 과정 — 헤더 앵커 #how */}
       <section className={`${s.band} ${s.bandAlt}`} id="how">
         <div className={s.inner}>
           <SectionHead title={data.flowTitle} titleClassName={s.sh} />
@@ -157,7 +157,7 @@ export default function Main() {
         </div>
       </section>
 
-      {/* 마지막 띠 — 헤더 앵커 #start(비용) */}
+      {/* 마지막 띠 #start */}
       <section className={s.bandNavy} id="start">
         <div className={s.inner}>
           <h2 className={s.sh}>{data.ctaTitle}</h2>

@@ -51,6 +51,15 @@ describe('Supplier-Landing — 공급자 랜딩', () => {
     expect(within(price).getByRole('link', { name: '정산 자세히 보기' }).getAttribute('href')).toBe('/help');
   });
 
+  it('상단 메뉴는 견적 방식 · 진행 과정 · 정산 방식이고 각 섹션 제목으로 이어진다', () => {
+    const { container } = renderAt('/supplier', 'guest');
+    const menu = container.querySelector('header ul') as HTMLElement;
+    const links = within(menu).getAllByRole('link');
+    expect(links.map((a) => a.textContent)).toEqual(['견적 방식', '진행 과정', '정산 방식']);
+    const targets = links.map((a) => container.querySelector(a.getAttribute('href')!)?.querySelector('h2')?.textContent);
+    expect(targets).toEqual(['견적이 쉬워집니다', '등록부터 정산까지', '대금은 나눠서 받습니다']);
+  });
+
   it('의뢰인 희망 예산 · AI 총액 숫자는 없다', () => {
     renderAt('/supplier', 'guest');
     expect(screen.queryByText(/희망 예산/)).toBeNull();

@@ -32,7 +32,7 @@
 ### 3.1 푸터 · 헤더 · 메뉴 (FE-05)
 
 - **푸터**: 기존 `Footer.tsx`는 이전 밝은 배경/열 구성. 11/04 시안은 navy-900 바탕, 3줄 분류, 마지막 띠/운영자 연락처 위치 조정. **`Footer.tsx`+`layout.module.css`만 먼저 수정**해 영향을 받는 모든 페이지에 반영하고 개별 45개 화면을 편집하지 않습니다.
-- `Main` 메뉴: `작동 방식 #how`, `안전장치 #safe`, `비용 #start`; 공급자 랜딩: `견적 방식 #how`, `이용 흐름 #flow`, `정산·비용 #price`. 현재 `menus.ts`는 다른 앵커를 사용하므로 **실제 섹션 ID를 동시에 맞춥니다**.
+- `Main` 메뉴: `서비스 소개 #value`, `진행 과정 #how`, `안전장치 #safe`; 공급자 랜딩: `견적 방식 #how`, `진행 과정 #flow`, `정산 방식 #price` (2026-11-08 랜딩 v3 섹션에 맞춰 이름 변경). 메뉴와 섹션 ID는 `menus.ts`와 각 랜딩에서 함께 바꿉니다.
 - `Terms`는 `routes.ts`에서 shell `public → viewer`. 로그인 여부에 따른 GNB는 이미 `Shell`/`Chrome`이 맡습니다. 약관 내용 자체는 법률 검토 전 초안입니다.
 - Admin 메뉴: 신고 처리 아래 `1:1 문의`를 추가. 실제 권한 admin guard 필수. GNB 네비를 개별 페이지가 따로 그리지 않습니다.
 - 알림은 기존 `Chrome.tsx` 드롭다운의 실API 호출·읽음 처리를 보존하고, 문의 답변 링크 `'/help/inquiry?tab=my&id=...'`만 추가합니다. Notify-Client/Supplier를 별도 라우트로 만들지 않습니다.
