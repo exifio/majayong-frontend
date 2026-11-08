@@ -10,6 +10,7 @@ import { apiRequest } from '@/lib/api';
 import { errorCode, isAbort, joinedLabel, newPasswordError } from '@/lib/account-profile';
 import { LiveSettlementInfo } from './LiveSettlementInfo';
 import { LiveNotificationSettings } from './LiveNotificationSettings';
+import { LiveProfileImage } from './LiveProfileImage';
 import own from './LiveAccountSettings.module.css';
 
 type Role = 'CLIENT' | 'SUPPLIER';
@@ -332,6 +333,7 @@ export function LiveAccountSettings({
         </ul>
       ) : null}
 
+      <LiveProfileImage role={role} />
       <LiveNotificationSettings />
       <LiveSettlementInfo role={role} />
 

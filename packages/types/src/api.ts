@@ -1190,7 +1190,8 @@ interface PresignUploadFileDto {
 /** 문의 첨부는 계약 없이, 납품 파일은 담당 공급자의 contractId와 함께 요청한다. */
 export type PresignUploadRequestDto =
   | (PresignUploadFileDto & { purpose: 'SUPPORT_INQUIRY'; inquiryId?: string })
-  | (PresignUploadFileDto & { purpose: 'DELIVERY'; contractId: string });
+  | (PresignUploadFileDto & { purpose: 'DELIVERY'; contractId: string })
+  | (PresignUploadFileDto & { purpose: 'PROFILE_IMAGE'; contractId?: never; inquiryId?: never });
 
 export interface PresignUploadResponseDto {
   fileId: string;
