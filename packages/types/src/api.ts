@@ -482,9 +482,28 @@ export interface CreateDepositResultDto {
   isNew: boolean;
 }
 
+/** 예치 승인 응답의 계약 — BE `DepositContractInfo`(deposit/index.ts) 축약형.
+ * 전체 계약(ContractRecordDto)이 아니다: supplierId·items가 없고 공급자는 supplierUserId다. 화면은 계약을 다시 조회해 쓴다. */
+export interface DepositConfirmContractDto {
+  id: string;
+  projectId?: string;
+  applicationId?: string;
+  clientUserId: string;
+  supplierUserId: string;
+  status: ApiContractStatus;
+  paymentStatus: ApiPaymentStatus;
+  agreedAmount: number;
+  clientFee: number;
+  interimRatio?: number | null;
+  durationDays?: number | null;
+  depositDeadline: IsoDate | null;
+  totalDeposited?: number;
+  workDueAt?: IsoDate | null;
+}
+
 export interface ConfirmDepositResultDto {
   deposit: EscrowDepositDto;
-  contract: ContractRecordDto;
+  contract: DepositConfirmContractDto;
   installments: PaymentInstallmentDto[];
 }
 

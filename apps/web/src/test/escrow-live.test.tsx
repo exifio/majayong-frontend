@@ -181,7 +181,14 @@ describe('LiveEscrow', () => {
         return jsonResponse({
           data: {
             deposit: { ...deposit, status: 'COMPLETED' },
-            contract: { ...contract, paymentStatus: 'DEPOSITED', totalDeposited: 2_940_000 },
+            // BE DepositContractInfo 축약형 — supplierId·items가 없다
+            contract: {
+              id: 'contract-1', projectId: 'project-1', applicationId: 'application-1',
+              clientUserId: 'client-user-1', supplierUserId: 'supplier-user-1',
+              status: 'ACTIVE', paymentStatus: 'DEPOSITED', agreedAmount: 2_800_000, clientFee: 140_000,
+              interimRatio: 50, durationDays: 20, depositDeadline: '2026-11-08T14:59:00.000Z',
+              totalDeposited: 2_940_000, workDueAt: null,
+            },
             installments: [],
           },
         });
