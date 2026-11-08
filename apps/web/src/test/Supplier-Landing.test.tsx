@@ -12,6 +12,7 @@ describe('Supplier-Landing — 공급자 랜딩', () => {
     const { container } = renderAt('/supplier', 'guest');
     expect(screen.getByRole('heading', { level: 1, name: /글을 읽고 기능을 뽑는/ })).toBeTruthy();
     for (const id of ['how', 'flow', 'price', 'signup']) expect(container.querySelector(`#${id}`)).not.toBeNull();
+    expect(screen.getByRole('link', { name: '견적 방식 보기' }).getAttribute('href')).toBe('#how');
 
     const heroCtas = screen.getAllByRole('link', { name: data.cta });
     expect(heroCtas.every((a) => a.getAttribute('data-btn') === 'onnavy' && a.getAttribute('href') === '/signup')).toBe(true);

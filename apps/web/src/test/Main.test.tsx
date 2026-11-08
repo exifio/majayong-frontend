@@ -11,6 +11,7 @@ describe('Main — 의뢰인 랜딩', () => {
     const { container } = renderAt('/', 'guest');
     expect(screen.getByRole('heading', { level: 1, name: /요구사항을 쓰지 마세요/ })).toBeTruthy();
     for (const id of ['value', 'how', 'safe', 'start']) expect(container.querySelector(`#${id}`)).not.toBeNull();
+    expect(screen.getByRole('link', { name: '진행 과정 보기' }).getAttribute('href')).toBe('#how');
   });
 
   it('섹션 제목이 캔버스 순서와 같다', () => {

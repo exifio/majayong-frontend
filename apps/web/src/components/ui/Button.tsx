@@ -34,6 +34,14 @@ export function Button(props: ButtonProps) {
   const { variant = 'primary', size = 'md', full, children } = props;
 
   if (props.to !== undefined) {
+    if (props.to.startsWith('#')) {
+      return (
+        <a href={props.to} className={cls(variant, size, full, props.className)} data-btn={variant}>
+          {children}
+        </a>
+      );
+    }
+
     return (
       <Link to={props.to} className={cls(variant, size, full, props.className)} data-btn={variant}>
         {children}
