@@ -167,7 +167,8 @@ export function LiveSettlements({ role }: { role: Role }) {
             apiRequest('getMySupplierProfile', '/me/supplier-profile', options),
             apiRequest('listContractInstallments', `${path}/installments`, options),
           ]);
-          if (profile.data.businessType !== 'BUSINESS') return;
+          // 프로필 행이 없는 공급자는 data가 null — 사업자로 확인되지 않으면 숨긴다
+          if (profile.data?.businessType !== 'BUSINESS') return;
           setInstallmentIds(Object.fromEntries(installments.data.installments.map((row) => [row.stage, row.id])));
         })
         .catch((error: unknown) => {
